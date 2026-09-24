@@ -1,0 +1,82 @@
+======================================================================
+  TESTBED EVIDENCE — Insider-Threat Detection on Cloud Audit Logs
+  Captured: 2026-09-24T07:45:34Z
+  Environment: LocalStack (CloudSim) on local Windows
+======================================================================
+
+--- Docker Container Status ---
+NAMES                             STATUS                   PORTS
+cloudtrail-insider-localstack-1   Up 5 minutes (healthy)   127.0.0.1:4510-4559->4510-4559/tcp, 127.0.0.1:4566->4566/tcp
+cloudtrail-insider-app-1          Up 5 minutes
+
+--- LocalStack Health ---
+{
+  "services": {
+    "acm": "available",
+    "apigateway": "available",
+    "cloudformation": "available",
+    "cloudwatch": "available",
+    "config": "available",
+    "dynamodb": "available",
+    "dynamodbstreams": "available",
+    "ec2": "available",
+    "es": "available",
+    "events": "available",
+    "firehose": "available",
+    "iam": "available",
+    "kinesis": "available",
+    "kms": "available",
+    "lambda": "available",
+    "logs": "available",
+    "opensearch": "available",
+    "redshift": "available",
+    "resource-groups": "available",
+    "resourcegroupstaggingapi": "available",
+    "route53": "available",
+    "route53resolver": "available",
+    "s3": "running",
+    "s3control": "available",
+    "scheduler": "available",
+    "secretsmanager": "available",
+    "ses": "available",
+    "sns": "available",
+    "sqs": "available",
+    "ssm": "available",
+    "stepfunctions": "available",
+    "sts": "available",
+    "support": "available",
+    "swf": "available",
+    "transcribe": "available"
+  },
+  "edition": "community",
+  "version": "3.8.1"
+}
+
+--- STS Caller Identity ---
+{
+  "UserId": "AKIAIOSFODNN7EXAMPLE",
+  "Account": "000000000000",
+  "Arn": "arn:aws:iam::000000000000:root"
+}
+
+--- CloudTrail Events ---
+LocalStack Community does not implement CloudTrail LookupEvents (Pro feature).
+This is expected and documented. The project uses a synthetic CloudTrail generator
+(cti.ingest.synthetic) that produces events with identical schema to real CloudTrail.
+Raw error: An error occurred (InternalFailure) when calling the LookupEvents operation: API for service 'cloudtrail' not yet implemented or pro feature - please check https://docs.localstack.cloud/references/coverage/ for further information
+
+--- S3 Buckets ---
+{
+  "Buckets": [
+    "cloudtrail-logs-bucket",
+    "finance-archive",
+    "public-assets-bucket"
+  ]
+}
+
+--- Pipeline Metrics ---
+5 detectors evaluated, 60 metric rows in results/metrics.csv
+
+--- Trained Models ---
+5 models saved: autoencoder, isolation_forest, lof, proposed_budget_aware_conformal, rule_baseline
+

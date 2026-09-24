@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name            = "cloudtrail-insider"
+version         = "0.1.0"
+description     = "Insider-threat detection over AWS CloudTrail audit logs at fixed alert budgets"
+readme          = "README.md"
+requires-python = ">=3.11"
+license         = { text = "MIT" }
+authors         = [{ name = "CTI Research Team" }]
+
+dependencies = [
+  "pandas>=2.2",
+  "numpy>=1.26",
+  "pyarrow>=17.0",
+  "scikit-learn>=1.5",
+  "scipy>=1.13",
+  "shap>=0.45",
+  "matplotlib>=3.9",
+  "pyyaml>=6.0",
+  "tqdm>=4.66",
+  "boto3>=1.34",
+  "streamlit>=1.35",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.2",
+  "pytest-cov>=5.0",
+  "ruff>=0.4",
+]
+
+[project.scripts]
+cti-ingest    = "cti.ingest.loader:main"
+cti-features  = "cti.features.pipeline:main"
+cti-train     = "cti.detectors.train:main"
+cti-eval      = "cti.eval.evaluate:main"
+cti-explain   = "cti.explain.shap_explain:main"
+cti-demo      = "cti.demo.app:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.ruff]
+line-length    = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select  = ["E", "F", "W", "I", "UP", "B", "C4", "SIM"]
+ignore  = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["cti"]
+
+[tool.pytest.ini_options]
+testpaths    = ["tests"]
+addopts      = "-v --tb=short"
+log_cli      = true
+log_cli_level = "INFO"

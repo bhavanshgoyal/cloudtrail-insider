@@ -1,0 +1,158 @@
+# Insider-Threat Detection on Cloud Audit Logs at Operationally Realistic Alert Budgets
+
+## Problem Statement
+
+Cloud platforms record every control-plane action in an audit log (e.g., AWS CloudTrail), capturing the identity, action, resource, and outcome. These logs are the principal evidence for detecting misuse of legitimate credentials — whether by a malicious insider or by an attacker who has obtained valid access.
+
+Current detection research reports area-under-curve figures computed across the full range of operating points. However, a security team operates at a **single fixed point** determined by how many alerts an analyst can examine in a day — typically a small number. A detector with an excellent AUC-ROC may be useless at ten alerts per day. Furthermore, an alert that identifies an event as anomalous without indicating *which aspect* of the behaviour deviated cannot be triaged and will be dismissed.
+
+## Hypotheses
+
+**H1 (primary).** Per-principal conformal calibration with budget-aware incident aggregation increases detection rate at a budget of 10 alerts/day by at least 40% relative, and precision at budget 10 by at least 30% relative, compared with an Isolation Forest trained on the identical feature matrix, on synthetic CloudTrail events over ~1,000 principals and ~180 days, at equal feature cost, with all baseline statistics computed causally.
+
+**H2 (secondary).** The same method reduces median time to detection at a budget of 10 alerts/day by at least 25% relative to the same baseline.
+
+**H3 (usability).** Reviewers shown only the generated explanation classify alerts as true or false positive with balanced accuracy at least 20 percentage points above reviewers shown only the anomaly score, over a fixed 40-alert set.
+
+**Falsification.** H1 is rejected if the 95% BCa bootstrap confidence interval for the relative difference in DR@10 — resampled over evaluation days, across 5 seeds and 3 temporal splits — lies below +40% or contains it.
+
+---
+
+## Objectives
+
+| ID | Objective |
+|----|-----------|
+| O1 | Implement anomaly detection over cloud audit logs capturing deviation in identity behaviour, resource access, and temporal pattern |
+| O2 | Evaluate detection performance at fixed alert budgets (10, 50, 100) that reflect real analyst capacity |
+| O3 | Generate for each alert an explanation naming the specific behavioural deviation responsible |
+| O4 | Assess whether those explanations are sufficient for a reviewer to triage the alert correctly |
+
+## One-Command Reproduction
+
+```bash
+# 1. Install
+pip install -e ".[dev]"
+
+# 2. Run full pipeline: generate data → train → evaluate → explain → figures
+python run_pipeline.py
+```
+
+## Testbed
+
+**CloudSim Environment**: LocalStack (Docker) emulating AWS CloudTrail, S3, IAM, STS on local machine.
+
+```bash
+# Start testbed
+docker compose up -d
+
+# Capture evidence
+python scripts/capture_evidence.py
+```
+
+See [docs/TESTBED.md](docs/TESTBED.md) for detailed instructions.
+
+## Results
+
+| Method | DR@10 | P@10 | DR@50 | P@50 | DR@100 | P@100 |
+|--------|-------|------|-------|------|--------|-------|
+| Isolation Forest (global) | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 |
+| LOF | 0.009 | 0.100 | 0.036 | 0.080 | 0.036 | 0.040 |
+| Autoencoder | 0.081 | 0.900 | 0.218 | 0.480 | 0.227 | 0.250 |
+| Rule Baseline | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 |
+| **Proposed (BudgetAwareConformal)** | **0.063** | **0.700** | **0.163** | **0.360** | **0.218** | **0.240** |
+
+*Run `python run_pipeline.py` to reproduce these numbers on the full 1,000-principal dataset. Results saved to `results/metrics.csv`.*
+
+## Ablation Study
+
+Each component of BudgetAwareConformal contributes to the final performance. See the ablation analysis:
+
+```bash
+python scripts/run_ablation.py    # -> results/ablation.csv, figures/ablation.png
+python scripts/run_sweep.py       # -> results/sweep.csv, figures/sweep_*.png
+```
+
+![Ablation Study](figures/ablation.png)
+
+## Threats to Validity
+
+See [docs/THREATS_TO_VALIDITY.md](docs/THREATS_TO_VALIDITY.md) for an honest assessment of what this setup can and cannot prove.
+
+
+
+## Project Structure
+
+```
+cloudtrail-insider/
+├── configs/
+│   ├── default.yaml              # All parameters — no magic numbers in code
+│   └── rules.yaml                # Rule baseline signatures
+├── src/cti/
+│   ├── ingest/
+│   │   ├── loader.py             # CERT data loader
+│   │   ├── synthetic.py          # Synthetic CloudTrail generator
+│   │   ├── normalise.py          # Column schema normalisation
+│   │   └── toy.py                # Quick test data
+│   ├── features/
+│   │   └── pipeline.py           # 5-family feature engineering
+│   ├── detectors/
+│   │   ├── train.py              # Baselines: IF, LOF, AE, Rules
+│   │   ├── proposed.py           # BudgetAwareConformal (proposed)
+│   │   └── score.py              # Test-split scoring
+│   ├── eval/
+│   │   ├── evaluate.py           # Budget-fixed metrics + bootstrap CI
+│   │   └── figures.py            # Chart generation
+│   ├── explain/
+│   │   └── shap_explain.py       # SHAP explanations for alert cards
+│   ├── triage/
+│   │   ├── generate_study.py     # Triage questionnaire generator
+│   │   └── score_study.py        # Triage response scorer
+│   ├── demo/
+│   │   ├── app.py                # Streamlit demo app
+│   │   └── replay.py             # LocalStack event replay
+│   └── util/
+│       ├── config.py             # Config loader
+│       ├── run.py                # RunContext
+│       └── seeds.py              # RNG management
+├── scripts/
+│   ├── capture_evidence.py       # Testbed evidence capture
+│   ├── bootstrap_env.ps1         # LocalStack bootstrap
+│   └── bootstrap_env.sh          # Linux version
+├── docs/
+│   ├── TESTBED.md                # CloudSim testbed documentation
+│   ├── related_work.md           # 15-paper gap table
+│   └── evidence/                 # Captured testbed proof
+├── tests/
+│   └── test_scaffold.py          # Unit tests
+├── run_pipeline.py               # One-command full pipeline
+├── docker-compose.yml            # LocalStack environment
+├── Dockerfile                    # App container
+├── pyproject.toml                # Dependencies
+├── Makefile                      # Build targets
+└── README.md                     # This file
+```
+
+## Datasets and Tools
+
+- **Synthetic CloudTrail generator** — 1000 principals × 180 days, 4 insider scenarios
+- **CERT Insider Threat dataset** r4.2 or r6.2 (optional supplement)
+- **Python**: scikit-learn, SHAP, pandas, matplotlib
+- **LocalStack**: Cloud simulation testbed
+
+## Baseline Comparison
+
+- Isolation Forest (global) — sklearn ensemble, global anomaly scoring
+- LOF (Local Outlier Factor) — density-based neighbour comparison
+- Autoencoder — MLP reconstruction error
+- Rule-based signatures — commercial cloud threat-detection style rules
+
+## Evaluation Metrics
+
+- Detection rate at budgets of 10, 50, and 100 alerts per day
+- Precision at those budgets
+- Mean time to detection within the event stream
+- Accuracy of human triage using the explanation alone
+
+## License
+
+MIT

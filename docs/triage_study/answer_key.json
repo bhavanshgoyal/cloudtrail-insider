@@ -1,0 +1,242 @@
+[
+  {
+    "alert_id": 1,
+    "principal": "usr-00521",
+    "date": "2023-05-02",
+    "true_label": "True Positive"
+  },
+  {
+    "alert_id": 2,
+    "principal": "usr-00165",
+    "date": "2023-04-16",
+    "true_label": "True Positive"
+  },
+  {
+    "alert_id": 3,
+    "principal": "usr-00323",
+    "date": "2023-02-07",
+    "true_label": "True Positive"
+  },
+  {
+    "alert_id": 4,
+    "principal": "usr-00235",
+    "date": "2023-02-10",
+    "true_label": "True Positive"
+  },
+  {
+    "alert_id": 5,
+    "principal": "usr-00883",
+    "date": "2023-04-10",
+    "true_label": "True Positive"
+  },
+  {
+    "alert_id": 6,
+    "principal": "usr-00651",
+    "date": "2023-02-24",
+    "true_label": "True Positive"
+  },
+  {
+    "alert_id": 7,
+    "principal": "usr-00636",
+    "date": "2023-02-18",
+    "true_label": "False Positive"
+  },
+  {
+    "alert_id": 8,
+    "principal": "usr-00366",
+    "date": "2023-03-25",
+    "true_label": "False Positive"
+  },
+  {
+    "alert_id": 9,
+    "principal": "usr-00346",
+    "date": "2023-03-18",
+    "true_label": "False Positive"
+  },
+  {
+    "alert_id": 10,
+    "principal": "usr-00696",
+    "date": "2023-01-28",
+    "true_label": "False Positive"
+  },
+  {
+    "alert_id": 11,
+    "principal": "usr-00647",
+    "date": "2023-03-19",
+    "true_label": "True Positive"
+  },
+  {
+    "alert_id": 12,
+    "principal": "usr-00831",
+    "date": "2023-04-30",
+    "true_label": "True Positive"
+  },
+  {
+    "alert_id": 13,
+    "principal": "usr-00294",
+    "date": "2023-04-15",
+    "true_label": "False Positive"
+  },
+  {
+    "alert_id": 14,
+    "principal": "usr-00264",
+    "date": "2023-01-14",
+    "true_label": "False Positive"
+  },
+  {
+    "alert_id": 15,
+    "principal": "usr-00511",
+    "date": "2023-03-25",
+    "true_label": "False Positive"
+  },
+  {
+    "alert_id": 16,
+    "principal": "usr-00089",
+    "date": "2023-04-22",
+    "true_label": "False Positive"
+  },
+  {
+    "alert_id": 17,
+    "principal": "usr-00944",
+    "date": "2023-02-19",
+    "true_label": "True Positive"
+  },
+  {
+    "alert_id": 18,
+    "principal": "usr-00366",
+    "date": "2023-05-06",
+    "true_label": "False Positive"
+  },
+  {
+    "alert_id": 19,
+    "principal": "usr-00018",
+    "date": "2023-02-11",
+    "true_label": "False Positive"
+  },
+  {
+    "alert_id": 20,
+    "principal": "usr-00213",
+    "date": "2023-02-25",
+    "true_label": "False Positive"
+  },
+  {
+    "alert_id": 21,
+    "principal": "usr-00863",
+    "date": "2023-03-18",
+    "true_label": "False Positive"
+  },
+  {
+    "alert_id": 22,
+    "principal": "usr-00616",
+    "date": "2023-02-11",
+    "true_label": "False Positive"
+  },
+  {
+    "alert_id": 23,
+    "principal": "usr-00875",
+    "date": "2023-04-29",
+    "true_label": "False Positive"
+  },
+  {
+    "alert_id": 24,
+    "principal": "usr-00245",
+    "date": "2023-02-18",
+    "true_label": "False Positive"
+  },
+  {
+    "alert_id": 25,
+    "principal": "usr-00451",
+    "date": "2023-02-06",
+    "true_label": "True Positive"
+  },
+  {
+    "alert_id": 26,
+    "principal": "usr-00503",
+    "date": "2023-04-22",
+    "true_label": "False Positive"
+  },
+  {
+    "alert_id": 27,
+    "principal": "usr-00611",
+    "date": "2023-03-18",
+    "true_label": "False Positive"
+  },
+  {
+    "alert_id": 28,
+    "principal": "usr-00277",
+    "date": "2023-02-21",
+    "true_label": "True Positive"
+  },
+  {
+    "alert_id": 29,
+    "principal": "usr-00973",
+    "date": "2023-04-05",
+    "true_label": "True Positive"
+  },
+  {
+    "alert_id": 30,
+    "principal": "usr-00376",
+    "date": "2023-05-03",
+    "true_label": "True Positive"
+  },
+  {
+    "alert_id": 31,
+    "principal": "usr-00971",
+    "date": "2023-03-25",
+    "true_label": "False Positive"
+  },
+  {
+    "alert_id": 32,
+    "principal": "usr-00076",
+    "date": "2023-01-07",
+    "true_label": "False Positive"
+  },
+  {
+    "alert_id": 33,
+    "principal": "usr-00293",
+    "date": "2023-01-21",
+    "true_label": "False Positive"
+  },
+  {
+    "alert_id": 34,
+    "principal": "usr-00294",
+    "date": "2023-02-07",
+    "true_label": "True Positive"
+  },
+  {
+    "alert_id": 35,
+    "principal": "usr-00388",
+    "date": "2023-06-30",
+    "true_label": "False Positive"
+  },
+  {
+    "alert_id": 36,
+    "principal": "usr-00883",
+    "date": "2023-06-30",
+    "true_label": "False Positive"
+  },
+  {
+    "alert_id": 37,
+    "principal": "usr-00401",
+    "date": "2023-06-30",
+    "true_label": "False Positive"
+  },
+  {
+    "alert_id": 38,
+    "principal": "usr-00629",
+    "date": "2023-06-30",
+    "true_label": "False Positive"
+  },
+  {
+    "alert_id": 39,
+    "principal": "usr-00465",
+    "date": "2023-06-30",
+    "true_label": "False Positive"
+  },
+  {
+    "alert_id": 40,
+    "principal": "usr-00268",
+    "date": "2023-06-30",
+    "true_label": "False Positive"
+  }
+]

@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Data (too large for git — regenerable via run_pipeline.py)
+data/processed/*.parquet
+data/features/*.parquet
+data/raw/
+
+# Models (too large — regenerable via run_pipeline.py)
+models/*.pkl
+
+# Results (large parquet — regenerable; keep CSV)
+results/*.parquet
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Env
+.env
+*.log
+volume/
+
+# Virtual environments
+venv/
+.venv/
+env/

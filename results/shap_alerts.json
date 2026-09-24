@@ -1,0 +1,165 @@
+{
+  "budget": 10,
+  "alerts": [
+    {
+      "rank": 1,
+      "principal": "usr-00027",
+      "date": "2023-01-14 00:00:00",
+      "score": 0.0,
+      "shap": {
+        "vol_events_per_day": -0.06635406129761738,
+        "div_unique_event_names": -0.5954825622529095,
+        "div_unique_sources": -1.9931875181790581,
+        "div_unique_regions": -1.8354839354453196,
+        "rar_fraction_rare_events": 0.0,
+        "tmp_after_hours_ratio": -1.5274723192304496,
+        "tmp_burst_std_minutes": -1.9562663264851545,
+        "err_error_rate": -1.7109066908139832
+      }
+    },
+    {
+      "rank": 2,
+      "principal": "usr-00269",
+      "date": "2023-04-21 00:00:00",
+      "score": 0.0,
+      "shap": {
+        "vol_events_per_day": -0.11585998855453074,
+        "div_unique_event_names": -1.3080493151172323,
+        "div_unique_sources": -2.335276390181095,
+        "div_unique_regions": -2.0620703643996356,
+        "rar_fraction_rare_events": 0.0,
+        "tmp_after_hours_ratio": -1.581475822044546,
+        "tmp_burst_std_minutes": -2.1277425395116043,
+        "err_error_rate": 0.15032100610410642
+      }
+    },
+    {
+      "rank": 3,
+      "principal": "usr-00274",
+      "date": "2023-06-30 00:00:00",
+      "score": 0.0,
+      "shap": {
+        "vol_events_per_day": -0.17014732579270647,
+        "div_unique_event_names": -1.263423728678354,
+        "div_unique_sources": -2.2041796993363407,
+        "div_unique_regions": -1.9425501831555116,
+        "rar_fraction_rare_events": 0.0,
+        "tmp_after_hours_ratio": -1.5328816717505769,
+        "tmp_burst_std_minutes": -0.28106892630767794,
+        "err_error_rate": -2.2709018786833743
+      }
+    },
+    {
+      "rank": 4,
+      "principal": "usr-00366",
+      "date": "2023-03-25 00:00:00",
+      "score": 0.0,
+      "shap": {
+        "vol_events_per_day": -0.176866052418888,
+        "div_unique_event_names": -1.3303957394536579,
+        "div_unique_sources": -2.3035702752569325,
+        "div_unique_regions": -2.0703685006691233,
+        "rar_fraction_rare_events": 0.0,
+        "tmp_after_hours_ratio": -1.5186376887308168,
+        "tmp_burst_std_minutes": -0.2792091727179289,
+        "err_error_rate": -2.2100690226692574
+      }
+    },
+    {
+      "rank": 5,
+      "principal": "usr-00394",
+      "date": "2023-03-14 00:00:00",
+      "score": 0.0,
+      "shap": {
+        "vol_events_per_day": -0.136296053519086,
+        "div_unique_event_names": -1.342711617230811,
+        "div_unique_sources": -2.3601299689817434,
+        "div_unique_regions": -2.0943812531911865,
+        "rar_fraction_rare_events": 0.0,
+        "tmp_after_hours_ratio": -1.437950904594699,
+        "tmp_burst_std_minutes": -2.120458336561501,
+        "err_error_rate": 0.15177472037448975
+      }
+    },
+    {
+      "rank": 6,
+      "principal": "usr-00394",
+      "date": "2023-05-26 00:00:00",
+      "score": 0.0,
+      "shap": {
+        "vol_events_per_day": -0.136296053519086,
+        "div_unique_event_names": -1.342711617230811,
+        "div_unique_sources": -2.3601299689817434,
+        "div_unique_regions": -2.0943812531911865,
+        "rar_fraction_rare_events": 0.0,
+        "tmp_after_hours_ratio": -1.437950904594699,
+        "tmp_burst_std_minutes": -2.120458336561501,
+        "err_error_rate": 0.15177472037448975
+      }
+    },
+    {
+      "rank": 7,
+      "principal": "usr-00774",
+      "date": "2023-01-04 00:00:00",
+      "score": 0.0,
+      "shap": {
+        "vol_events_per_day": -0.11378441723220374,
+        "div_unique_event_names": -1.3546990063839732,
+        "div_unique_sources": -2.3377583288727455,
+        "div_unique_regions": -2.071312916943553,
+        "rar_fraction_rare_events": 0.0,
+        "tmp_after_hours_ratio": -1.5800677990863274,
+        "tmp_burst_std_minutes": -1.9885909624553189,
+        "err_error_rate": 0.15106001726958
+      }
+    },
+    {
+      "rank": 8,
+      "principal": "usr-00774",
+      "date": "2023-01-26 00:00:00",
+      "score": 0.0,
+      "shap": {
+        "vol_events_per_day": -0.11586686933840624,
+        "div_unique_event_names": -1.2968936309175239,
+        "div_unique_sources": -2.33548134581045,
+        "div_unique_regions": -2.0620703643996356,
+        "rar_fraction_rare_events": 0.0,
+        "tmp_after_hours_ratio": -1.6028897248683271,
+        "tmp_burst_std_minutes": -2.1220059930413004,
+        "err_error_rate": 0.15005451467110417
+      }
+    },
+    {
+      "rank": 9,
+      "principal": "usr-00774",
+      "date": "2023-04-30 00:00:00",
+      "score": 0.0,
+      "shap": {
+        "vol_events_per_day": -0.10566506126608707,
+        "div_unique_event_names": -1.1440503959611275,
+        "div_unique_sources": -1.9052592336921315,
+        "div_unique_regions": -1.7248905165138038,
+        "rar_fraction_rare_events": 0.0,
+        "tmp_after_hours_ratio": -1.3823021302123943,
+        "tmp_burst_std_minutes": -1.6970100002954112,
+        "err_error_rate": -1.8559760757635386
+      }
+    },
+    {
+      "rank": 10,
+      "principal": "usr-00796",
+      "date": "2023-03-27 00:00:00",
+      "score": 0.0,
+      "shap": {
+        "vol_events_per_day": -0.10069984439661825,
+        "div_unique_event_names": -1.5203884423389253,
+        "div_unique_sources": -2.4545586075531642,
+        "div_unique_regions": -2.316300712406345,
+        "rar_fraction_rare_events": 0.0,
+        "tmp_after_hours_ratio": -0.0542341362366386,
+        "tmp_burst_std_minutes": -0.5724595841468707,
+        "err_error_rate": -2.275030828486435
+      }
+    }
+  ]
+}

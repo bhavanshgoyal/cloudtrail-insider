@@ -1,0 +1,568 @@
+{
+  "arm_a": [
+    {
+      "alert_id": 1,
+      "text": "Alert #1\n  Principal: usr-00521\n  Date: 2023-05-02\n  Anomaly Score: 0.9995\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 2,
+      "text": "Alert #2\n  Principal: usr-00165\n  Date: 2023-04-16\n  Anomaly Score: 0.9995\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 3,
+      "text": "Alert #3\n  Principal: usr-00323\n  Date: 2023-02-07\n  Anomaly Score: 0.9995\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 4,
+      "text": "Alert #4\n  Principal: usr-00235\n  Date: 2023-02-10\n  Anomaly Score: 0.9995\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 5,
+      "text": "Alert #5\n  Principal: usr-00883\n  Date: 2023-04-10\n  Anomaly Score: 0.9991\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 6,
+      "text": "Alert #6\n  Principal: usr-00651\n  Date: 2023-02-24\n  Anomaly Score: 0.9991\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 7,
+      "text": "Alert #7\n  Principal: usr-00636\n  Date: 2023-02-18\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 8,
+      "text": "Alert #8\n  Principal: usr-00366\n  Date: 2023-03-25\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 9,
+      "text": "Alert #9\n  Principal: usr-00346\n  Date: 2023-03-18\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 10,
+      "text": "Alert #10\n  Principal: usr-00696\n  Date: 2023-01-28\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 11,
+      "text": "Alert #11\n  Principal: usr-00647\n  Date: 2023-03-19\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 12,
+      "text": "Alert #12\n  Principal: usr-00831\n  Date: 2023-04-30\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 13,
+      "text": "Alert #13\n  Principal: usr-00294\n  Date: 2023-04-15\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 14,
+      "text": "Alert #14\n  Principal: usr-00264\n  Date: 2023-01-14\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 15,
+      "text": "Alert #15\n  Principal: usr-00511\n  Date: 2023-03-25\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 16,
+      "text": "Alert #16\n  Principal: usr-00089\n  Date: 2023-04-22\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 17,
+      "text": "Alert #17\n  Principal: usr-00944\n  Date: 2023-02-19\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 18,
+      "text": "Alert #18\n  Principal: usr-00366\n  Date: 2023-05-06\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 19,
+      "text": "Alert #19\n  Principal: usr-00018\n  Date: 2023-02-11\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 20,
+      "text": "Alert #20\n  Principal: usr-00213\n  Date: 2023-02-25\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 21,
+      "text": "Alert #21\n  Principal: usr-00863\n  Date: 2023-03-18\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 22,
+      "text": "Alert #22\n  Principal: usr-00616\n  Date: 2023-02-11\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 23,
+      "text": "Alert #23\n  Principal: usr-00875\n  Date: 2023-04-29\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 24,
+      "text": "Alert #24\n  Principal: usr-00245\n  Date: 2023-02-18\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 25,
+      "text": "Alert #25\n  Principal: usr-00451\n  Date: 2023-02-06\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 26,
+      "text": "Alert #26\n  Principal: usr-00503\n  Date: 2023-04-22\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 27,
+      "text": "Alert #27\n  Principal: usr-00611\n  Date: 2023-03-18\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 28,
+      "text": "Alert #28\n  Principal: usr-00277\n  Date: 2023-02-21\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 29,
+      "text": "Alert #29\n  Principal: usr-00973\n  Date: 2023-04-05\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 30,
+      "text": "Alert #30\n  Principal: usr-00376\n  Date: 2023-05-03\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 31,
+      "text": "Alert #31\n  Principal: usr-00971\n  Date: 2023-03-25\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 32,
+      "text": "Alert #32\n  Principal: usr-00076\n  Date: 2023-01-07\n  Anomaly Score: 0.9989\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 33,
+      "text": "Alert #33\n  Principal: usr-00293\n  Date: 2023-01-21\n  Anomaly Score: 0.9987\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 34,
+      "text": "Alert #34\n  Principal: usr-00294\n  Date: 2023-02-07\n  Anomaly Score: 0.9980\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 35,
+      "text": "Alert #35\n  Principal: usr-00388\n  Date: 2023-06-30\n  Anomaly Score: 0.9972\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 36,
+      "text": "Alert #36\n  Principal: usr-00883\n  Date: 2023-06-30\n  Anomaly Score: 0.9972\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 37,
+      "text": "Alert #37\n  Principal: usr-00401\n  Date: 2023-06-30\n  Anomaly Score: 0.9972\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 38,
+      "text": "Alert #38\n  Principal: usr-00629\n  Date: 2023-06-30\n  Anomaly Score: 0.9972\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 39,
+      "text": "Alert #39\n  Principal: usr-00465\n  Date: 2023-06-30\n  Anomaly Score: 0.9972\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 40,
+      "text": "Alert #40\n  Principal: usr-00268\n  Date: 2023-06-30\n  Anomaly Score: 0.9972\n\n  Is this a True Positive or False Positive? ___"
+    }
+  ],
+  "arm_b": [
+    {
+      "alert_id": 1,
+      "text": "Alert #1\n  Principal: usr-00521\n  Date: 2023-05-02\n  Anomaly Score: 0.9995\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 2,
+      "text": "Alert #2\n  Principal: usr-00165\n  Date: 2023-04-16\n  Anomaly Score: 0.9995\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 3,
+      "text": "Alert #3\n  Principal: usr-00323\n  Date: 2023-02-07\n  Anomaly Score: 0.9995\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 4,
+      "text": "Alert #4\n  Principal: usr-00235\n  Date: 2023-02-10\n  Anomaly Score: 0.9995\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 5,
+      "text": "Alert #5\n  Principal: usr-00883\n  Date: 2023-04-10\n  Anomaly Score: 0.9991\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 6,
+      "text": "Alert #6\n  Principal: usr-00651\n  Date: 2023-02-24\n  Anomaly Score: 0.9991\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 7,
+      "text": "Alert #7\n  Principal: usr-00636\n  Date: 2023-02-18\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 8,
+      "text": "Alert #8\n  Principal: usr-00366\n  Date: 2023-03-25\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 accessed multiple AWS services (unusual breadth) (contribution: -2.304)\n  \u2022 high rate of access-denied errors (contribution: -2.210)\n  \u2022 operated across multiple AWS regions (contribution: -2.070)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 9,
+      "text": "Alert #9\n  Principal: usr-00346\n  Date: 2023-03-18\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 10,
+      "text": "Alert #10\n  Principal: usr-00696\n  Date: 2023-01-28\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 11,
+      "text": "Alert #11\n  Principal: usr-00647\n  Date: 2023-03-19\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 12,
+      "text": "Alert #12\n  Principal: usr-00831\n  Date: 2023-04-30\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 13,
+      "text": "Alert #13\n  Principal: usr-00294\n  Date: 2023-04-15\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 14,
+      "text": "Alert #14\n  Principal: usr-00264\n  Date: 2023-01-14\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 15,
+      "text": "Alert #15\n  Principal: usr-00511\n  Date: 2023-03-25\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 16,
+      "text": "Alert #16\n  Principal: usr-00089\n  Date: 2023-04-22\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 17,
+      "text": "Alert #17\n  Principal: usr-00944\n  Date: 2023-02-19\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 18,
+      "text": "Alert #18\n  Principal: usr-00366\n  Date: 2023-05-06\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 accessed multiple AWS services (unusual breadth) (contribution: -2.304)\n  \u2022 high rate of access-denied errors (contribution: -2.210)\n  \u2022 operated across multiple AWS regions (contribution: -2.070)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 19,
+      "text": "Alert #19\n  Principal: usr-00018\n  Date: 2023-02-11\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 20,
+      "text": "Alert #20\n  Principal: usr-00213\n  Date: 2023-02-25\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 21,
+      "text": "Alert #21\n  Principal: usr-00863\n  Date: 2023-03-18\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 22,
+      "text": "Alert #22\n  Principal: usr-00616\n  Date: 2023-02-11\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 23,
+      "text": "Alert #23\n  Principal: usr-00875\n  Date: 2023-04-29\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 24,
+      "text": "Alert #24\n  Principal: usr-00245\n  Date: 2023-02-18\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 25,
+      "text": "Alert #25\n  Principal: usr-00451\n  Date: 2023-02-06\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 26,
+      "text": "Alert #26\n  Principal: usr-00503\n  Date: 2023-04-22\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 27,
+      "text": "Alert #27\n  Principal: usr-00611\n  Date: 2023-03-18\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 28,
+      "text": "Alert #28\n  Principal: usr-00277\n  Date: 2023-02-21\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 29,
+      "text": "Alert #29\n  Principal: usr-00973\n  Date: 2023-04-05\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 30,
+      "text": "Alert #30\n  Principal: usr-00376\n  Date: 2023-05-03\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 31,
+      "text": "Alert #31\n  Principal: usr-00971\n  Date: 2023-03-25\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 32,
+      "text": "Alert #32\n  Principal: usr-00076\n  Date: 2023-01-07\n  Anomaly Score: 0.9989\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 33,
+      "text": "Alert #33\n  Principal: usr-00293\n  Date: 2023-01-21\n  Anomaly Score: 0.9987\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 34,
+      "text": "Alert #34\n  Principal: usr-00294\n  Date: 2023-02-07\n  Anomaly Score: 0.9980\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 35,
+      "text": "Alert #35\n  Principal: usr-00388\n  Date: 2023-06-30\n  Anomaly Score: 0.9972\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 36,
+      "text": "Alert #36\n  Principal: usr-00883\n  Date: 2023-06-30\n  Anomaly Score: 0.9972\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 37,
+      "text": "Alert #37\n  Principal: usr-00401\n  Date: 2023-06-30\n  Anomaly Score: 0.9972\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 38,
+      "text": "Alert #38\n  Principal: usr-00629\n  Date: 2023-06-30\n  Anomaly Score: 0.9972\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 39,
+      "text": "Alert #39\n  Principal: usr-00465\n  Date: 2023-06-30\n  Anomaly Score: 0.9972\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    },
+    {
+      "alert_id": 40,
+      "text": "Alert #40\n  Principal: usr-00268\n  Date: 2023-06-30\n  Anomaly Score: 0.9972\n\n  WHY THIS WAS FLAGGED:\n  \u2022 (explanation not available)\n\n  Is this a True Positive or False Positive? ___"
+    }
+  ],
+  "answer_key": [
+    {
+      "alert_id": 1,
+      "principal": "usr-00521",
+      "date": "2023-05-02",
+      "true_label": "True Positive"
+    },
+    {
+      "alert_id": 2,
+      "principal": "usr-00165",
+      "date": "2023-04-16",
+      "true_label": "True Positive"
+    },
+    {
+      "alert_id": 3,
+      "principal": "usr-00323",
+      "date": "2023-02-07",
+      "true_label": "True Positive"
+    },
+    {
+      "alert_id": 4,
+      "principal": "usr-00235",
+      "date": "2023-02-10",
+      "true_label": "True Positive"
+    },
+    {
+      "alert_id": 5,
+      "principal": "usr-00883",
+      "date": "2023-04-10",
+      "true_label": "True Positive"
+    },
+    {
+      "alert_id": 6,
+      "principal": "usr-00651",
+      "date": "2023-02-24",
+      "true_label": "True Positive"
+    },
+    {
+      "alert_id": 7,
+      "principal": "usr-00636",
+      "date": "2023-02-18",
+      "true_label": "False Positive"
+    },
+    {
+      "alert_id": 8,
+      "principal": "usr-00366",
+      "date": "2023-03-25",
+      "true_label": "False Positive"
+    },
+    {
+      "alert_id": 9,
+      "principal": "usr-00346",
+      "date": "2023-03-18",
+      "true_label": "False Positive"
+    },
+    {
+      "alert_id": 10,
+      "principal": "usr-00696",
+      "date": "2023-01-28",
+      "true_label": "False Positive"
+    },
+    {
+      "alert_id": 11,
+      "principal": "usr-00647",
+      "date": "2023-03-19",
+      "true_label": "True Positive"
+    },
+    {
+      "alert_id": 12,
+      "principal": "usr-00831",
+      "date": "2023-04-30",
+      "true_label": "True Positive"
+    },
+    {
+      "alert_id": 13,
+      "principal": "usr-00294",
+      "date": "2023-04-15",
+      "true_label": "False Positive"
+    },
+    {
+      "alert_id": 14,
+      "principal": "usr-00264",
+      "date": "2023-01-14",
+      "true_label": "False Positive"
+    },
+    {
+      "alert_id": 15,
+      "principal": "usr-00511",
+      "date": "2023-03-25",
+      "true_label": "False Positive"
+    },
+    {
+      "alert_id": 16,
+      "principal": "usr-00089",
+      "date": "2023-04-22",
+      "true_label": "False Positive"
+    },
+    {
+      "alert_id": 17,
+      "principal": "usr-00944",
+      "date": "2023-02-19",
+      "true_label": "True Positive"
+    },
+    {
+      "alert_id": 18,
+      "principal": "usr-00366",
+      "date": "2023-05-06",
+      "true_label": "False Positive"
+    },
+    {
+      "alert_id": 19,
+      "principal": "usr-00018",
+      "date": "2023-02-11",
+      "true_label": "False Positive"
+    },
+    {
+      "alert_id": 20,
+      "principal": "usr-00213",
+      "date": "2023-02-25",
+      "true_label": "False Positive"
+    },
+    {
+      "alert_id": 21,
+      "principal": "usr-00863",
+      "date": "2023-03-18",
+      "true_label": "False Positive"
+    },
+    {
+      "alert_id": 22,
+      "principal": "usr-00616",
+      "date": "2023-02-11",
+      "true_label": "False Positive"
+    },
+    {
+      "alert_id": 23,
+      "principal": "usr-00875",
+      "date": "2023-04-29",
+      "true_label": "False Positive"
+    },
+    {
+      "alert_id": 24,
+      "principal": "usr-00245",
+      "date": "2023-02-18",
+      "true_label": "False Positive"
+    },
+    {
+      "alert_id": 25,
+      "principal": "usr-00451",
+      "date": "2023-02-06",
+      "true_label": "True Positive"
+    },
+    {
+      "alert_id": 26,
+      "principal": "usr-00503",
+      "date": "2023-04-22",
+      "true_label": "False Positive"
+    },
+    {
+      "alert_id": 27,
+      "principal": "usr-00611",
+      "date": "2023-03-18",
+      "true_label": "False Positive"
+    },
+    {
+      "alert_id": 28,
+      "principal": "usr-00277",
+      "date": "2023-02-21",
+      "true_label": "True Positive"
+    },
+    {
+      "alert_id": 29,
+      "principal": "usr-00973",
+      "date": "2023-04-05",
+      "true_label": "True Positive"
+    },
+    {
+      "alert_id": 30,
+      "principal": "usr-00376",
+      "date": "2023-05-03",
+      "true_label": "True Positive"
+    },
+    {
+      "alert_id": 31,
+      "principal": "usr-00971",
+      "date": "2023-03-25",
+      "true_label": "False Positive"
+    },
+    {
+      "alert_id": 32,
+      "principal": "usr-00076",
+      "date": "2023-01-07",
+      "true_label": "False Positive"
+    },
+    {
+      "alert_id": 33,
+      "principal": "usr-00293",
+      "date": "2023-01-21",
+      "true_label": "False Positive"
+    },
+    {
+      "alert_id": 34,
+      "principal": "usr-00294",
+      "date": "2023-02-07",
+      "true_label": "True Positive"
+    },
+    {
+      "alert_id": 35,
+      "principal": "usr-00388",
+      "date": "2023-06-30",
+      "true_label": "False Positive"
+    },
+    {
+      "alert_id": 36,
+      "principal": "usr-00883",
+      "date": "2023-06-30",
+      "true_label": "False Positive"
+    },
+    {
+      "alert_id": 37,
+      "principal": "usr-00401",
+      "date": "2023-06-30",
+      "true_label": "False Positive"
+    },
+    {
+      "alert_id": 38,
+      "principal": "usr-00629",
+      "date": "2023-06-30",
+      "true_label": "False Positive"
+    },
+    {
+      "alert_id": 39,
+      "principal": "usr-00465",
+      "date": "2023-06-30",
+      "true_label": "False Positive"
+    },
+    {
+      "alert_id": 40,
+      "principal": "usr-00268",
+      "date": "2023-06-30",
+      "true_label": "False Positive"
+    }
+  ]
+}

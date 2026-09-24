@@ -1,0 +1,72 @@
+rules:
+  - id: R001
+    description: "Root account credentials used"
+    severity: 5
+    finding_type: "PrivilegeEscalation:IAMUser/RootCredentialUsage"
+    condition: "principal == 'root'"
+
+  - id: R002
+    description: "Console login without MFA"
+    severity: 4
+    finding_type: "InitialAccess:IAMUser/ConsoleLoginWithoutMFA"
+    condition: "eventName == 'ConsoleLogin' and request_parameters_mfa_authenticated == False"
+
+  - id: R003
+    description: "Multiple AccessDenied followed by success within 5 minutes"
+    severity: 4
+    finding_type: "CredentialAccess:IAMUser/BruteForceSuccess"
+    condition: "err_error_rate > 0.5 and eventName == 'ConsoleLogin'"
+
+  - id: R004
+    description: "API call from a previously unseen region"
+    severity: 3
+    finding_type: "DefenseEvasion:IAMUser/UnseenRegion"
+    condition: "div_unique_regions > 3"
+
+  - id: R005
+    description: "Resource made public (ModifySnapshotAttribute or PutBucketPolicy)"
+    severity: 5
+    finding_type: "Exfiltration:S3/PublicExposure"
+    condition: "eventName in ('ModifySnapshotAttribute', 'PutBucketPolicy') and 'public' in request_parameters"
+
+  - id: R006
+    description: "CreateAccessKey for a different principal"
+    severity: 4
+    finding_type: "Persistence:IAMUser/CreateAccessKeyForOther"
+    condition: "eventName == 'CreateAccessKey'"
+
+  - id: R007
+    description: "AssumeRole into admin by non-admin"
+    severity: 5
+    finding_type: "PrivilegeEscalation:IAMUser/AssumeAdminRole"
+    condition: "eventName == 'AssumeRole' and role_name != 'admin' and 'admin' in request_parameters"
+
+  - id: R008
+    description: "Mass GetObject exceeding per-role threshold"
+    severity: 4
+    finding_type: "Collection:S3/MassGetObject"
+    condition: "eventName == 'GetObject' and vol_events_per_day > 100"
+
+  - id: R009
+    description: "CloudTrail logging disabled or deleted"
+    severity: 5
+    finding_type: "DefenseEvasion:CloudTrail/LoggingDisabled"
+    condition: "eventName in ('DeleteTrail', 'StopLogging')"
+
+  - id: R010
+    description: "SendEmail to large number of external recipients"
+    severity: 3
+    finding_type: "Exfiltration:SES/MassEmail"
+    condition: "eventName == 'SendEmail' and vol_events_per_day > 20"
+
+  - id: R011
+    description: "Console login outside historical hour range"
+    severity: 3
+    finding_type: "InitialAccess:IAMUser/AnomalousLoginTime"
+    condition: "eventName == 'ConsoleLogin' and tmp_after_hours_ratio > 0.5"
+
+  - id: R012
+    description: "New source IP country"
+    severity: 2
+    finding_type: "InitialAccess:IAMUser/UnseenCountry"
+    condition: "div_unique_sources > 5"
