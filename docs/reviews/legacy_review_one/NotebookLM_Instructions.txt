@@ -1,0 +1,26 @@
+# Context for NotebookLM: Review 1 Presentation
+
+**Project:** Insider-Threat Detection on Cloud Audit Logs at Operationally Realistic Alert Budgets
+**Goal:** Generate a Slide Deck Outline and Presenter Notes for an academic evaluation known as "Review 1".
+
+## Rubric Requirements for Review 1
+The presentation MUST explicitly hit these four points to score 10/10:
+
+1. **Literature Survey (3 marks):** 
+   - Must show a gap table of 12-15 recent papers (2021 onwards). 
+   - Must highlight the critical gap: Prior work ignores "alert fatigue" and strict daily operational budgets (using AUC-ROC instead of Precision@K).
+   - Source: `related_work.md`
+
+2. **Problem Statement and Hypothesis (2 marks):** 
+   - Must clearly restate the problem: Cloud anomaly detectors are useless if they flag thousands of noisy service accounts.
+   - Must include the falsifiable claim: "Per-principal conformal calibration with budget-aware incident aggregation increases detection rate at a budget of 10 alerts/day by at least 40% relative compared with an Isolation Forest baseline."
+   - Source: `README.md` and `PROJECT_EXPLANATION.md`
+
+3. **Testbed / Environment Evidence (3 marks):** 
+   - Must prove the environment runs and can simulate cloud data.
+   - Highlight that LocalStack is running healthy, S3 buckets are created, and we have a pipeline that successfully produces anomalies.
+   - Source: `testbed_evidence.txt`
+
+4. **Baseline Reproduced (2 marks):** 
+   - Must prove that the Isolation Forest baseline named in the hypothesis actually runs and produces numbers on our data.
+   - Source: `metrics.csv` (Show the rows for `isolation_forest`)

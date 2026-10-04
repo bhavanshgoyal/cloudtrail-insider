@@ -87,10 +87,15 @@ def main():
 
     if df_train.empty:
         log.warning("Train split empty — using full dataset")
-        df_train = df_feat.copy()
+        df_train = df_feat.copy().reset_index(drop=True)
+    else:
+        df_train = df_train.reset_index(drop=True)
+        
     if df_test.empty:
         log.warning("Test split empty — using full dataset")
-        df_test = df_feat.copy()
+        df_test = df_feat.copy().reset_index(drop=True)
+    else:
+        df_test = df_test.reset_index(drop=True)
 
     # Labels for test
     test_labels = df_test.merge(df_labels, on=["principal", "date"], how="left")
@@ -113,8 +118,8 @@ def main():
     split_idx = int(len(unique_dates) * (1.0 - cal_fraction))
     fit_dates = set(unique_dates[:split_idx])
     cal_dates = set(unique_dates[split_idx:])
-    df_fit = df_train[df_train["date"].isin(fit_dates)].copy()
-    df_cal = df_train[df_train["date"].isin(cal_dates)].copy()
+    df_fit = df_train[df_train["date"].isin(fit_dates)].copy().reset_index(drop=True)
+    df_cal = df_train[df_train["date"].isin(cal_dates)].copy().reset_index(drop=True)
 
     # Train per-family per-principal IF models
     family_models = {}
@@ -122,7 +127,7 @@ def main():
         fcols = _family_columns(feat_cols, family_name)
         if not fcols:
             continue
-        model = _PerPrincipalIF(n_estimators=n_estimators, contamination=contamination)
+        model = _PerPrincipalIF(n_estimators=n_estimators, contamination=contamination, seed=seed)
         model.fit(df_fit, fcols, min_events=min_events)
         family_models[family_name] = model
     log.info("Trained %d family models", len(family_models))

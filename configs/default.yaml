@@ -85,7 +85,7 @@ detectors:
     contamination:  0.05
     min_events:     30
 
-rules:
+rules_cfg:
   rules_file: "configs/rules.yaml"
 
 eval:

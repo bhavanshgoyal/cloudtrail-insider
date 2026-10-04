@@ -74,7 +74,8 @@ class _PerPrincipalIF:
     not the global population.
     """
 
-    def __init__(self, n_estimators: int = 100, contamination: float = 0.05) -> None:
+    def __init__(self, n_estimators: int = 100, contamination: float = 0.05, seed: int = 42) -> None:
+        self.seed = seed
         self.n_estimators = n_estimators
         self.contamination = contamination
         self._models: dict[str, IsolationForest] = {}
@@ -94,7 +95,7 @@ class _PerPrincipalIF:
             model = IsolationForest(
                 n_estimators=self.n_estimators,
                 contamination=self.contamination,
-                random_state=42,
+                random_state=self.seed,
                 n_jobs=-1,
             )
             model.fit(X_scaled)
@@ -287,6 +288,7 @@ class BudgetAwareConformal:
             model = _PerPrincipalIF(
                 n_estimators=self.n_estimators,
                 contamination=self.contamination,
+                seed=self.seed,
             )
             model.fit(df_fit, family_cols, min_events=self.min_events)
             self._family_models[family_name] = model
