@@ -1,0 +1,284 @@
+{
+ "n": 20,
+ "top1_in_named": 1.0,
+ "family_agreement": 1.0,
+ "per_alert": [
+  {
+   "principal": "usr-00628",
+   "date": "2023-06-19",
+   "shap_top": "res_sensitive_events",
+   "shap_top_family": "resource",
+   "named": [
+    "res_sensitive_events",
+    "res_sensitive_frac",
+    "res_unique_resources"
+   ],
+   "primary_family": "resource",
+   "top1_in_named": true,
+   "family_agrees": true
+  },
+  {
+   "principal": "usr-00430",
+   "date": "2023-06-17",
+   "shap_top": "tmp_weekend_events",
+   "shap_top_family": "temporal",
+   "named": [
+    "tmp_weekend_events",
+    "tmp_hour_deviation",
+    "tmp_active_hours"
+   ],
+   "primary_family": "temporal",
+   "top1_in_named": true,
+   "family_agrees": true
+  },
+  {
+   "principal": "usr-00502",
+   "date": "2023-05-27",
+   "shap_top": "tmp_weekend_events",
+   "shap_top_family": "temporal",
+   "named": [
+    "tmp_weekend_events",
+    "tmp_hour_deviation",
+    "tmp_after_hours_ratio"
+   ],
+   "primary_family": "temporal",
+   "top1_in_named": true,
+   "family_agrees": true
+  },
+  {
+   "principal": "usr-00495",
+   "date": "2023-06-28",
+   "shap_top": "res_external_writes",
+   "shap_top_family": "resource",
+   "named": [
+    "res_external_writes",
+    "res_sensitive_events",
+    "res_sensitive_frac"
+   ],
+   "primary_family": "resource",
+   "top1_in_named": true,
+   "family_agrees": true
+  },
+  {
+   "principal": "usr-00628",
+   "date": "2023-06-23",
+   "shap_top": "res_sensitive_frac",
+   "shap_top_family": "resource",
+   "named": [
+    "res_sensitive_frac",
+    "res_sensitive_events",
+    "res_unique_resources"
+   ],
+   "primary_family": "resource",
+   "top1_in_named": true,
+   "family_agrees": true
+  },
+  {
+   "principal": "usr-00908",
+   "date": "2023-06-19",
+   "shap_top": "idn_login_new_ip",
+   "shap_top_family": "identity",
+   "named": [
+    "idn_login_new_ip",
+    "idn_new_ips",
+    "idn_new_ip_events"
+   ],
+   "primary_family": "identity",
+   "top1_in_named": true,
+   "family_agrees": true
+  },
+  {
+   "principal": "usr-00316",
+   "date": "2023-05-24",
+   "shap_top": "res_sensitive_frac",
+   "shap_top_family": "resource",
+   "named": [
+    "res_sensitive_frac",
+    "res_sensitive_events"
+   ],
+   "primary_family": "resource",
+   "top1_in_named": true,
+   "family_agrees": true
+  },
+  {
+   "principal": "usr-00920",
+   "date": "2023-05-22",
+   "shap_top": "vol_events_per_day",
+   "shap_top_family": "volume",
+   "named": [
+    "vol_events_per_day",
+    "vol_get_object",
+    "div_unique_sources"
+   ],
+   "primary_family": "volume",
+   "top1_in_named": true,
+   "family_agrees": true
+  },
+  {
+   "principal": "usr-00570",
+   "date": "2023-06-14",
+   "shap_top": "res_sensitive_events",
+   "shap_top_family": "resource",
+   "named": [
+    "res_sensitive_events",
+    "res_sensitive_frac",
+    "res_new_resources"
+   ],
+   "primary_family": "resource",
+   "top1_in_named": true,
+   "family_agrees": true
+  },
+  {
+   "principal": "usr-00305",
+   "date": "2023-06-09",
+   "shap_top": "idn_logins_no_mfa",
+   "shap_top_family": "identity",
+   "named": [
+    "idn_logins_no_mfa",
+    "idn_login_failures",
+    "idn_unique_regions"
+   ],
+   "primary_family": "identity",
+   "top1_in_named": true,
+   "family_agrees": true
+  },
+  {
+   "principal": "usr-00570",
+   "date": "2023-06-05",
+   "shap_top": "res_sensitive_events",
+   "shap_top_family": "resource",
+   "named": [
+    "res_sensitive_events",
+    "res_sensitive_frac"
+   ],
+   "primary_family": "resource",
+   "top1_in_named": true,
+   "family_agrees": true
+  },
+  {
+   "principal": "usr-00034",
+   "date": "2023-05-22",
+   "shap_top": "res_sensitive_events",
+   "shap_top_family": "resource",
+   "named": [
+    "res_sensitive_events",
+    "res_sensitive_frac",
+    "res_unique_resources"
+   ],
+   "primary_family": "resource",
+   "top1_in_named": true,
+   "family_agrees": true
+  },
+  {
+   "principal": "usr-00858",
+   "date": "2023-06-06",
+   "shap_top": "res_sensitive_events",
+   "shap_top_family": "resource",
+   "named": [
+    "res_sensitive_events",
+    "res_sensitive_frac",
+    "res_new_resources"
+   ],
+   "primary_family": "resource",
+   "top1_in_named": true,
+   "family_agrees": true
+  },
+  {
+   "principal": "usr-00522",
+   "date": "2023-06-22",
+   "shap_top": "vol_events_per_day",
+   "shap_top_family": "volume",
+   "named": [
+    "vol_events_per_day",
+    "vol_get_object",
+    "vol_log_bytes"
+   ],
+   "primary_family": "volume",
+   "top1_in_named": true,
+   "family_agrees": true
+  },
+  {
+   "principal": "usr-00291",
+   "date": "2023-05-22",
+   "shap_top": "idn_new_ip_events",
+   "shap_top_family": "identity",
+   "named": [
+    "idn_new_ip_events",
+    "idn_new_ips",
+    "idn_login_new_ip"
+   ],
+   "primary_family": "identity",
+   "top1_in_named": true,
+   "family_agrees": true
+  },
+  {
+   "principal": "usr-00631",
+   "date": "2023-06-18",
+   "shap_top": "tmp_weekend_events",
+   "shap_top_family": "temporal",
+   "named": [
+    "tmp_weekend_events",
+    "tmp_active_hours",
+    "tmp_hour_deviation"
+   ],
+   "primary_family": "temporal",
+   "top1_in_named": true,
+   "family_agrees": true
+  },
+  {
+   "principal": "usr-00287",
+   "date": "2023-06-20",
+   "shap_top": "res_sensitive_frac",
+   "shap_top_family": "resource",
+   "named": [
+    "res_sensitive_frac",
+    "res_sensitive_events"
+   ],
+   "primary_family": "resource",
+   "top1_in_named": true,
+   "family_agrees": true
+  },
+  {
+   "principal": "usr-00205",
+   "date": "2023-06-05",
+   "shap_top": "idn_login_new_ip",
+   "shap_top_family": "identity",
+   "named": [
+    "idn_login_new_ip",
+    "idn_new_ips",
+    "idn_new_ip_events"
+   ],
+   "primary_family": "identity",
+   "top1_in_named": true,
+   "family_agrees": true
+  },
+  {
+   "principal": "usr-00570",
+   "date": "2023-06-16",
+   "shap_top": "res_sensitive_events",
+   "shap_top_family": "resource",
+   "named": [
+    "res_sensitive_events",
+    "res_sensitive_frac",
+    "res_unique_resources"
+   ],
+   "primary_family": "resource",
+   "top1_in_named": true,
+   "family_agrees": true
+  },
+  {
+   "principal": "usr-00495",
+   "date": "2023-06-09",
+   "shap_top": "res_sensitive_events",
+   "shap_top_family": "resource",
+   "named": [
+    "res_sensitive_events",
+    "res_sensitive_frac",
+    "res_priv_esc_events"
+   ],
+   "primary_family": "resource",
+   "top1_in_named": true,
+   "family_agrees": true
+  }
+ ]
+}

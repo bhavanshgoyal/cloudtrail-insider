@@ -1,40 +1,45 @@
 """
 cti.detectors.proposed
 ----------------------
-BudgetAwareConformal — the proposed insider-threat detector.
+BudgetAwareConformal - the proposed insider-threat detector.
 
-Architecture (four ablatable components)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-C1  Per-family surprisal
-    For each feature family (volume, diversity/rarity, temporal/error),
-    fit a per-principal Isolation Forest.  The anomaly score of an event
-    is relative to *that principal's own history*, not the global
-    population.
+Four ablatable components
+~~~~~~~~~~~~~~~~~~~~~~~~~
+C1  Per-principal surprisal
+    Every feature is compared with *that principal's own* history: a robust
+    z-score ``(x - median_p) / scale_p`` using median / MAD of the principal's
+    fit-window rows, shrunk towards the population for principals with short
+    histories (cold start) and floored by a population scale so a feature
+    that has never varied does not explode. Only increases count
+    (one-sided). Per-feature z-scores are the per-feature attribution used
+    by the explanations (O3). Ablation ``per_principal=False`` replaces the
+    principal baseline with the population baseline.
 
-C2  Conformal calibration
-    Convert each per-family raw score into a conformal p-value using the
-    principal's own calibration window, so scores from different
-    principals live on the same [0, 1] scale.
+C2  Pooled conformal calibration
+    Within each feature family (identity / resource / temporal / volume) the
+    z-scores are combined into a family score; the family score is turned into
+    a conformal p-value against a **pooled** calibration set: the family
+    scores of every principal on the last ``cal_fraction`` of the fit window,
+    scored with baselines estimated on the earlier part only (so calibration
+    rows are held out). Because scores are already normalised per principal,
+    pooling makes p-values comparable across principals *and* gives them
+    resolution (~1/20000 instead of the 1/31 floor of a 30-row
+    per-principal calibration set). Ablation ``calibrate=False`` sums the raw
+    family scores instead.
 
-C3  Fisher fusion
-    Combine per-family p-values via Fisher's method into a single
-    chi-squared statistic.  An event that is mildly unusual in *three*
-    ways simultaneously is flagged even if no single family would
-    trigger alone.
+C3  Fusion
+    Family p-values are fused (Fisher by default; ``min_p`` / ``harmonic`` /
+    ``stouffer`` for ablation) and returned as ``-log10(fused p)`` so the
+    score never saturates.
 
-C4  Budget-aware incident selector
-    Aggregate event-level fused scores into per-principal-per-day
-    incident scores.  Rank incidents globally and suppress duplicate
-    principals across consecutive days so the alert budget is spent on
-    *distinct insider candidates*.
+C4  Budget-aware alert selection
+    ``suppress_days``: the evaluator drops a principal already alerted in the
+    previous N days so the daily budget goes to distinct candidates
+    (see ``cti.eval.evaluate.emit_alerts``).
 
-Why this beats Isolation Forest at k = 10
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-IF scores on one global scale, so inherently noisy principals
-(service accounts doing 500 events/day) monopolise the top of the
-ranked list.  BudgetAwareConformal scores each event relative to its
-own principal's baseline, making the top-10 list diverse and
-actionable.
+``explain`` returns, per row, the family p-values, the primary deviating
+family and its top-k features with today's value and the principal's usual
+value - the material for the alert card (O3).
 """
 from __future__ import annotations
 
@@ -43,322 +48,212 @@ from typing import Optional
 
 import numpy as np
 import pandas as pd
-from scipy.stats import chi2
-from sklearn.ensemble import IsolationForest
-from sklearn.preprocessing import StandardScaler
+from scipy import stats
 
-from cti.features.pipeline import FAMILY_PREFIXES
+from cti.features.pipeline import FAMILY_PREFIXES, family_columns, feature_columns
 
 log = logging.getLogger(__name__)
 
-# ── Feature family definitions ───────────────────────────────────────────
-# Single source of truth: cti.features.pipeline.FAMILY_PREFIXES
-# (identity / resource / temporal / volume).
-_FAMILIES = {name: list(prefixes) for name, prefixes in FAMILY_PREFIXES.items()}
+_MAD_K = 1.4826                       # MAD -> standard deviation for a normal distribution
+
+DEFAULTS = dict(
+    cal_fraction=0.3,                 # last share of the fit window used for C2 calibration
+    family_agg="l2",                  # l2 | max | sum   (z-scores -> family score)
+    fusion="fisher",                  # fisher | min_p | harmonic | stouffer
+    per_principal=True,               # C1 on/off
+    calibrate=True,                   # C2 on/off
+    transform="log1p",                # log1p | none  (features are non-negative counts / rates)
+    scale_alpha=0.5,                  # weight of the population scale floor
+    shrink_k=10.0,                    # pseudo-days of population prior for short histories
+    families=list(FAMILY_PREFIXES),   # which families to use (feature-family ablation)
+    suppress_days=3,                  # C4
+)
 
 
-def _family_columns(feat_cols: list[str], family: str) -> list[str]:
-    """Return feature columns belonging to a family."""
-    prefixes = _FAMILIES[family]
-    return [c for c in feat_cols if any(c.startswith(p) for p in prefixes)]
+# ---------------------------------------------------------------------------
+# Fusion rules (p-value matrix -> -log10 fused p)
+# ---------------------------------------------------------------------------
+def fuse(pvals: np.ndarray, method: str) -> np.ndarray:
+    """Combine per-family p-values (n x k) into one score = -log10(fused p)."""
+    p = np.clip(pvals, 1e-300, 1.0)
+    k = p.shape[1]
+    if method == "fisher":
+        stat = -2.0 * np.log(p).sum(axis=1)
+        return -stats.chi2.logsf(stat, df=2 * k) / np.log(10)
+    if method == "min_p":                                   # Bonferroni-adjusted minimum
+        return -np.log10(np.minimum(p.min(axis=1) * k, 1.0))
+    if method == "harmonic":                                # harmonic mean p (un-adjusted)
+        return -np.log10(np.minimum(k / (1.0 / p).sum(axis=1), 1.0))
+    if method == "stouffer":
+        z = stats.norm.isf(p).sum(axis=1) / np.sqrt(k)
+        return -stats.norm.logsf(z) / np.log(10)
+    raise ValueError(f"unknown fusion method {method!r}")
 
 
-# ── C1: Per-principal per-family surprisal ───────────────────────────────
-
-class _PerPrincipalIF:
-    """Train one small Isolation Forest per principal per family.
-
-    Each principal gets its own StandardScaler + IsolationForest so that
-    anomaly scores reflect deviations from *that principal's own* baseline,
-    not the global population.
-    """
-
-    def __init__(self, n_estimators: int = 100, contamination: float = 0.05, seed: int = 42) -> None:
-        self.seed = seed
-        self.n_estimators = n_estimators
-        self.contamination = contamination
-        self._models: dict[str, IsolationForest] = {}
-        self._scalers: dict[str, StandardScaler] = {}
-
-    def fit(self, df: pd.DataFrame, family_cols: list[str], min_events: int = 30) -> "_PerPrincipalIF":
-        df = df.reset_index(drop=True)
-        # Adaptively lower threshold if dataset is small
-        effective_min = max(5, min(min_events, len(df) // max(1, df["principal"].nunique()) // 2))
-        for principal, group in df.groupby("principal"):
-            if len(group) < effective_min:
-                continue
-            X = group[family_cols].to_numpy(dtype=np.float32)
-            # Per-principal standardisation
-            scaler = StandardScaler()
-            X_scaled = scaler.fit_transform(X)
-            model = IsolationForest(
-                n_estimators=self.n_estimators,
-                contamination=self.contamination,
-                random_state=self.seed,
-                n_jobs=1,          # tiny per-principal forests: thread start-up dominates otherwise
-            )
-            model.fit(X_scaled)
-            self._models[principal] = model
-            self._scalers[principal] = scaler
-        log.info("Fitted per-principal IF for %d principals (min_events=%d)",
-                 len(self._models), effective_min)
-        return self
-
-    def score(self, df: pd.DataFrame, family_cols: list[str]) -> np.ndarray:
-        """Return per-row anomaly scores (higher = more anomalous)."""
-        df = df.reset_index(drop=True)
-        scores = np.zeros(len(df), dtype=np.float64)
-        for principal, group in df.groupby("principal"):
-            idx = group.index.to_numpy()  # Now guaranteed 0-based after reset
-            X = group[family_cols].to_numpy(dtype=np.float32)
-            if principal in self._models:
-                X_scaled = self._scalers[principal].transform(X)
-                # Negate so higher = more anomalous
-                scores[idx] = -self._models[principal].score_samples(X_scaled)
-            else:
-                # Principal not seen in training — assign moderate score
-                scores[idx] = 0.5
-        return scores
+def conformal_pvalues(scores: np.ndarray, cal_sorted: np.ndarray) -> np.ndarray:
+    """p = (1 + #{cal >= s}) / (n_cal + 1) against a sorted calibration sample."""
+    n = len(cal_sorted)
+    ge = n - np.searchsorted(cal_sorted, scores, side="left")
+    return (1.0 + ge) / (n + 1.0)
 
 
-# ── C2: Conformal calibration ───────────────────────────────────────────
-
-def _conformal_pvalues(
-    scores: np.ndarray,
-    principals: np.ndarray,
-    calibration_scores: dict[str, np.ndarray],
-) -> np.ndarray:
-    """Convert raw anomaly scores to conformal p-values.
-
-    For each event, the p-value is the fraction of calibration scores
-    from the *same principal* that are >= the test score.  Lower p-value
-    means more anomalous (less conforming).
-    """
-    pvals = np.ones(len(scores), dtype=np.float64)
-    for i, (score, principal) in enumerate(zip(scores, principals)):
-        cal = calibration_scores.get(principal)
-        if cal is not None and len(cal) > 0:
-            # Fraction of calibration scores >= this score
-            pvals[i] = (np.sum(cal >= score) + 1) / (len(cal) + 1)
-        else:
-            pvals[i] = 0.5  # Unknown principal — neutral
-    return pvals
-
-
-# ── C3: Fisher fusion ───────────────────────────────────────────────────
-
-def _fisher_fusion(pval_matrix: np.ndarray) -> np.ndarray:
-    """Combine per-family p-values via Fisher's method.
-
-    Parameters
-    ----------
-    pval_matrix : ndarray of shape (n_samples, n_families)
-        Each column is a vector of p-values from one family.
-
-    Returns
-    -------
-    ndarray of shape (n_samples,)
-        Fused anomaly scores (higher = more anomalous).
-        Specifically: -2 * sum(ln(p)), which follows chi2(2k) under H0.
-    """
-    # Clip to avoid log(0)
-    pval_matrix = np.clip(pval_matrix, 1e-15, 1.0)
-    k = pval_matrix.shape[1]
-    stat = -2.0 * np.sum(np.log(pval_matrix), axis=1)
-    # Convert chi2 statistic to a p-value (lower = more anomalous),
-    # then negate so higher = more anomalous
-    fused_pval = chi2.sf(stat, df=2 * k)
-    # Return 1 - p so that higher = more anomalous
-    return 1.0 - fused_pval
-
-
-# ── C4: Budget-aware incident selector ──────────────────────────────────
-
-def _incident_aggregation(
-    df_scored: pd.DataFrame,
-    score_col: str = "fused_score",
-    suppress_days: int = 3,
-) -> pd.DataFrame:
-    """Aggregate event-level scores into per-principal-per-day incidents.
-
-    For each (principal, date) pair, the incident score is the maximum
-    fused score.  Then suppress duplicate principals within
-    ``suppress_days`` consecutive days so the budget is spent on
-    distinct insider candidates.
-    """
-    # Aggregate: max score per principal per day
-    incidents = (
-        df_scored.groupby(["principal", "date"])[score_col]
-        .max()
-        .reset_index()
-        .rename(columns={score_col: "incident_score"})
-    )
-    incidents = incidents.sort_values("incident_score", ascending=False).reset_index(drop=True)
-
-    # Suppress: remove duplicate principals within suppress_days
-    seen: dict[str, pd.Timestamp] = {}
-    keep = []
-    for _, row in incidents.iterrows():
-        principal = row["principal"]
-        date = pd.Timestamp(row["date"])
-        if principal in seen:
-            last_date = seen[principal]
-            if abs((date - last_date).days) <= suppress_days:
-                continue
-        seen[principal] = date
-        keep.append(row)
-
-    if keep:
-        return pd.DataFrame(keep).reset_index(drop=True)
-    return incidents.head(0)
-
-
-# ── Main detector class ─────────────────────────────────────────────────
-
+# ---------------------------------------------------------------------------
+# Detector
+# ---------------------------------------------------------------------------
 class BudgetAwareConformal:
-    """Proposed detector: per-principal conformal calibration with
-    Fisher fusion and budget-aware incident selection.
+    """Proposed detector. See module docstring."""
 
-    This detector implements four components (C1–C4) that can be
-    individually ablated via the ``ablation`` parameter.
-    """
-
-    def __init__(self, cfg: dict, seed: int) -> None:
-        self.name = "proposed_budget_aware_conformal"
-        self.seed = seed
-        self.cfg = cfg
-
-        det_cfg = cfg.get("detectors", {}).get("proposed", {})
-        self.suppress_days = cfg.get("suppress_days", 3)
-        self.min_events = det_cfg.get("min_events", 30)
-        self.n_estimators = det_cfg.get("n_estimators", 100)
-        self.contamination = det_cfg.get("contamination", 0.05)
-        self.cal_fraction = det_cfg.get("cal_fraction", 0.3)
-
-        # Per-family per-principal IF models
-        self._family_models: dict[str, _PerPrincipalIF] = {}
-        # Calibration scores per family per principal
-        self._calibration_scores: dict[str, dict[str, np.ndarray]] = {}
-        self._feat_cols: list[str] = []
-        self._fitted = False
-
+    name = "proposed_budget_aware_conformal"
     needs_events = False
 
-    def fit(self, df_feat: pd.DataFrame, events: Optional[pd.DataFrame] = None) -> "BudgetAwareConformal":
-        """Fit on the TRAIN window.
+    def __init__(self, cfg: dict, seed: int, **overrides) -> None:
+        self.seed = seed
+        unknown = set(overrides) - set(DEFAULTS)
+        if unknown:
+            raise ValueError(f"unknown proposed-detector options: {sorted(unknown)}")
+        p = dict(DEFAULTS)
+        p.update({k: v for k, v in cfg.get("detectors", {}).get("proposed", {}).items() if k in DEFAULTS})
+        p.update(overrides)
+        self.params = p
+        self.suppress_days = int(p["suppress_days"])
+        self._fitted = False
 
-        Parameters
-        ----------
-        df_feat : pd.DataFrame
-            Train-window feature rows with 'principal' and 'date' columns.
-        events : ignored (interface compatibility).
-        """
-        self._feat_cols = [c for c in df_feat.columns if c not in {"principal", "date"}]
+    # -- C1: baselines -------------------------------------------------------
+    def _t(self, X: np.ndarray) -> np.ndarray:
+        return np.log1p(np.maximum(X, 0.0)) if self.params["transform"] == "log1p" else X
 
-        # ── Temporal split: 70 % fit / 30 % calibration ─────────────
-        # Calibration scores MUST come from data the IF models have NOT
-        # seen, otherwise the conformal p-values collapse to near-uniform
-        # and Fisher fusion produces no signal.
-        unique_dates = sorted(df_feat["date"].unique())
-        split_idx = int(len(unique_dates) * (1.0 - self.cal_fraction))
-        fit_dates = set(unique_dates[:split_idx])
-        cal_dates = set(unique_dates[split_idx:])
-        df_fit = df_feat[df_feat["date"].isin(fit_dates)].copy()
-        df_cal = df_feat[df_feat["date"].isin(cal_dates)].copy()
-        log.info("Fit/cal split: %d fit days, %d cal days (%d / %d rows)",
-                 len(fit_dates), len(cal_dates), len(df_fit), len(df_cal))
+    def _inv_t(self, X: np.ndarray) -> np.ndarray:
+        return np.expm1(X) if self.params["transform"] == "log1p" else X
 
-        # C1: Fit per-family per-principal IF models on fit split only
-        for family_name in _FAMILIES:
-            family_cols = _family_columns(self._feat_cols, family_name)
-            if not family_cols:
-                log.warning("No columns for family '%s'", family_name)
-                continue
+    def _baselines(self, df: pd.DataFrame) -> None:
+        """Per-principal median / scale (shrunk to the population) from ``df``."""
+        X = self._t(df[self.feat_cols].to_numpy(dtype=np.float64))
+        pop_med = np.median(X, axis=0)
+        g = df["principal"].to_numpy()
+        order = np.argsort(g, kind="stable")
+        g_s, X_s = g[order], X[order]
+        uniq, start, counts = np.unique(g_s, return_index=True, return_counts=True)
 
-            model = _PerPrincipalIF(
-                n_estimators=self.n_estimators,
-                contamination=self.contamination,
-                seed=self.seed,
-            )
-            model.fit(df_fit, family_cols, min_events=self.min_events)
-            self._family_models[family_name] = model
+        med = np.empty((len(uniq), X.shape[1]))
+        mad = np.empty_like(med)
+        for i, (st, c) in enumerate(zip(start, counts)):
+            block = X_s[st:st + c]
+            m = np.median(block, axis=0)
+            med[i] = m
+            mad[i] = np.median(np.abs(block - m), axis=0)
 
-        # C2: Build calibration scores on HELD-OUT calibration split
-        df_cal_reset = df_cal.reset_index(drop=True)
-        for family_name, model in self._family_models.items():
-            family_cols = _family_columns(self._feat_cols, family_name)
-            raw_scores = model.score(df_cal_reset, family_cols)
+        # population scale: robust spread of within-principal residuals
+        resid = np.abs(X_s - np.repeat(med, counts, axis=0))
+        pop_scale = _MAD_K * np.median(resid, axis=0)
+        fallback = resid.mean(axis=0)
+        pop_scale = np.where(pop_scale > 0, pop_scale, np.where(fallback > 0, fallback, 1.0))
 
-            cal_scores: dict[str, np.ndarray] = {}
-            for principal, group in df_cal_reset.groupby("principal"):
-                idx = group.index.to_numpy()
-                cal_scores[principal] = raw_scores[idx]
-            self._calibration_scores[family_name] = cal_scores
+        if not self.params["per_principal"]:            # ablation: everybody gets the population baseline
+            med[:] = pop_med
+            mad[:] = pop_scale / _MAD_K
 
+        alpha = self.params["scale_alpha"]
+        w = (counts / (counts + self.params["shrink_k"]))[:, None]
+        self._med = w * med + (1 - w) * pop_med
+        self._scale = np.sqrt((w * _MAD_K * mad + (1 - w) * pop_scale) ** 2 + (alpha * pop_scale) ** 2)
+        self._pop_med = pop_med                           # for principals never seen in the fit window
+        self._pop_scale = np.sqrt(pop_scale ** 2 + (alpha * pop_scale) ** 2)
+        self._index = {p: i for i, p in enumerate(uniq)}
+
+    def _lookup(self, principals: np.ndarray) -> np.ndarray:
+        return np.array([self._index.get(p, -1) for p in principals])
+
+    def _z(self, df: pd.DataFrame) -> np.ndarray:
+        X = self._t(df[self.feat_cols].to_numpy(dtype=np.float64))
+        idx = self._lookup(df["principal"].to_numpy())
+        known = (idx >= 0)[:, None]
+        med = np.where(known, self._med[np.maximum(idx, 0)], self._pop_med)
+        scale = np.where(known, self._scale[np.maximum(idx, 0)], self._pop_scale)
+        return np.maximum((X - med) / scale, 0.0)            # one-sided: only increases are suspicious
+
+    def _family_scores(self, z: np.ndarray) -> np.ndarray:
+        agg = self.params["family_agg"]
+        cols = []
+        for fam in self.families:
+            zf = z[:, self._fam_idx[fam]]
+            if agg == "l2":
+                cols.append(np.sqrt((zf ** 2).sum(axis=1)))
+            elif agg == "max":
+                cols.append(zf.max(axis=1))
+            elif agg == "sum":
+                cols.append(zf.sum(axis=1))
+            else:
+                raise ValueError(f"unknown family_agg {agg!r}")
+        return np.column_stack(cols)
+
+    # -- fit -----------------------------------------------------------------
+    def fit(self, df_feat: pd.DataFrame, events: Optional[pd.DataFrame] = None) -> "BudgetAwareConformal":  # noqa: ARG002
+        """Fit on the fit window (train, or train+val for the final test run)."""
+        all_cols = feature_columns(df_feat)
+        self.families = [f for f in self.params["families"] if family_columns(all_cols, f)]
+        if not self.families:
+            raise ValueError("no feature family left to score")
+        self.feat_cols, self._fam_idx, pos = [], {}, 0
+        for f in self.families:
+            cols = family_columns(all_cols, f)
+            self.feat_cols += cols
+            self._fam_idx[f] = np.arange(pos, pos + len(cols))
+            pos += len(cols)
+
+        days = np.sort(df_feat["date"].unique())
+        cut = days[int(len(days) * (1.0 - self.params["cal_fraction"]))]
+        early, late = df_feat[df_feat["date"] < cut], df_feat[df_feat["date"] >= cut]
+        if early.empty or late.empty:
+            raise ValueError("fit window too short for the calibration split")
+
+        # C2: baselines from the early part, calibration = family scores of the held-out late part.
+        # Scoring later uses these SAME baselines, so test scores and calibration scores are
+        # produced by the same function (the exchangeability split-conformal relies on).
+        self._baselines(early)
+        cal = self._family_scores(self._z(late))
+        self._cal_sorted = [np.sort(cal[:, j]) for j in range(cal.shape[1])]
         self._fitted = True
-        log.info("BudgetAwareConformal fitted with %d families", len(self._family_models))
+        log.info("BudgetAwareConformal: %d principals, %d features / %d families, %d calibration rows",
+                 len(self._index), len(self.feat_cols), len(self.families), len(late))
         return self
 
-    def score(self, df_feat: pd.DataFrame, events: Optional[pd.DataFrame] = None) -> np.ndarray:
-        """Per-row fused anomaly score (higher = more anomalous)."""
+    # -- score ---------------------------------------------------------------
+    def family_pvalues(self, df_feat: pd.DataFrame) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """(z-scores, family scores, family p-values) for ``df_feat`` rows."""
         if not self._fitted:
-            raise RuntimeError("Detector not fitted. Call fit() first.")
+            raise RuntimeError("detector not fitted")
+        z = self._z(df_feat)
+        fs = self._family_scores(z)
+        pv = np.column_stack([conformal_pvalues(fs[:, j], self._cal_sorted[j]) for j in range(fs.shape[1])])
+        return z, fs, pv
 
-        feat_cols = [c for c in df_feat.columns if c not in {"principal", "date"}]
-        df_feat = df_feat.reset_index(drop=True)
-        principals = df_feat["principal"].to_numpy()
-        n = len(df_feat)
+    def score(self, df_feat: pd.DataFrame, events: Optional[pd.DataFrame] = None) -> np.ndarray:  # noqa: ARG002
+        """Per-row anomaly score (higher = more anomalous)."""
+        _, fs, pv = self.family_pvalues(df_feat)
+        if not self.params["calibrate"]:                   # ablation: no calibration, raw family scores
+            return fs.sum(axis=1)
+        return fuse(pv, self.params["fusion"])
 
-        # C1: Per-family surprisal scores
-        family_scores = {}
-        for family_name, model in self._family_models.items():
-            family_cols = _family_columns(feat_cols, family_name)
-            if family_cols:
-                family_scores[family_name] = model.score(df_feat, family_cols)
-
-        if not family_scores:
-            return np.zeros(n)
-
-        # C2: Convert to conformal p-values
-        pval_matrix = np.ones((n, len(family_scores)), dtype=np.float64)
-        for j, (family_name, scores) in enumerate(family_scores.items()):
-            cal = self._calibration_scores.get(family_name, {})
-            pval_matrix[:, j] = _conformal_pvalues(scores, principals, cal)
-
-        # C3: Fisher fusion
-        fused = _fisher_fusion(pval_matrix)
-
-        return fused
-
-    def score_and_select(
-        self,
-        df_feat: pd.DataFrame,
-        budget: int = 10,
-    ) -> pd.DataFrame:
-        """Full pipeline: score → fuse → aggregate → select top incidents.
-
-        Parameters
-        ----------
-        df_feat : pd.DataFrame
-            Test feature matrix with 'principal' and 'date' columns.
-        budget : int
-            Number of alerts to emit.
-
-        Returns
-        -------
-        pd.DataFrame
-            Top incidents ranked by fused score, limited to ``budget``.
-        """
-        fused_scores = self.score(df_feat)
-
-        df_scored = df_feat[["principal", "date"]].copy()
-        df_scored["fused_score"] = fused_scores
-
-        # C4: Budget-aware incident selection
-        incidents = _incident_aggregation(
-            df_scored,
-            score_col="fused_score",
-            suppress_days=self.suppress_days,
-        )
-
-        return incidents.head(budget)
+    # -- O3: explanations ----------------------------------------------------
+    def explain(self, df_feat: pd.DataFrame, top_k: int = 3) -> list[dict]:
+        """Structured per-row explanation: family p-values, primary family, top features."""
+        z, fs, pv = self.family_pvalues(df_feat)
+        X = df_feat[self.feat_cols].to_numpy(dtype=np.float64)
+        idx = self._lookup(df_feat["principal"].to_numpy())
+        usual = self._inv_t(np.where((idx >= 0)[:, None], self._med[np.maximum(idx, 0)], self._pop_med))
+        out = []
+        for i in range(len(df_feat)):
+            order_f = np.argsort(pv[i], kind="stable")
+            primary = self.families[order_f[0]]
+            fidx = self._fam_idx[primary]
+            top = fidx[np.argsort(-z[i, fidx], kind="stable")][:top_k]
+            out.append(dict(
+                principal=str(df_feat["principal"].iloc[i]),
+                date=str(pd.Timestamp(df_feat["date"].iloc[i]).date()),
+                primary_family=primary,
+                family_pvalues={f: float(pv[i, j]) for j, f in enumerate(self.families)},
+                secondary_families=[self.families[j] for j in order_f[1:] if pv[i, j] < 0.01],
+                top_features=[dict(feature=self.feat_cols[c], z=float(z[i, c]), value=float(X[i, c]),
+                                   usual=float(usual[i, c])) for c in top if z[i, c] > 0],
+            ))
+        return out

@@ -84,6 +84,7 @@ class IsoForestDetector(_FeatureDetector):
         dc = cfg["detectors"]["isolation_forest"]
         self._model = IsolationForest(
             n_estimators=dc["n_estimators"], contamination=dc["contamination"],
+            max_samples=dc.get("max_samples", "auto"),
             max_features=dc["max_features"], bootstrap=dc["bootstrap"],
             random_state=seed, n_jobs=-1)
 

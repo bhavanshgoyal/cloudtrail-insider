@@ -244,6 +244,7 @@ class RuleBaselineDetector:
 
     name = "rule_baseline"
     needs_events = True
+    abstains = True          # score 0 (no rule fired) means "no alert", not "lowest-ranked alert"
 
     def __init__(self, cfg: dict, seed: int) -> None:  # noqa: ARG002
         path = cfg.get("rules_cfg", {}).get("rules_file", "configs/rules.yaml")
