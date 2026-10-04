@@ -30,7 +30,8 @@ C2  Pooled conformal calibration
 C3  Fusion
     Family p-values are fused (Fisher by default; ``min_p`` / ``harmonic`` /
     ``stouffer`` for ablation) and returned as ``-log10(fused p)`` so the
-    score never saturates.
+    score never saturates. Ablation ``pool_families=True`` scores all features
+    as one family, i.e. removes the cross-family fusion altogether.
 
 C4  Budget-aware alert selection
     ``suppress_days``: the evaluator drops a principal already alerted in the
@@ -66,6 +67,7 @@ DEFAULTS = dict(
     scale_alpha=0.5,                  # weight of the population scale floor
     shrink_k=10.0,                    # pseudo-days of population prior for short histories
     families=list(FAMILY_PREFIXES),   # which families to use (feature-family ablation)
+    pool_families=False,              # C3 ablation: one pooled family, i.e. no cross-family fusion
     suppress_days=3,                  # C4
 )
 
@@ -199,6 +201,9 @@ class BudgetAwareConformal:
             self.feat_cols += cols
             self._fam_idx[f] = np.arange(pos, pos + len(cols))
             pos += len(cols)
+        if self.params["pool_families"]:                 # all selected features form ONE family
+            self.families = ["all"]
+            self._fam_idx = {"all": np.arange(len(self.feat_cols))}
 
         days = np.sort(df_feat["date"].unique())
         cut = days[int(len(days) * (1.0 - self.params["cal_fraction"]))]
