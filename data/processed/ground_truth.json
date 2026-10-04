@@ -1,182 +1,829 @@
 [
   {
-    "principal_id": "usr-00986",
-    "scenario_id": "S1",
-    "first_event_id": "9992a7c1-ec16-475b-87c0-ff5fe78ca2e7",
-    "first_event_time": "2023-06-07T03:00:00+00:00"
-  },
-  {
-    "principal_id": "usr-00647",
+    "principal_id": "usr-00993",
     "scenario_id": "S2",
-    "first_event_id": "97a4ac1b-b4b2-43aa-a070-7cd0850639fc",
-    "first_event_time": "2023-03-13T13:00:00+00:00"
+    "role": "analyst",
+    "first_event_id": 1648252,
+    "first_event_time": "2023-02-10T07:44:23.553867762+00:00",
+    "last_event_time": "2023-03-02T12:17:04.835795027+00:00",
+    "malicious_days": [
+      "2023-02-10",
+      "2023-02-13",
+      "2023-02-14",
+      "2023-02-15",
+      "2023-02-16",
+      "2023-02-17",
+      "2023-02-20",
+      "2023-02-21",
+      "2023-02-22",
+      "2023-02-23",
+      "2023-02-24",
+      "2023-02-27",
+      "2023-02-28",
+      "2023-03-01",
+      "2023-03-02"
+    ]
   },
   {
-    "principal_id": "usr-00992",
-    "scenario_id": "S3",
-    "first_event_id": "bc36bdee-2ecc-44ba-a1d4-7a4e19049dfb",
-    "first_event_time": "2023-05-25T10:00:00+00:00"
+    "principal_id": "usr-00671",
+    "scenario_id": "S2",
+    "role": "developer",
+    "first_event_id": 5883556,
+    "first_event_time": "2023-05-25T13:25:05.346284362+00:00",
+    "last_event_time": "2023-06-14T18:19:20.525424082+00:00",
+    "malicious_days": [
+      "2023-05-25",
+      "2023-05-26",
+      "2023-05-29",
+      "2023-05-30",
+      "2023-05-31",
+      "2023-06-01",
+      "2023-06-02",
+      "2023-06-05",
+      "2023-06-06",
+      "2023-06-07",
+      "2023-06-08",
+      "2023-06-09",
+      "2023-06-12",
+      "2023-06-13",
+      "2023-06-14"
+    ]
   },
   {
-    "principal_id": "usr-00944",
+    "principal_id": "usr-00495",
+    "scenario_id": "S2",
+    "role": "developer",
+    "first_event_id": 6446065,
+    "first_event_time": "2023-06-08T11:51:25.692624986+00:00",
+    "last_event_time": "2023-06-28T17:10:37.743505037+00:00",
+    "malicious_days": [
+      "2023-06-08",
+      "2023-06-09",
+      "2023-06-12",
+      "2023-06-13",
+      "2023-06-14",
+      "2023-06-15",
+      "2023-06-16",
+      "2023-06-19",
+      "2023-06-20",
+      "2023-06-21",
+      "2023-06-22",
+      "2023-06-23",
+      "2023-06-26",
+      "2023-06-27",
+      "2023-06-28"
+    ]
+  },
+  {
+    "principal_id": "usr-00669",
+    "scenario_id": "S1",
+    "role": "developer",
+    "first_event_id": 2210666,
+    "first_event_time": "2023-02-24T03:00:00+00:00",
+    "last_event_time": "2023-02-24T03:06:58+00:00",
+    "malicious_days": [
+      "2023-02-24"
+    ]
+  },
+  {
+    "principal_id": "usr-00280",
     "scenario_id": "S4",
-    "first_event_id": "e294819d-9041-4e69-8dcd-fec3b9ed8716",
-    "first_event_time": "2023-02-19T10:00:01+00:00"
+    "role": "analyst",
+    "first_event_id": 3344904,
+    "first_event_time": "2023-03-24T02:00:02+00:00",
+    "last_event_time": "2023-03-24T02:01:44+00:00",
+    "malicious_days": [
+      "2023-03-24"
+    ]
   },
   {
-    "principal_id": "usr-00451",
+    "principal_id": "usr-00858",
+    "scenario_id": "S5",
+    "role": "developer",
+    "first_event_id": 6064666,
+    "first_event_time": "2023-05-30T08:21:57.097581104+00:00",
+    "last_event_time": "2023-06-28T11:22:45.950552251+00:00",
+    "malicious_days": [
+      "2023-05-30",
+      "2023-05-31",
+      "2023-06-01",
+      "2023-06-02",
+      "2023-06-05",
+      "2023-06-06",
+      "2023-06-07",
+      "2023-06-08",
+      "2023-06-09",
+      "2023-06-12",
+      "2023-06-13",
+      "2023-06-14",
+      "2023-06-15",
+      "2023-06-16",
+      "2023-06-19",
+      "2023-06-20",
+      "2023-06-21",
+      "2023-06-22",
+      "2023-06-23",
+      "2023-06-26",
+      "2023-06-27",
+      "2023-06-28"
+    ]
+  },
+  {
+    "principal_id": "usr-00702",
     "scenario_id": "S1",
-    "first_event_id": "489c3298-bf09-4b5a-adbe-16db9562ffc6",
-    "first_event_time": "2023-02-06T03:00:00+00:00"
+    "role": "analyst",
+    "first_event_id": 2029097,
+    "first_event_time": "2023-02-20T03:00:00+00:00",
+    "last_event_time": "2023-02-20T03:07:27+00:00",
+    "malicious_days": [
+      "2023-02-20"
+    ]
   },
   {
-    "principal_id": "usr-00651",
-    "scenario_id": "S2",
-    "first_event_id": "cebba262-f759-41f6-b728-12ede8aa73b1",
-    "first_event_time": "2023-02-15T12:00:00+00:00"
+    "principal_id": "usr-00034",
+    "scenario_id": "S5",
+    "role": "developer",
+    "first_event_id": 5350537,
+    "first_event_time": "2023-05-12T08:59:43.688690964+00:00",
+    "last_event_time": "2023-06-09T10:43:07.328341036+00:00",
+    "malicious_days": [
+      "2023-05-12",
+      "2023-05-15",
+      "2023-05-16",
+      "2023-05-17",
+      "2023-05-18",
+      "2023-05-19",
+      "2023-05-22",
+      "2023-05-23",
+      "2023-05-24",
+      "2023-05-25",
+      "2023-05-26",
+      "2023-05-29",
+      "2023-05-30",
+      "2023-05-31",
+      "2023-06-01",
+      "2023-06-02",
+      "2023-06-05",
+      "2023-06-06",
+      "2023-06-07",
+      "2023-06-08",
+      "2023-06-09"
+    ]
   },
   {
-    "principal_id": "usr-00711",
+    "principal_id": "usr-00428",
     "scenario_id": "S3",
-    "first_event_id": "fa9e2ca5-9c51-40d5-b3f2-d6b7cff02f81",
-    "first_event_time": "2023-04-11T10:00:00+00:00"
+    "role": "analyst",
+    "first_event_id": 3568374,
+    "first_event_time": "2023-03-29T15:12:21.758616114+00:00",
+    "last_event_time": "2023-03-29T15:23:21.758616114+00:00",
+    "malicious_days": [
+      "2023-03-29"
+    ]
   },
   {
-    "principal_id": "usr-00294",
+    "principal_id": "usr-00949",
     "scenario_id": "S4",
-    "first_event_id": "d899585f-ae08-4dcc-b918-503bee54f240",
-    "first_event_time": "2023-02-07T10:00:02+00:00"
+    "role": "developer",
+    "first_event_id": 2489819,
+    "first_event_time": "2023-03-03T02:00:01+00:00",
+    "last_event_time": "2023-03-03T02:01:41+00:00",
+    "malicious_days": [
+      "2023-03-03"
+    ]
   },
   {
-    "principal_id": "usr-00277",
+    "principal_id": "usr-00340",
+    "scenario_id": "S5",
+    "role": "analyst",
+    "first_event_id": 6061472,
+    "first_event_time": "2023-05-30T06:56:26.765001935+00:00",
+    "last_event_time": "2023-06-28T11:30:08.377342425+00:00",
+    "malicious_days": [
+      "2023-05-30",
+      "2023-05-31",
+      "2023-06-01",
+      "2023-06-02",
+      "2023-06-05",
+      "2023-06-06",
+      "2023-06-07",
+      "2023-06-08",
+      "2023-06-09",
+      "2023-06-12",
+      "2023-06-13",
+      "2023-06-14",
+      "2023-06-15",
+      "2023-06-16",
+      "2023-06-19",
+      "2023-06-20",
+      "2023-06-21",
+      "2023-06-22",
+      "2023-06-23",
+      "2023-06-26",
+      "2023-06-27",
+      "2023-06-28"
+    ]
+  },
+  {
+    "principal_id": "usr-00762",
     "scenario_id": "S1",
-    "first_event_id": "e53f13bb-9b1c-4a8b-9e11-9552f6aadea8",
-    "first_event_time": "2023-02-21T03:00:00+00:00"
+    "role": "analyst",
+    "first_event_id": 2972395,
+    "first_event_time": "2023-03-15T03:00:00+00:00",
+    "last_event_time": "2023-03-15T03:07:07+00:00",
+    "malicious_days": [
+      "2023-03-15"
+    ]
   },
   {
-    "principal_id": "usr-00663",
-    "scenario_id": "S2",
-    "first_event_id": "7597c91b-5001-4f7e-b7f4-2cbbc67e4bc9",
-    "first_event_time": "2023-05-29T12:00:00+00:00"
-  },
-  {
-    "principal_id": "usr-00831",
-    "scenario_id": "S3",
-    "first_event_id": "dcc85b74-c099-4780-b6a0-9e412a993f34",
-    "first_event_time": "2023-04-30T10:00:00+00:00"
-  },
-  {
-    "principal_id": "usr-00599",
+    "principal_id": "usr-00157",
     "scenario_id": "S4",
-    "first_event_id": "c284be4a-1198-4c9a-8286-055dd88ad2d5",
-    "first_event_time": "2023-05-12T10:00:01+00:00"
+    "role": "admin",
+    "first_event_id": 1828467,
+    "first_event_time": "2023-02-15T02:00:01+00:00",
+    "last_event_time": "2023-02-15T02:01:44+00:00",
+    "malicious_days": [
+      "2023-02-15"
+    ]
   },
   {
-    "principal_id": "usr-00235",
-    "scenario_id": "S1",
-    "first_event_id": "a60627e2-b17c-4739-9b20-cd034f906656",
-    "first_event_time": "2023-02-10T03:00:00+00:00"
-  },
-  {
-    "principal_id": "usr-00419",
-    "scenario_id": "S2",
-    "first_event_id": "5642b900-ee79-4f66-b5e5-7ef30c57f095",
-    "first_event_time": "2023-05-30T11:00:00+00:00"
-  },
-  {
-    "principal_id": "usr-00329",
-    "scenario_id": "S3",
-    "first_event_id": "8ae20b27-e7c7-416a-ba19-aeda3fffc9ac",
-    "first_event_time": "2023-04-04T10:00:00+00:00"
-  },
-  {
-    "principal_id": "usr-00883",
+    "principal_id": "usr-00563",
     "scenario_id": "S4",
-    "first_event_id": "247acee5-39d3-42f6-825b-c6018e300f2c",
-    "first_event_time": "2023-04-10T10:00:01+00:00"
+    "role": "admin",
+    "first_event_id": 2637871,
+    "first_event_time": "2023-03-07T02:00:01+00:00",
+    "last_event_time": "2023-03-07T02:01:43+00:00",
+    "malicious_days": [
+      "2023-03-07"
+    ]
   },
   {
-    "principal_id": "usr-00376",
+    "principal_id": "usr-00473",
     "scenario_id": "S1",
-    "first_event_id": "b2b09d03-da03-45f1-b50b-b69b8c522044",
-    "first_event_time": "2023-05-03T03:00:00+00:00"
+    "role": "analyst",
+    "first_event_id": 859800,
+    "first_event_time": "2023-01-22T03:00:00+00:00",
+    "last_event_time": "2023-01-22T03:07:21+00:00",
+    "malicious_days": [
+      "2023-01-22"
+    ]
   },
   {
-    "principal_id": "usr-00804",
-    "scenario_id": "S2",
-    "first_event_id": "40688425-b803-4b3d-94e9-1a074493975e",
-    "first_event_time": "2023-05-06T11:00:00+00:00"
-  },
-  {
-    "principal_id": "usr-00464",
-    "scenario_id": "S3",
-    "first_event_id": "8dc11378-dcb5-4572-a393-d394733a7fd4",
-    "first_event_time": "2023-03-25T10:00:00+00:00"
-  },
-  {
-    "principal_id": "usr-00973",
+    "principal_id": "usr-00918",
     "scenario_id": "S4",
-    "first_event_id": "f428580d-7747-4417-a367-5bcba0ccd975",
-    "first_event_time": "2023-04-05T10:00:02+00:00"
+    "role": "developer",
+    "first_event_id": 5766353,
+    "first_event_time": "2023-05-23T02:00:02+00:00",
+    "last_event_time": "2023-05-23T02:01:45+00:00",
+    "malicious_days": [
+      "2023-05-23"
+    ]
   },
   {
-    "principal_id": "usr-00165",
-    "scenario_id": "S1",
-    "first_event_id": "1f438ab8-bd02-46b1-998b-40cd6f3bed59",
-    "first_event_time": "2023-04-16T03:00:00+00:00"
-  },
-  {
-    "principal_id": "usr-00412",
-    "scenario_id": "S2",
-    "first_event_id": "0bc5044a-2f13-480c-a6fc-89fa6bb43f30",
-    "first_event_time": "2023-03-26T13:00:00+00:00"
-  },
-  {
-    "principal_id": "usr-00214",
+    "principal_id": "usr-00693",
     "scenario_id": "S3",
-    "first_event_id": "7d27643a-2bc6-4db8-a1d7-960bccad255e",
-    "first_event_time": "2023-03-29T10:00:00+00:00"
+    "role": "developer",
+    "first_event_id": 5038731,
+    "first_event_time": "2023-05-04T17:11:50.448975396+00:00",
+    "last_event_time": "2023-05-04T17:21:50.448975396+00:00",
+    "malicious_days": [
+      "2023-05-04"
+    ]
+  },
+  {
+    "principal_id": "usr-00570",
+    "scenario_id": "S5",
+    "role": "developer",
+    "first_event_id": 6063716,
+    "first_event_time": "2023-05-30T07:57:44.920813250+00:00",
+    "last_event_time": "2023-06-28T10:18:00.329856430+00:00",
+    "malicious_days": [
+      "2023-05-30",
+      "2023-05-31",
+      "2023-06-01",
+      "2023-06-02",
+      "2023-06-05",
+      "2023-06-06",
+      "2023-06-07",
+      "2023-06-08",
+      "2023-06-09",
+      "2023-06-12",
+      "2023-06-13",
+      "2023-06-14",
+      "2023-06-15",
+      "2023-06-16",
+      "2023-06-19",
+      "2023-06-20",
+      "2023-06-21",
+      "2023-06-22",
+      "2023-06-23",
+      "2023-06-26",
+      "2023-06-27",
+      "2023-06-28"
+    ]
+  },
+  {
+    "principal_id": "usr-00026",
+    "scenario_id": "S5",
+    "role": "developer",
+    "first_event_id": 2874095,
+    "first_event_time": "2023-03-13T00:29:25.937748823+00:00",
+    "last_event_time": "2023-04-07T03:35:56.294030090+00:00",
+    "malicious_days": [
+      "2023-03-13",
+      "2023-03-14",
+      "2023-03-15",
+      "2023-03-16",
+      "2023-03-17",
+      "2023-03-20",
+      "2023-03-21",
+      "2023-03-22",
+      "2023-03-23",
+      "2023-03-24",
+      "2023-03-27",
+      "2023-03-28",
+      "2023-03-29",
+      "2023-03-30",
+      "2023-03-31",
+      "2023-04-03",
+      "2023-04-04",
+      "2023-04-05",
+      "2023-04-06",
+      "2023-04-07"
+    ]
+  },
+  {
+    "principal_id": "usr-00516",
+    "scenario_id": "S4",
+    "role": "developer",
+    "first_event_id": 3102819,
+    "first_event_time": "2023-03-18T02:00:02+00:00",
+    "last_event_time": "2023-03-18T02:01:43+00:00",
+    "malicious_days": [
+      "2023-03-18"
+    ]
+  },
+  {
+    "principal_id": "usr-00212",
+    "scenario_id": "S5",
+    "role": "analyst",
+    "first_event_id": 4416989,
+    "first_event_time": "2023-04-19T12:21:16.513778081+00:00",
+    "last_event_time": "2023-05-18T16:35:47.594132678+00:00",
+    "malicious_days": [
+      "2023-04-19",
+      "2023-04-20",
+      "2023-04-21",
+      "2023-04-24",
+      "2023-04-25",
+      "2023-04-26",
+      "2023-04-27",
+      "2023-04-28",
+      "2023-05-01",
+      "2023-05-02",
+      "2023-05-03",
+      "2023-05-04",
+      "2023-05-05",
+      "2023-05-08",
+      "2023-05-09",
+      "2023-05-10",
+      "2023-05-11",
+      "2023-05-12",
+      "2023-05-15",
+      "2023-05-16",
+      "2023-05-17",
+      "2023-05-18"
+    ]
+  },
+  {
+    "principal_id": "usr-00550",
+    "scenario_id": "S4",
+    "role": "developer",
+    "first_event_id": 1426230,
+    "first_event_time": "2023-02-05T02:00:02+00:00",
+    "last_event_time": "2023-02-05T02:01:42+00:00",
+    "malicious_days": [
+      "2023-02-05"
+    ]
+  },
+  {
+    "principal_id": "usr-00134",
+    "scenario_id": "S3",
+    "role": "developer",
+    "first_event_id": 5204909,
+    "first_event_time": "2023-05-09T04:22:12.889961826+00:00",
+    "last_event_time": "2023-05-09T04:33:12.889961826+00:00",
+    "malicious_days": [
+      "2023-05-09"
+    ]
+  },
+  {
+    "principal_id": "usr-00359",
+    "scenario_id": "S1",
+    "role": "developer",
+    "first_event_id": 3735144,
+    "first_event_time": "2023-04-03T03:00:00+00:00",
+    "last_event_time": "2023-04-03T03:07:16+00:00",
+    "malicious_days": [
+      "2023-04-03"
+    ]
+  },
+  {
+    "principal_id": "usr-00628",
+    "scenario_id": "S2",
+    "role": "developer",
+    "first_event_id": 6434247,
+    "first_event_time": "2023-06-08T06:44:24.818725208+00:00",
+    "last_event_time": "2023-06-28T12:03:02.320087954+00:00",
+    "malicious_days": [
+      "2023-06-08",
+      "2023-06-09",
+      "2023-06-12",
+      "2023-06-13",
+      "2023-06-14",
+      "2023-06-15",
+      "2023-06-16",
+      "2023-06-19",
+      "2023-06-20",
+      "2023-06-21",
+      "2023-06-22",
+      "2023-06-23",
+      "2023-06-26",
+      "2023-06-27",
+      "2023-06-28"
+    ]
+  },
+  {
+    "principal_id": "usr-00315",
+    "scenario_id": "S4",
+    "role": "developer",
+    "first_event_id": 4555167,
+    "first_event_time": "2023-04-23T02:00:01+00:00",
+    "last_event_time": "2023-04-23T02:01:42+00:00",
+    "malicious_days": [
+      "2023-04-23"
+    ]
+  },
+  {
+    "principal_id": "usr-00810",
+    "scenario_id": "S3",
+    "role": "analyst",
+    "first_event_id": 3798836,
+    "first_event_time": "2023-04-04T11:09:21.867649725+00:00",
+    "last_event_time": "2023-04-04T11:20:21.867649725+00:00",
+    "malicious_days": [
+      "2023-04-04"
+    ]
+  },
+  {
+    "principal_id": "usr-00202",
+    "scenario_id": "S2",
+    "role": "developer",
+    "first_event_id": 1259155,
+    "first_event_time": "2023-02-01T00:51:55.168262126+00:00",
+    "last_event_time": "2023-02-21T23:34:55.628427647+00:00",
+    "malicious_days": [
+      "2023-02-01",
+      "2023-02-02",
+      "2023-02-03",
+      "2023-02-06",
+      "2023-02-07",
+      "2023-02-08",
+      "2023-02-09",
+      "2023-02-10",
+      "2023-02-13",
+      "2023-02-14",
+      "2023-02-15",
+      "2023-02-16",
+      "2023-02-17",
+      "2023-02-20",
+      "2023-02-21"
+    ]
+  },
+  {
+    "principal_id": "usr-00931",
+    "scenario_id": "S4",
+    "role": "developer",
+    "first_event_id": 6049643,
+    "first_event_time": "2023-05-30T02:00:02+00:00",
+    "last_event_time": "2023-05-30T02:01:42+00:00",
+    "malicious_days": [
+      "2023-05-30"
+    ]
+  },
+  {
+    "principal_id": "usr-00951",
+    "scenario_id": "S2",
+    "role": "analyst",
+    "first_event_id": 1605502,
+    "first_event_time": "2023-02-09T08:38:00.243752171+00:00",
+    "last_event_time": "2023-03-01T12:40:47.517126560+00:00",
+    "malicious_days": [
+      "2023-02-09",
+      "2023-02-10",
+      "2023-02-13",
+      "2023-02-14",
+      "2023-02-15",
+      "2023-02-16",
+      "2023-02-17",
+      "2023-02-20",
+      "2023-02-21",
+      "2023-02-22",
+      "2023-02-23",
+      "2023-02-24",
+      "2023-02-27",
+      "2023-02-28",
+      "2023-03-01"
+    ]
+  },
+  {
+    "principal_id": "usr-00231",
+    "scenario_id": "S1",
+    "role": "developer",
+    "first_event_id": 6262170,
+    "first_event_time": "2023-06-04T03:00:00+00:00",
+    "last_event_time": "2023-06-04T03:07:30+00:00",
+    "malicious_days": [
+      "2023-06-04"
+    ]
+  },
+  {
+    "principal_id": "usr-00108",
+    "scenario_id": "S2",
+    "role": "analyst",
+    "first_event_id": 2589141,
+    "first_event_time": "2023-03-06T00:31:27.682796679+00:00",
+    "last_event_time": "2023-03-24T05:44:04.295230481+00:00",
+    "malicious_days": [
+      "2023-03-06",
+      "2023-03-07",
+      "2023-03-08",
+      "2023-03-09",
+      "2023-03-10",
+      "2023-03-13",
+      "2023-03-14",
+      "2023-03-15",
+      "2023-03-16",
+      "2023-03-17",
+      "2023-03-20",
+      "2023-03-21",
+      "2023-03-22",
+      "2023-03-23",
+      "2023-03-24"
+    ]
+  },
+  {
+    "principal_id": "usr-00014",
+    "scenario_id": "S3",
+    "role": "developer",
+    "first_event_id": 3997514,
+    "first_event_time": "2023-04-09T10:15:46.532594809+00:00",
+    "last_event_time": "2023-04-09T10:25:46.532594809+00:00",
+    "malicious_days": [
+      "2023-04-09"
+    ]
+  },
+  {
+    "principal_id": "usr-00242",
+    "scenario_id": "S3",
+    "role": "analyst",
+    "first_event_id": 3431263,
+    "first_event_time": "2023-03-26T11:07:20.564524370+00:00",
+    "last_event_time": "2023-03-26T11:17:20.564524370+00:00",
+    "malicious_days": [
+      "2023-03-26"
+    ]
   },
   {
     "principal_id": "usr-00521",
-    "scenario_id": "S4",
-    "first_event_id": "3a8a7ffb-864d-4e22-9abe-8444310203a8",
-    "first_event_time": "2023-05-02T10:00:02+00:00"
-  },
-  {
-    "principal_id": "usr-00323",
-    "scenario_id": "S1",
-    "first_event_id": "3eeabbe9-2871-4703-87aa-4955ee1fa04b",
-    "first_event_time": "2023-02-07T03:00:00+00:00"
-  },
-  {
-    "principal_id": "usr-00635",
-    "scenario_id": "S2",
-    "first_event_id": "85db8e0e-19df-454a-bda3-3bbd5d52e87a",
-    "first_event_time": "2023-04-05T12:00:00+00:00"
-  },
-  {
-    "principal_id": "usr-00780",
     "scenario_id": "S3",
-    "first_event_id": "b096f4f9-2821-4977-96fa-344d78c8d3c8",
-    "first_event_time": "2023-05-05T10:00:00+00:00"
+    "role": "developer",
+    "first_event_id": 6123480,
+    "first_event_time": "2023-05-31T14:21:10.675392481+00:00",
+    "last_event_time": "2023-05-31T14:32:10.675392481+00:00",
+    "malicious_days": [
+      "2023-05-31"
+    ]
   },
   {
-    "principal_id": "usr-00870",
+    "principal_id": "usr-00950",
+    "scenario_id": "S3",
+    "role": "developer",
+    "first_event_id": 5665285,
+    "first_event_time": "2023-05-20T03:43:26.322906261+00:00",
+    "last_event_time": "2023-05-20T03:54:26.322906261+00:00",
+    "malicious_days": [
+      "2023-05-20"
+    ]
+  },
+  {
+    "principal_id": "usr-00595",
+    "scenario_id": "S3",
+    "role": "analyst",
+    "first_event_id": 6360780,
+    "first_event_time": "2023-06-06T14:04:45.247462483+00:00",
+    "last_event_time": "2023-06-06T14:15:45.247462483+00:00",
+    "malicious_days": [
+      "2023-06-06"
+    ]
+  },
+  {
+    "principal_id": "usr-00534",
+    "scenario_id": "S3",
+    "role": "analyst",
+    "first_event_id": 2263551,
+    "first_event_time": "2023-02-25T10:54:07.310359858+00:00",
+    "last_event_time": "2023-02-25T11:04:07.310359858+00:00",
+    "malicious_days": [
+      "2023-02-25"
+    ]
+  },
+  {
+    "principal_id": "usr-00484",
     "scenario_id": "S4",
-    "first_event_id": "2c3136ea-6fc3-4a13-a8c1-fcf7b4ccfa40",
-    "first_event_time": "2023-06-08T10:00:02+00:00"
+    "role": "analyst",
+    "first_event_id": 4242888,
+    "first_event_time": "2023-04-15T02:00:02+00:00",
+    "last_event_time": "2023-04-15T02:01:43+00:00",
+    "malicious_days": [
+      "2023-04-15"
+    ]
   },
   {
-    "principal_id": "usr-00682",
-    "scenario_id": "S1",
-    "first_event_id": "c1bb3981-e28f-438e-8f71-ce47148a3dcf",
-    "first_event_time": "2023-03-10T03:00:00+00:00"
+    "principal_id": "usr-00564",
+    "scenario_id": "S4",
+    "role": "admin",
+    "first_event_id": 4766889,
+    "first_event_time": "2023-04-28T02:00:01+00:00",
+    "last_event_time": "2023-04-28T02:01:40+00:00",
+    "malicious_days": [
+      "2023-04-28"
+    ]
   },
   {
-    "principal_id": "usr-00823",
+    "principal_id": "usr-00094",
     "scenario_id": "S2",
-    "first_event_id": "7da3e810-2cbd-4c47-8cfe-4686e4c41b59",
-    "first_event_time": "2023-05-06T13:00:00+00:00"
+    "role": "developer",
+    "first_event_id": 5176195,
+    "first_event_time": "2023-05-08T11:47:18.919146145+00:00",
+    "last_event_time": "2023-05-26T17:50:36.179336323+00:00",
+    "malicious_days": [
+      "2023-05-08",
+      "2023-05-09",
+      "2023-05-10",
+      "2023-05-11",
+      "2023-05-12",
+      "2023-05-15",
+      "2023-05-16",
+      "2023-05-17",
+      "2023-05-18",
+      "2023-05-19",
+      "2023-05-22",
+      "2023-05-23",
+      "2023-05-24",
+      "2023-05-25",
+      "2023-05-26"
+    ]
+  },
+  {
+    "principal_id": "usr-00284",
+    "scenario_id": "S1",
+    "role": "developer",
+    "first_event_id": 3256285,
+    "first_event_time": "2023-03-22T03:00:00+00:00",
+    "last_event_time": "2023-03-22T03:07:18+00:00",
+    "malicious_days": [
+      "2023-03-22"
+    ]
+  },
+  {
+    "principal_id": "usr-00984",
+    "scenario_id": "S3",
+    "role": "analyst",
+    "first_event_id": 1096923,
+    "first_event_time": "2023-01-27T14:55:02.859367067+00:00",
+    "last_event_time": "2023-01-27T15:06:02.859367067+00:00",
+    "malicious_days": [
+      "2023-01-27"
+    ]
+  },
+  {
+    "principal_id": "usr-00176",
+    "scenario_id": "S5",
+    "role": "developer",
+    "first_event_id": 5541616,
+    "first_event_time": "2023-05-17T08:25:31.368875557+00:00",
+    "last_event_time": "2023-06-15T13:20:47.489322990+00:00",
+    "malicious_days": [
+      "2023-05-17",
+      "2023-05-18",
+      "2023-05-19",
+      "2023-05-22",
+      "2023-05-23",
+      "2023-05-24",
+      "2023-05-25",
+      "2023-05-26",
+      "2023-05-29",
+      "2023-05-30",
+      "2023-05-31",
+      "2023-06-01",
+      "2023-06-02",
+      "2023-06-05",
+      "2023-06-06",
+      "2023-06-07",
+      "2023-06-08",
+      "2023-06-09",
+      "2023-06-12",
+      "2023-06-13",
+      "2023-06-14",
+      "2023-06-15"
+    ]
+  },
+  {
+    "principal_id": "usr-00679",
+    "scenario_id": "S1",
+    "role": "developer",
+    "first_event_id": 1175187,
+    "first_event_time": "2023-01-30T03:00:00+00:00",
+    "last_event_time": "2023-01-30T03:07:08+00:00",
+    "malicious_days": [
+      "2023-01-30"
+    ]
+  },
+  {
+    "principal_id": "usr-00183",
+    "scenario_id": "S3",
+    "role": "developer",
+    "first_event_id": 6684155,
+    "first_event_time": "2023-06-14T11:23:04.562028430+00:00",
+    "last_event_time": "2023-06-14T11:34:04.562028430+00:00",
+    "malicious_days": [
+      "2023-06-14"
+    ]
+  },
+  {
+    "principal_id": "usr-00316",
+    "scenario_id": "S5",
+    "role": "developer",
+    "first_event_id": 4896248,
+    "first_event_time": "2023-05-01T13:50:37.852550892+00:00",
+    "last_event_time": "2023-05-30T15:34:22.528120058+00:00",
+    "malicious_days": [
+      "2023-05-01",
+      "2023-05-02",
+      "2023-05-03",
+      "2023-05-04",
+      "2023-05-05",
+      "2023-05-08",
+      "2023-05-09",
+      "2023-05-10",
+      "2023-05-11",
+      "2023-05-12",
+      "2023-05-15",
+      "2023-05-16",
+      "2023-05-17",
+      "2023-05-18",
+      "2023-05-19",
+      "2023-05-22",
+      "2023-05-23",
+      "2023-05-24",
+      "2023-05-25",
+      "2023-05-26",
+      "2023-05-29",
+      "2023-05-30"
+    ]
+  },
+  {
+    "principal_id": "usr-00483",
+    "scenario_id": "S3",
+    "role": "developer",
+    "first_event_id": 1980471,
+    "first_event_time": "2023-02-18T12:35:43.298872666+00:00",
+    "last_event_time": "2023-02-18T12:45:43.298872666+00:00",
+    "malicious_days": [
+      "2023-02-18"
+    ]
+  },
+  {
+    "principal_id": "usr-00174",
+    "scenario_id": "S1",
+    "role": "analyst",
+    "first_event_id": 4019198,
+    "first_event_time": "2023-04-10T03:00:00+00:00",
+    "last_event_time": "2023-04-10T03:06:56+00:00",
+    "malicious_days": [
+      "2023-04-10"
+    ]
+  },
+  {
+    "principal_id": "usr-00423",
+    "scenario_id": "S4",
+    "role": "analyst",
+    "first_event_id": 4555168,
+    "first_event_time": "2023-04-23T02:00:01+00:00",
+    "last_event_time": "2023-04-23T02:01:41+00:00",
+    "malicious_days": [
+      "2023-04-23"
+    ]
   }
 ]

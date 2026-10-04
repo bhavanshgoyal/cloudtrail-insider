@@ -44,6 +44,7 @@ _COLUMN_MAP: dict[str, str] = {
     "error_code":           "errorCode",
     "read_only":            "readOnly",
     "bytes_transferred":    "bytesTransferred",
+    "mfa_used":             "mfaUsed",
     "label":                "label",
     "scenario_id":          "scenarioId",
 }
