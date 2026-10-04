@@ -1,153 +1,90 @@
 # Insider-Threat Detection on Cloud Audit Logs at Operationally Realistic Alert Budgets
 
-## Problem Statement
+Project P20. Detect misuse of legitimate cloud credentials in AWS-CloudTrail-style audit logs. Every
+detector is judged where a security team actually operates: **a fixed number of alerts an analyst can
+review per day**. Every alert says **which behaviour deviated**.
 
-Cloud platforms record every control-plane action in an audit log (e.g., AWS CloudTrail), capturing the identity, action, resource, and outcome. These logs are the principal evidence for detecting misuse of legitimate credentials — whether by a malicious insider or by an attacker who has obtained valid access.
-
-Current detection research reports area-under-curve figures computed across the full range of operating points. However, a security team operates at a **single fixed point** determined by how many alerts an analyst can examine in a day — typically a small number. A detector with an excellent AUC-ROC may be useless at ten alerts per day. Furthermore, an alert that identifies an event as anomalous without indicating *which aspect* of the behaviour deviated cannot be triaged and will be dismissed.
-
-## Hypotheses
-
-**H1 (primary).** Per-principal conformal calibration with budget-aware incident aggregation increases detection rate at a budget of 10 alerts/day by at least 40% relative, and precision at budget 10 by at least 30% relative, compared with an Isolation Forest trained on the identical feature matrix, on synthetic CloudTrail events over ~1,000 principals and ~180 days, at equal feature cost, with all baseline statistics computed causally.
-
-**H2 (secondary).** The same method reduces median time to detection at a budget of 10 alerts/day by at least 25% relative to the same baseline.
-
-**H3 (usability).** Reviewers shown only the generated explanation classify alerts as true or false positive with balanced accuracy at least 20 percentage points above reviewers shown only the anomaly score, over a fixed 40-alert set.
-
-**Falsification.** H1 is rejected if the 95% BCa bootstrap confidence interval for the relative difference in DR@10 — resampled over evaluation days, across 5 seeds and 3 temporal splits — lies below +40% or contains it.
-
----
+## Problem
+Detection research reports area-under-curve figures computed over all operating points. A SOC runs
+at one point, set by how many alerts an analyst can examine each day, which is a small number. A
+detector with an excellent curve can be useless at ten alerts per day. And an alert that does not
+say which aspect of behaviour deviated cannot be triaged, so it gets dismissed.
 
 ## Objectives
-
 | ID | Objective |
-|----|-----------|
-| O1 | Implement anomaly detection over cloud audit logs capturing deviation in identity behaviour, resource access, and temporal pattern |
-| O2 | Evaluate detection performance at fixed alert budgets (10, 50, 100) that reflect real analyst capacity |
-| O3 | Generate for each alert an explanation naming the specific behavioural deviation responsible |
-| O4 | Assess whether those explanations are sufficient for a reviewer to triage the alert correctly |
+|---|---|
+| O1 | Anomaly detection over cloud audit logs capturing deviation in identity behaviour, resource access and temporal pattern |
+| O2 | Evaluate detection at fixed alert budgets (10, 50, 100 alerts/day) that reflect analyst capacity |
+| O3 | For each alert, an explanation naming the specific behavioural deviation responsible |
+| O4 | Assess whether those explanations let a reviewer triage the alert correctly |
 
-## One-Command Reproduction
+## Hypotheses (falsifiable)
+All stated against Isolation Forest on the identical feature matrix, at **B = 10 alerts/day**, on the
+**test** windows of 4 synthetic workloads (5 seeds x 3 rolling temporal origins each):
+- **H1a** detection rate is at least **40%** higher (relative);
+- **H1b** precision is at least **30%** higher (relative);
+- **H2** median time to detection is at least **25%** lower;
+- **H3** reviewers shown only the explanation triage with balanced accuracy at least **20 percentage
+  points** above reviewers shown only the score.
 
+**Falsification rule:** a hypothesis is *supported* only if the **whole** 95% interval (paired
+bootstrap over seeds for H1/H2; stratified bootstrap over alerts for H3) lies beyond its threshold.
+Otherwise it is reported as *not supported*.
+
+<!-- RESULTS:START -->
+(run `python scripts/build_docs.py` to fill this block from results/)
+<!-- RESULTS:END -->
+
+## How it works (one paragraph)
+CloudTrail events → **32 causal features per identity-day** in four families
+(identity, resource, temporal, volume) → **BudgetAwareConformal**:
+- **C1** compares every identity with *its own* history (robust z-scores);
+- **C2** turns per-family deviations into conformal p-values against a calibration set pooled over
+  all identities;
+- **C3** keeps the families separate and alerts on the strongest one;
+- **C4**, an optional suppression of repeat alerts, was switched off by tuning.
+
+Each alert is explained by its most deviant family and features. Settings were tuned **only** on
+validation windows of separate seeds and frozen before the test campaign.
+
+## Reproduce
 ```bash
-# 1. Install
 pip install -e ".[dev]"
-
-# 2. Run full pipeline: generate data → train → evaluate → explain → figures
-python run_pipeline.py
+python -m pytest -q                      # all tests: metrics, causality, rules, splits, triage scoring
+python run_pipeline.py                   # one run (~40 s): metrics, explanations, SHAP cross-check
+python scripts/tune_proposed.py          # model selection on VALIDATION windows only (~10 min)
+python scripts/run_campaign.py           # 4 workloads x 5 seeds x 3 origins on TEST windows (~60 min)
+python -m cti.eval.figures               # figures from the campaign
+python scripts/run_ablation.py           # which component causes the gain
+python scripts/run_sweep.py              # budget / scale / stealth / calibration sweeps
+python scripts/build_docs.py             # paper (PDF), threats, evidence matrix, this README's results
+python scripts/live_demo.py --scenario S1   # live demo on a brand-new company (< 1 min)
+streamlit run src/cti/demo/app.py        # analyst dashboard
 ```
+Testbed (LocalStack, AWS-compatible): `docker compose up -d` then `python scripts/capture_evidence.py`
+(see `docs/TESTBED.md`).
 
-## Testbed
+## Repository map
+| Path | What |
+|---|---|
+| `src/cti/ingest/synthetic.py` | Synthetic CloudTrail generator: roles, habits, benign look-alikes, scenarios S1-S5, workloads W1-W4 |
+| `src/cti/features/pipeline.py` | Causal feature families |
+| `src/cti/detectors/` | `proposed.py` (BudgetAwareConformal), `train.py` (IF, LOF, autoencoder), `rules.py` (12 signatures) |
+| `src/cti/eval/` | `evaluate.py` (per-day budget metrics, CIs), `aggregate.py`, `figures.py` |
+| `src/cti/explain/explain_proposed.py` | Alert explanations + SHAP cross-check |
+| `src/cti/triage/` | Triage study generator and scorer (O4) |
+| `src/cti/experiment.py`, `src/cti/util/splits.py` | Leak-free train / val / test harness |
+| `scripts/` | Tuning, campaign, ablation, sweeps, docs build, live demo |
+| `configs/` | `default.yaml`, `rules.yaml`, frozen `proposed_final.yaml` / `baseline_final.yaml` |
+| `results/`, `figures/` | Outputs (each figure has a CSV table next to it) |
+| `docs/` | Paper, related work, threats to validity, evidence matrix, triage study, demo runbook |
 
-**CloudSim Environment**: LocalStack (Docker) emulating AWS CloudTrail, S3, IAM, STS on local machine.
+## Honest limitations
+- The data is **synthetic**; the CERT dataset was not used.
+- The gain rests mainly on resource-access deviations, and we wrote both the attacks and the
+  detector.
+- Duplicate suppression (C4) did not help.
 
-```bash
-# Start testbed
-docker compose up -d
+See `docs/THREATS_TO_VALIDITY.md`.
 
-# Capture evidence
-python scripts/capture_evidence.py
-```
-
-See [docs/TESTBED.md](docs/TESTBED.md) for detailed instructions.
-
-## Results
-
-> **Pending.** Earlier numbers in this table were produced by a pipeline that trained and tested on
-> the same rows and used a random "rule baseline", so they have been removed
-> (see `results/STALE_RESULTS_NOTICE.md`). Corrected results - per-day alert budgets, leak-free rolling
-> temporal splits, a real rule baseline, >= 3 seeds with confidence intervals - are regenerated by the
-> campaign (Phase 6) and will be filled in here from `results/summary.csv`.
-
-Quick check that the pipeline runs end to end (not a result):
-
-```bash
-python run_pipeline.py --fast
-```
-
-## Ablation Study
-
-Rewritten on top of the per-day evaluator (Phase 7); the previous ablation was invalid for the same reason.
-
-## Threats to Validity
-
-See [docs/THREATS_TO_VALIDITY.md](docs/THREATS_TO_VALIDITY.md) for an honest assessment of what this setup can and cannot prove.
-
-
-
-## Project Structure
-
-```
-cloudtrail-insider/
-├── configs/
-│   ├── default.yaml              # All parameters — no magic numbers in code
-│   └── rules.yaml                # Rule baseline signatures
-├── src/cti/
-│   ├── ingest/
-│   │   ├── loader.py             # CERT data loader
-│   │   ├── synthetic.py          # Synthetic CloudTrail generator
-│   │   ├── normalise.py          # Column schema normalisation
-│   │   └── toy.py                # Quick test data
-│   ├── features/
-│   │   └── pipeline.py           # 5-family feature engineering
-│   ├── detectors/
-│   │   ├── train.py              # Baselines: IF, LOF, AE, Rules
-│   │   ├── proposed.py           # BudgetAwareConformal (proposed)
-│   │   └── score.py              # Test-split scoring
-│   ├── eval/
-│   │   ├── evaluate.py           # Budget-fixed metrics + bootstrap CI
-│   │   └── figures.py            # Chart generation
-│   ├── explain/
-│   │   └── shap_explain.py       # SHAP explanations for alert cards
-│   ├── triage/
-│   │   ├── generate_study.py     # Triage questionnaire generator
-│   │   └── score_study.py        # Triage response scorer
-│   ├── demo/
-│   │   ├── app.py                # Streamlit demo app
-│   │   └── replay.py             # LocalStack event replay
-│   └── util/
-│       ├── config.py             # Config loader
-│       ├── run.py                # RunContext
-│       └── seeds.py              # RNG management
-├── scripts/
-│   ├── capture_evidence.py       # Testbed evidence capture
-│   ├── bootstrap_env.ps1         # LocalStack bootstrap
-│   └── bootstrap_env.sh          # Linux version
-├── docs/
-│   ├── TESTBED.md                # CloudSim testbed documentation
-│   ├── related_work.md           # 15-paper gap table
-│   └── evidence/                 # Captured testbed proof
-├── tests/
-│   └── test_scaffold.py          # Unit tests
-├── run_pipeline.py               # One-command full pipeline
-├── docker-compose.yml            # LocalStack environment
-├── Dockerfile                    # App container
-├── pyproject.toml                # Dependencies
-├── Makefile                      # Build targets
-└── README.md                     # This file
-```
-
-## Datasets and Tools
-
-- **Synthetic CloudTrail generator** — 1000 principals × 180 days, 4 insider scenarios
-- **CERT Insider Threat dataset** r4.2 or r6.2 (optional supplement)
-- **Python**: scikit-learn, SHAP, pandas, matplotlib
-- **LocalStack**: Cloud simulation testbed
-
-## Baseline Comparison
-
-- Isolation Forest (global) — sklearn ensemble, global anomaly scoring
-- LOF (Local Outlier Factor) — density-based neighbour comparison
-- Autoencoder — MLP reconstruction error
-- Rule-based signatures — commercial cloud threat-detection style rules
-
-## Evaluation Metrics
-
-- Detection rate at budgets of 10, 50, and 100 alerts per day
-- Precision at those budgets
-- Mean time to detection within the event stream
-- Accuracy of human triage using the explanation alone
-
-## License
-
-MIT
+License: MIT
