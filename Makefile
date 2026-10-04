@@ -1,7 +1,7 @@
 # cloudtrail-insider Makefile
 # One-command reproduction: `make all`
 
-.PHONY: setup testbed evidence pipeline figures test all clean
+.PHONY: setup testbed evidence pipeline figures test all clean demo dashboard campaign ablation sweep tune
 
 PYTHON  = python
 PYTEST  = pytest
@@ -44,3 +44,24 @@ clean:
 # ── Shut down testbed ────────────────────────────────────────────────────
 down:
 	docker compose down -v
+
+# ── Experiments (Phases 5-7) ─────────────────────────────────────────────
+tune:
+	$(PYTHON) scripts/tune_proposed.py
+
+campaign:
+	$(PYTHON) scripts/run_campaign.py
+	$(PYTHON) -m cti.eval.figures
+
+ablation:
+	$(PYTHON) scripts/run_ablation.py
+
+sweep:
+	$(PYTHON) scripts/run_sweep.py
+
+# ── Live demo (Review 3) ─────────────────────────────────────────────────
+demo:
+	$(PYTHON) scripts/live_demo.py --scenario S1
+
+dashboard:
+	streamlit run src/cti/demo/app.py

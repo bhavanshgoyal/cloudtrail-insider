@@ -1,14 +1,15 @@
-﻿"""
+"""
 cti.demo.app
 ------------
-Streamlit dashboard for the cloudtrail-insider project.
+Streamlit dashboard: the analyst's view of one run of ``python run_pipeline.py``.
 
-Shows:
-- Live alert feed at configurable budget B
-- SHAP explanation waterfall for a selected alert
-- Precision@B / Recall@B trend chart across detectors
+  * pick a detector, a day and a budget -> that day's alert queue
+  * for the proposed detector, the generated explanation of each alert (O3)
+  * campaign results (all workloads x 5 seeds) with confidence intervals
 
-Run with:
+Run with::
+
+    python run_pipeline.py          # produces results/scores.parquet, explanations.json, metrics.csv
     streamlit run src/cti/demo/app.py
 """
 from __future__ import annotations
@@ -19,125 +20,86 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from cti.util.config import load_config
-from cti.util.seeds import set_all_seeds
+from cti.eval.evaluate import emit_alerts
+from cti.explain.explain_proposed import FAMILY_TEXT, render
 
-# ── Page config ───────────────────────────────────────────────────────────────
-st.set_page_config(
-    page_title="CloudTrail Insider Threat",
-    page_icon="🔍",
-    layout="wide",
-)
+RESULTS = Path("results")
+PROPOSED = "proposed_budget_aware_conformal"
+NAMES = {PROPOSED: "Proposed (BudgetAwareConformal)", "isolation_forest": "Isolation Forest", "lof": "LOF",
+         "autoencoder": "Autoencoder", "rule_baseline": "Rule signatures"}
 
-
-@st.cache_data(show_spinner=False)
-def _load_config():
-    cfg = load_config()
-    set_all_seeds(cfg["random_seed"])
-    return cfg
+st.set_page_config(page_title="CloudTrail insider-threat queue", layout="wide")
 
 
 @st.cache_data(show_spinner=False)
-def _load_scores(path: str) -> pd.DataFrame:
-    return pd.read_parquet(path)
-
-
-@st.cache_data(show_spinner=False)
-def _load_metrics(path: str) -> pd.DataFrame:
-    return pd.read_parquet(path)
-
-
-@st.cache_data(show_spinner=False)
-def _load_shap_alerts(path: str) -> list[dict]:
-    with open(path) as fh:
-        data = json.load(fh)
-    return data.get("alerts", [])
+def load():
+    scores = pd.read_parquet(RESULTS / "scores.parquet")
+    scores["date"] = pd.to_datetime(scores["date"])
+    metrics = pd.read_csv(RESULTS / "metrics.csv")
+    expl = json.loads((RESULTS / "explanations.json").read_text())
+    campaign = RESULTS / "campaign" / "summary.csv"
+    return scores, metrics, expl, (pd.read_csv(campaign) if campaign.exists() else None)
 
 
 def main() -> None:
-    """Streamlit app entrypoint."""
-    cfg   = _load_config()
-    demo  = cfg["demo"]
-    paths = cfg["paths"]
-
-    st.title("🔍 CloudTrail Insider Threat Dashboard")
-    st.caption("Fixed-budget anomaly detection over AWS CloudTrail logs")
-
-    # ── Sidebar controls ──────────────────────────────────────────────────────
-    with st.sidebar:
-        st.header("Controls")
-        budget = st.selectbox(
-            "Alert Budget (B)",
-            options=cfg["budgets"],
-            index=cfg["budgets"].index(demo["default_budget"])
-            if demo["default_budget"] in cfg["budgets"]
-            else 0,
-        )
-        detector_name = st.selectbox(
-            "Detector",
-            options=["isolation_forest", "lof", "autoencoder"],
-        )
-
-    results_dir = Path(paths["results_dir"])
-
-    # ── Alert feed ────────────────────────────────────────────────────────────
-    st.header(f"Top-{budget} Alerts  ·  {detector_name}")
-
-    score_files = list(results_dir.glob("**/scores.parquet"))
-    if not score_files:
-        st.warning("No scores found. Run `make baselines proposed` first.")
+    if not (RESULTS / "scores.parquet").exists():
+        st.error("No results yet. Run `python run_pipeline.py` first.")
         return
+    scores, metrics, expl, campaign = load()
+    by_key = {(e["principal"], e["date"]): e for e in expl["alerts"]}
 
-    df_scores = _load_scores(str(score_files[-1]))
-    det_scores = df_scores[df_scores.get("detector", pd.Series()) == detector_name].copy()
-    if det_scores.empty:
-        det_scores = df_scores.copy()
+    st.title("CloudTrail insider-threat alert queue")
+    st.caption(f"One run: workload {expl['workload']}, seed {expl['seed']}, rolling origin {expl['origin']}, "
+               "test window only. Detector settings frozen on validation data.")
 
-    det_scores = det_scores.sort_values("score", ascending=False).head(budget)
-    st.dataframe(
-        det_scores[["principal", "date", "score"]].reset_index(drop=True),
-        use_container_width=True,
-    )
+    with st.sidebar:
+        det = st.selectbox("Detector", list(NAMES), format_func=NAMES.get)
+        budget = st.select_slider("Alerts per day (budget)", options=[1, 5, 10, 20, 50, 100], value=10)
+        days = sorted(scores["date"].unique())
+        day = st.select_slider("Day", options=days, value=days[0], format_func=lambda d: str(d)[:10])
 
-    # ── Metrics trend ─────────────────────────────────────────────────────────
-    st.header("Evaluation Metrics")
+    tab_queue, tab_metrics, tab_campaign = st.tabs(["Today's queue", "This run's metrics", "Campaign (5 seeds)"])
 
-    metric_files = list(results_dir.glob("**/metrics.parquet"))
-    if metric_files:
-        df_metrics = _load_metrics(str(metric_files[-1]))
-        df_plot = df_metrics[
-            (df_metrics["metric"] == "precision_at_b") & (df_metrics["budget"] == budget)
-        ].set_index("detector")[["value"]]
-        st.bar_chart(df_plot, y="value")
-    else:
-        st.info("No evaluation metrics found yet.")
+    with tab_queue:
+        s = scores[scores["detector"] == det]
+        al = emit_alerts(s, budget, 0, int(expl["seed"]))
+        today = al[al["date"] == day]
+        st.subheader(f"{NAMES[det]}: {len(today)} alerts on {str(day)[:10]}")
+        if today.empty:
+            st.info("This detector raised no alert that day.")
+        for _, a in today.iterrows():
+            with st.container(border=True):
+                st.markdown(f"**#{int(a['rank'])}  {a['principal']}**  ·  score {a['score']:.2f}")
+                e = by_key.get((a["principal"], str(day)[:10])) if det == PROPOSED else None
+                if e:
+                    st.code(render(e), language=None)
+                    pv = pd.Series(e["family_pvalues"]).rename(index=lambda f: FAMILY_TEXT.get(f, f))
+                    st.caption("How unusual each behaviour family is for this identity (smaller p = more unusual)")
+                    st.dataframe(pv.rename("p-value").to_frame().T, hide_index=True)
+                elif det == PROPOSED:
+                    st.caption("Explanation stored for the 10-alerts/day queue only; set the budget to 10.")
+                else:
+                    st.caption("This baseline gives a score but no explanation.")
 
-    # ── SHAP explanations ─────────────────────────────────────────────────────
-    st.header("SHAP Explanations")
+    with tab_metrics:
+        show = metrics[metrics["metric"].isin(["dr_at_b", "precision_at_b", "precision_oracle_at_b",
+                                               "mttd_hours_median"]) & (metrics["budget"] > 0)]
+        st.dataframe(show.pivot_table(index="detector", columns=["metric", "budget"], values="value")
+                     .rename(index=NAMES).round(3))
+        st.caption("Single run; see the Campaign tab for means and 95% CIs over seeds.")
 
-    shap_files = list(results_dir.glob("**/shap_alerts.json"))
-    if shap_files:
-        alerts = _load_shap_alerts(str(shap_files[-1]))
-        if alerts:
-            alert_labels = [f"#{a['rank']}  {a['principal']}  {a['date']}" for a in alerts]
-            sel = st.selectbox("Select alert", alert_labels)
-            idx = alert_labels.index(sel)
-            chosen = alerts[idx]
-
-            shap_df = (
-                pd.DataFrame.from_dict(
-                    chosen["shap"], orient="index", columns=["shap_value"]
-                )
-                .sort_values("shap_value", key=abs, ascending=False)
-                .head(cfg["explain"]["shap_max_display"])
-            )
-            st.bar_chart(shap_df["shap_value"])
-            st.json({"principal": chosen["principal"], "date": chosen["date"], "score": chosen["score"]})
-    else:
-        st.info("No SHAP explanations found. Run `make explain` first.")
-
-    st.divider()
-    st.caption("cloudtrail-insider  ·  research prototype")
+    with tab_campaign:
+        if campaign is None:
+            st.info("Run `python scripts/run_campaign.py` for multi-seed results.")
+        else:
+            m = st.radio("Metric", ["dr_at_b", "precision_at_b"], horizontal=True,
+                         format_func={"dr_at_b": "Detection rate", "precision_at_b": "Precision"}.get)
+            c = campaign[(campaign["metric"] == m) & (campaign["budget"] == 10)].copy()
+            c["value"] = c.apply(lambda r: f"{r['mean']:.3f}  [{r['ci_lo']:.3f}, {r['ci_hi']:.3f}]", axis=1)
+            st.dataframe(c.pivot(index="detector", columns="workload", values="value").rename(index=NAMES))
+            for fig in ("per_workload_dr10.png", "precision_vs_budget.png", "ablation.png"):
+                if (Path("figures") / fig).exists():
+                    st.image(str(Path("figures") / fig))
 
 
 if __name__ == "__main__":
