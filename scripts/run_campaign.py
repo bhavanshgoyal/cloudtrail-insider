@@ -36,6 +36,7 @@ import pandas as pd
 from scipy import stats
 
 from cti.detectors.train import build_detectors
+from cti.eval.aggregate import clip_bounded
 from cti.eval.evaluate import per_insider_table
 from cti.experiment import apply_frozen_configs, load_world, run_window
 from cti.util.config import load_config
@@ -115,7 +116,7 @@ def summarise(df: pd.DataFrame) -> pd.DataFrame:
     rows = []
     for (w, d, b, m), g in per_seed.groupby(["workload", "detector", "budget", "metric"]):
         x = g["value"].to_numpy(dtype=float)
-        lo, hi = _t_interval(x)
+        lo, hi = clip_bounded(*_t_interval(x), m)
         n_runs = int(df[(df.workload == w) & (df.detector == d) & (df.budget == b) & (df.metric == m)]
                      ["value"].notna().sum())
         rows.append(dict(workload=w, detector=d, budget=b, metric=m, n_seeds=len(x), n_runs=n_runs,

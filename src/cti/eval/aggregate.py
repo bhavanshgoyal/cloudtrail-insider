@@ -16,6 +16,17 @@ def t_interval(x, conf: float = 0.95) -> tuple[float, float]:
     return float(x.mean() - half), float(x.mean() + half)
 
 
+# Metrics bounded to [0, 1]: their t-intervals are clipped to that range (with n = 3-5 seeds a
+# symmetric interval can otherwise extend below 0, which is not a possible value).
+BOUNDED = {"dr_at_b", "precision_at_b", "precision_oracle_at_b", "precision_day_mean", "auc_roc", "pr_auc"}
+
+
+def clip_bounded(lo: float, hi: float, metric) -> tuple[float, float]:
+    if metric in BOUNDED:
+        return (max(0.0, lo) if np.isfinite(lo) else lo, min(1.0, hi) if np.isfinite(hi) else hi)
+    return lo, hi
+
+
 def summarise(df: pd.DataFrame, keys: list[str], value: str = "value",
               replicate: str = "seed", within: str | None = "origin") -> pd.DataFrame:
     """Mean / std / 95% t-CI over independent replicates (seeds).
@@ -29,6 +40,8 @@ def summarise(df: pd.DataFrame, keys: list[str], value: str = "value",
         x = g[value].to_numpy(dtype=float)
         lo, hi = t_interval(x)
         key = key if isinstance(key, tuple) else (key,)
+        if "metric" in keys:
+            lo, hi = clip_bounded(lo, hi, key[keys.index("metric")])
         rows.append({**dict(zip(keys, key)), "n_seeds": int(np.isfinite(x).sum()),
                      "mean": float(np.nanmean(x)),
                      "std": float(np.nanstd(x, ddof=1)) if np.isfinite(x).sum() > 1 else np.nan,
