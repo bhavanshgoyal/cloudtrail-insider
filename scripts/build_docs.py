@@ -37,13 +37,13 @@ h1 { font-size: 15pt; margin: 0 0 4pt 0; }
 h2 { font-size: 11.5pt; margin: 10pt 0 3pt 0; }
 h3 { font-size: 10pt; margin: 7pt 0 2pt 0; }
 p, li { margin: 2pt 0; text-align: justify; }
-table { border-collapse: collapse; margin: 4pt 0; font-size: 8pt; width: 100%; }
-th, td { border: 0.5pt solid #999; padding: 1.5pt 3pt; text-align: left; }
+table { margin: 4pt 0; font-size: 8pt; width: 100%; }
+th, td { padding: 1.5pt 3pt; text-align: left; }
+th { border-bottom: 0.7pt solid #555; }
 th { background: #eee; }
 img { width: 100%; }
 pre, code { font-family: monospace; font-size: 7.8pt; }
 pre { background: #f4f4f4; padding: 3pt; }
-hr { border: 0; border-top: 0.5pt solid #999; }
 """
 
 
@@ -98,7 +98,8 @@ def build_paper() -> tuple[list[str], int]:
     text, errors = fill((TEMPLATES / "paper.md").read_text(encoding="utf-8"))
     (out_dir / "paper.md").write_text(text, encoding="utf-8")
 
-    html_body = markdown.markdown(_md_spacing(text), extensions=["tables", "fenced_code"])
+    text_html = re.sub(r"(?m)^---\s*$", "", text)          # horizontal rules render as stray lines in PyMuPDF
+    html_body = markdown.markdown(_md_spacing(text_html), extensions=["tables", "fenced_code"])
     # images: markdown paths are relative to docs/paper; the PDF archive is rooted at the repo
     html_body = re.sub(r'src="\.\./\.\./', 'src="', html_body)
     html = f"<html><head><meta charset='utf-8'><style>{PAPER_CSS}</style></head><body>{html_body}</body></html>"

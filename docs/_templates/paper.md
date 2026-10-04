@@ -159,7 +159,8 @@ exposure, logging disabled, admin role assumed by a non-admin, brute force then 
   given the positives per day. *MTTD*: hours from attack onset to the end of the alerting day
   (alerts are a daily batch). AUC-ROC is reported for reference.
 - **Statistics.** Origins are averaged within a seed. We report the mean and 95% t-interval over
-  the five seeds, and a paired seed bootstrap (10,000 resamples) for the hypotheses.
+  the five seeds (clipped to [0, 1] for rates), and a paired seed bootstrap (10,000 resamples) for
+  the hypotheses.
 
 ## 6 Results
 
@@ -240,9 +241,10 @@ What the ablation shows:
 ![Figure 3](../../figures/dr_vs_budget.png)
 *Figure 3. Detection rate as the daily budget grows from 1 to 200 (W1, 5 seeds).*
 
-At a budget of **1** alert/day the proposed detector already catches
-{{W|budget|0|P|dr_at_b|1|mean|.0%}} of insiders, against Isolation Forest's
-{{W|budget|0|IF|dr_at_b|1|mean|.0%}}.
+At a budget of **1** alert/day the proposed detector catches {{W|budget|0|P|dr_at_b|1|mean|.0%}}
+of insiders, against Isolation Forest's {{W|budget|0|IF|dr_at_b|1|mean|.0%}}. On this workload LOF
+matches it on detection at small budgets ({{W|budget|0|LOF|dr_at_b|1|mean|.0%}} at 1/day). The
+proposed method's advantage over LOF is precision, and robustness as the organisation grows.
 
 As the organisation grows from 250 to 3,000 identities, at 10 alerts/day:
 
@@ -252,8 +254,18 @@ As the organisation grows from 250 to 3,000 identities, at 10 alerts/day:
 | Isolation Forest | {{W|principals|250|IF|dr_at_b|10|mean|.2f}} | {{W|principals|3000|IF|dr_at_b|10|mean|.2f}} | {{R|IF|3000|.1f}} s |
 | LOF | | | {{R|LOF|3000|.0f}} s |
 
-When attack magnitude is cut to a quarter (stealth x0.25), the proposed detector's DR@10 falls to
-{{W|stealth|0.25|P|dr_at_b|10|mean|.2f}} (Isolation Forest {{W|stealth|0.25|IF|dr_at_b|10|mean|.2f}}).
+Isolation Forest and LOF degrade as identities are added; the proposed detector does not. With
+more identities, a global model sees more "normal-looking extremes", while a per-identity baseline is
+unaffected.
+
+Cutting attack magnitude to a quarter (stealth x0.25) does **not** lower the proposed detector's
+DR@10 ({{W|stealth|0.25|P|dr_at_b|10|mean|.2f}}, vs {{W|stealth|1.0|P|dr_at_b|10|mean|.2f}} at full
+strength; Isolation Forest {{W|stealth|0.25|IF|dr_at_b|10|mean|.2f}}). This matches the ablation:
+the signal is *novelty* (a sensitive resource this identity never touched), which is present whatever
+the volume. Attacks that avoid novel resources are the open problem.
+
+`cal_fraction` (0.1-0.4) leaves DR@10 unchanged ({{W|calfrac|0.1|P|dr_at_b|10|mean|.3f}} to
+{{W|calfrac|0.4|P|dr_at_b|10|mean|.3f}}), so the result is not sensitive to that choice.
 
 ### 6.5 Explanations and triage (O3, O4)
 Every alert of the proposed detector carries an explanation, for example:

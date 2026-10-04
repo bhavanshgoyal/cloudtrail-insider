@@ -205,10 +205,19 @@ Message: everyone catches the loud attacks; the per-identity view wins on slow, 
   - `figures/sweep_suppress_days.png`
   - `figures/sweep_cal_fraction.png`
 - Numbers:
-  - At **1 alert/day**: proposed DR {{W|budget|0|P|dr_at_b|1|mean|.0%}} vs IF {{W|budget|0|IF|dr_at_b|1|mean|.0%}}.
-  - At 3,000 identities: proposed DR@10 {{W|principals|3000|P|dr_at_b|10|mean|.2f}}, fit + score
-    {{R|P|3000|.1f}} s; LOF {{R|LOF|3000|.0f}} s.
-  - At stealth x0.25: proposed {{W|stealth|0.25|P|dr_at_b|10|mean|.2f}} vs IF {{W|stealth|0.25|IF|dr_at_b|10|mean|.2f}}.
+  - At **1 alert/day**: proposed DR {{W|budget|0|P|dr_at_b|1|mean|.0%}} vs IF {{W|budget|0|IF|dr_at_b|1|mean|.0%}}
+    (LOF {{W|budget|0|LOF|dr_at_b|1|mean|.0%}}; **say that LOF matches us on detection at small budgets
+    in W1**, and that our edge is precision and scale).
+  - **Scale (best sweep message):** from 250 to 3,000 identities, proposed DR@10
+    {{W|principals|250|P|dr_at_b|10|mean|.2f}} → {{W|principals|3000|P|dr_at_b|10|mean|.2f}}, while
+    Isolation Forest goes {{W|principals|250|IF|dr_at_b|10|mean|.2f}} → {{W|principals|3000|IF|dr_at_b|10|mean|.2f}}
+    and LOF {{W|principals|250|LOF|dr_at_b|10|mean|.2f}} → {{W|principals|3000|LOF|dr_at_b|10|mean|.2f}}.
+  - **Cost:** fit + score at 3,000 identities is proposed {{R|P|3000|.1f}} s, Isolation Forest
+    {{R|IF|3000|.1f}} s, LOF {{R|LOF|3000|.0f}} s (`figures/runtime_vs_principals.png`).
+  - **Stealth:** at x0.25 attack strength the proposed detector still gets
+    {{W|stealth|0.25|P|dr_at_b|10|mean|.2f}}. Detection relies on *novel* resources, not volume (ties
+    to the ablation caveat).
+  - `cal_fraction` 0.1-0.4: no change, so the result is robust to that setting.
 
 ### Slide R2-8: Threats to validity (1 mark)
 From `docs/THREATS_TO_VALIDITY.md`, four bullets:
@@ -303,6 +312,8 @@ Three takeaways:
 - ❌ "Explanations proven to help" unless the triage study (real responses) says SUPPORTED.
 - ❌ Any number from `results/_invalid_pre_fix/`, `figures/_invalid_pre_fix/` or the earlier README.
 - ❌ The mock triage responses used to test the scorer. They are not data.
+- ❌ "Beats every baseline at every budget." LOF matches us on detection rate at 1-2 alerts/day on W1.
+- ❌ "Robust to stealthy attacks" in general. Only attacks that touch new resources were tested.
 - ❌ "Uses SHAP to explain." Explanations come from the detector's own per-feature deviations; SHAP
   is only a cross-check.
 

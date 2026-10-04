@@ -32,7 +32,26 @@ bootstrap over seeds for H1/H2; stratified bootstrap over alerts for H3) lies be
 Otherwise it is reported as *not supported*.
 
 <!-- RESULTS:START -->
-(run `python scripts/build_docs.py` to fill this block from results/)
+## Results (test windows, 10 alerts/day, mean over 5 seeds; 95% CI in `results/campaign/summary.csv`)
+
+| Workload | Proposed DR@10 | Isolation Forest | LOF | Autoencoder | Rules | Proposed P@10 (oracle) | IF P@10 |
+|---|---|---|---|---|---|---|---|
+| W1 baseline | **0.956** | 0.653 | 0.953 | 0.863 | 0.553 | **0.204** (0.30) | 0.028 |
+| W2 stealthy | **0.954** | 0.536 | 0.870 | 0.877 | 0.246 | **0.272** (0.51) | 0.031 |
+| W3 scale (3,000) | **0.948** | 0.451 | 0.604 | 0.796 | 0.356 | **0.287** (0.71) | 0.056 |
+| W4 noisy | **0.992** | 0.561 | 0.948 | 0.899 | 0.383 | **0.230** (0.32) | 0.026 |
+
+**Hypothesis verdicts** (whole 95% CI beyond the threshold = supported):
+
+| | W1 | W2 | W3 | W4 |
+|---|---|---|---|---|
+| H1a DR@10 ≥ +40% | +46% NOT SUPPORTED | +78% SUPPORTED | +110% SUPPORTED | +77% SUPPORTED |
+| H1b P@10 ≥ +30% | +624% SUPPORTED | +769% SUPPORTED | +413% SUPPORTED | +796% SUPPORTED |
+| H2 MTTD ≤ −25% | -35% NOT SUPPORTED | -81% SUPPORTED | -5% NOT SUPPORTED | -13% NOT SUPPORTED |
+| H3 triage | [PENDING: triage study not yet run] | | | |
+
+![Detection and precision per workload](figures/per_workload_dr10.png)
+
 <!-- RESULTS:END -->
 
 ## How it works (one paragraph)
@@ -58,7 +77,7 @@ python -m cti.eval.figures               # figures from the campaign
 python scripts/run_ablation.py           # which component causes the gain
 python scripts/run_sweep.py              # budget / scale / stealth / calibration sweeps
 python scripts/build_docs.py             # paper (PDF), threats, evidence matrix, this README's results
-python scripts/live_demo.py --scenario S1   # live demo on a brand-new company (< 1 min)
+python scripts/live_demo.py --scenario S2   # live demo on a brand-new company (~20 s)
 streamlit run src/cti/demo/app.py        # analyst dashboard
 ```
 Testbed (LocalStack, AWS-compatible): `docker compose up -d` then `python scripts/capture_evidence.py`

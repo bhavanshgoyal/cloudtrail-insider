@@ -1,0 +1,525 @@
+<html><head><meta charset='utf-8'><style>
+@page { size: A4; margin: 16mm 15mm; }
+body { font-family: serif; font-size: 9.6pt; line-height: 1.32; color: #111; }
+h1 { font-size: 15pt; margin: 0 0 4pt 0; }
+h2 { font-size: 11.5pt; margin: 10pt 0 3pt 0; }
+h3 { font-size: 10pt; margin: 7pt 0 2pt 0; }
+p, li { margin: 2pt 0; text-align: justify; }
+table { margin: 4pt 0; font-size: 8pt; width: 100%; }
+th, td { padding: 1.5pt 3pt; text-align: left; }
+th { border-bottom: 0.7pt solid #555; }
+th { background: #eee; }
+img { width: 100%; }
+pre, code { font-family: monospace; font-size: 7.8pt; }
+pre { background: #f4f4f4; padding: 3pt; }
+</style></head><body><h1>Insider-Threat Detection on Cloud Audit Logs at Operationally Realistic Alert Budgets</h1>
+<p><strong>[Team member names, affiliation]</strong> · Project P20 · October 2026</p>
+<p>Code: <strong>[GitHub URL]</strong> · Demo video: <strong>[video URL]</strong></p>
+<h2>Abstract</h2>
+<p>Insider-threat detectors for cloud audit logs are usually compared by the area under the ROC
+curve. A security team, however, works at a single operating point: the few alerts an analyst can
+review each day. Alerts that do not say <em>what</em> deviated are dismissed. We evaluate detectors on
+AWS-CloudTrail-style audit logs at <strong>fixed daily alert budgets</strong> (10, 50 and 100 alerts/day). We
+propose <em>BudgetAwareConformal</em>, which judges every identity against its own history with robust
+per-feature deviations, calibrates them with pooled split-conformal p-values, keeps four behaviour
+families (identity, resource, timing, volume) separate, and explains each alert by naming the
+deviating family and features. On synthetic organisations with five planted insider scenarios
+(4 workloads x 5 seeds x 3 rolling temporal origins; settings frozen on separate validation data),
+at 10 alerts/day the method detects 96% of insiders against
+65% for Isolation Forest on the baseline workload, with
+0.204 vs 0.028
+precision (oracle ceiling 0.30). The pre-registered
+relative-gain hypotheses hold in 7 of 8 workload tests. An ablation shows the gain comes from
+per-identity baselines, pooled calibration and family separation, and mostly from resource-access
+deviations. Duplicate suppression does not help. A crossover triage study with four reviewers
+measures whether the explanations alone suffice for triage.</p>
+<h2>1 Introduction</h2>
+<p>Cloud control planes record every API call (who, what action, which resource, outcome) in audit
+logs such as AWS CloudTrail. When credentials are misused by an insider, or by an outsider holding
+valid credentials, this log is often the only evidence. Detection research usually reports
+threshold-free metrics such as AUC-ROC. But a Security Operations Centre (SOC) runs at one fixed
+point: analysts can examine only a small number of alerts per day. Analysts report that the vast
+majority of alarms they see are false positives and that they need alarms that are explainable and
+contextual [9]. A detector with a good curve can still be useless at ten alerts per day, and an
+alert that only says "anomalous" will be dismissed.</p>
+<p>We address both gaps with four objectives:
+<strong>O1</strong> detect deviations in identity behaviour, resource access and temporal pattern;
+<strong>O2</strong> evaluate at fixed alert budgets reflecting analyst capacity;
+<strong>O3</strong> generate per-alert explanations naming the deviation responsible; and
+<strong>O4</strong> test whether those explanations let a reviewer triage the alert.</p>
+<p><strong>Contributions.</strong>
+(i) A leak-free evaluation protocol for cloud audit-log insider detection at fixed <em>per-day</em>
+alert budgets, reporting detection rate, precision against its oracle ceiling, and time to detection
+with confidence intervals over independent seeds.
+(ii) BudgetAwareConformal, a per-identity detector with pooled conformal calibration that is fast
+(seconds for 3,000 identities) and explains every alert from its own attribution.
+(iii) A component and feature-family ablation and parameter sweeps that locate where the gain comes
+from, including a negative result for alert suppression.
+(iv) A pre-registered crossover triage study protocol for explanation usability.
+(v) A reproducible synthetic CloudTrail testbed with five insider scenarios and benign look-alikes.</p>
+<h2>2 Related Work</h2>
+<p><em>Insider-threat detection.</em> Most work uses the synthetic CERT data and reports AUC, accuracy or F1
+[2, 3, 4]. Le and Zincir-Heywood [1] evaluate unsupervised ensembles against an <em>investigation
+budget</em> expressed as a share of all sessions. We instead fix the number of alerts per day, which is
+how an analyst queue operates. Facade [5] shows at Google scale that judging an event in the context
+of its user and resource is what makes precision workable, but its data and system are private.</p>
+<p><em>Cloud audit logs.</em> Isolation Forest is used directly on CloudTrail for credential-abuse detection
+and evaluated with F1 [6]. Cloud anomaly benchmarks focus on operational faults and per-case
+classification [7].</p>
+<p><em>Calibration.</em> Conformal p-values give distribution-free outlier tests [8]. We apply them to
+per-identity normalised scores pooled across identities.</p>
+<p><em>Explanations and analysts.</em> Pitfalls such as temporal snooping, inappropriate metrics and the
+base-rate fallacy are common in security ML [10]. Only 14% of security XAI studies evaluate
+explanations with users [11]. SHAP-based insider-threat work re-classifies or labels detections
+automatically [12, 13]. Alert-fatigue work acts downstream on IDS alerts with supervision [14]. The
+full verified gap table is in <code>docs/related_work.md</code>.</p>
+<h2>3 Problem and Hypotheses</h2>
+<p>Detectors score every (identity, day). Each day the analyst receives the top-<em>B</em> scored rows.
+Hypotheses are stated against Isolation Forest on the identical feature matrix, at <em>B</em> = 10, on
+the test windows, with 95% intervals from a paired bootstrap over seeds. A hypothesis counts as
+supported only if the whole interval clears its threshold.</p>
+<ul>
+<li><strong>H1a</strong> detection rate at 10 alerts/day is at least 40% higher (relative) than Isolation Forest;</li>
+<li><strong>H1b</strong> precision at 10 alerts/day is at least 30% higher;</li>
+<li><strong>H2</strong> median time to detection is at least 25% lower;</li>
+<li><strong>H3</strong> reviewers shown only the explanation triage alerts with balanced accuracy at least 20
+  percentage points above reviewers shown only the anomaly score.</li>
+</ul>
+<h2>4 Method</h2>
+<h3>4.1 Testbed and data</h3>
+<p>CERT data was not used (a deliberate scope decision; see Section 7). A vectorised generator
+produces CloudTrail-schema events for 1,000-3,000 identities over 180 days. Five roles (analyst,
+developer, admin, backup service, CI runner) each have time zones, working hours, IPs, user agents
+and a personal working set of S3 buckets. Benign look-alikes include admin on-call bursts,
+backup-service night reads, travel from new IPs, logins without MFA, developer error bursts,
+admin key creation and month-end spikes. Five insider scenarios are planted:</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Scenario</th>
+<th>Signature</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S1</td>
+<td>Exfiltration after hours</td>
+<td>03:00 login from new IP, ~50 sensitive reads, public snapshot</td>
+</tr>
+<tr>
+<td>S2</td>
+<td>Departing insider</td>
+<td>three-week ramp of sensitive reads, then write to an external bucket</td>
+</tr>
+<tr>
+<td>S3</td>
+<td>Privilege escalation</td>
+<td>key for another user, assume admin, policy change, external e-mail</td>
+</tr>
+<tr>
+<td>S4</td>
+<td>Credential stuffing</td>
+<td>burst of failed logins from a new IP, success, reconnaissance</td>
+</tr>
+<tr>
+<td>S5</td>
+<td>Low-and-slow</td>
+<td>a few extra reads of one sensitive bucket every working day for a month</td>
+</tr>
+</tbody>
+</table>
+<p>Four workloads vary the conditions: <strong>W1</strong> baseline; <strong>W2</strong> stealthy (attack magnitude halved,
+slow scenarios twice as likely); <strong>W3</strong> 3,000 identities; <strong>W4</strong> 2.5x more benign look-alikes and
+more service accounts. A LocalStack (AWS-compatible) container is the cloud testbed.</p>
+<h3>4.2 Features (O1)</h3>
+<p>32 features per identity-day in four families, all <strong>causal</strong>: anything "new" or
+"usual" is computed only from earlier days, and a test checks that appending future events never
+changes earlier rows.</p>
+<ul>
+<li><em>Identity:</em> never-seen IPs, user agents and regions; failed logins; logins without MFA; error rate.</li>
+<li><em>Resource:</em> never-touched resources; sensitive-bucket access; writes to external buckets;
+  privilege-escalating and IAM-write actions; public exposure; rare API actions.</li>
+<li><em>Temporal:</em> after-hours share; distance from the identity's usual hour; weekend activity; burstiness.</li>
+<li><em>Volume:</em> event and byte volume; distinct actions and services; never-used actions.</li>
+</ul>
+<h3>4.3 BudgetAwareConformal</h3>
+<ul>
+<li><strong>C1, per-identity surprisal.</strong> For identity <em>u</em> and feature <em>f</em>:
+  <em>z = max(0, (x - med_u,f) / s_u,f)</em>, where med and MAD are taken over <em>u</em>'s history (log-scale).
+  They are shrunk towards the population for short histories, and the scale is floored by a
+  population scale.</li>
+<li><strong>C2, pooled conformal calibration.</strong> Per family, the largest deviation becomes a family score.
+  The last 30% of the fit window is held out: baselines are estimated on the earlier part, and the
+  held-out family scores of <em>all</em> identities form a pooled calibration set (~2x10^4 rows). A family
+  p-value is <em>p = (1 + #{cal &gt;= s}) / (n + 1)</em>. Per-identity calibration sets of ~30 days cannot
+  produce p-values below 1/31, which is what made the original per-identity design fail.</li>
+<li><strong>C3, fusion.</strong> Family p-values are combined. Validation selected the Bonferroni minimum
+  (<em>score = -log10(min p x 4)</em>) over Fisher, harmonic-mean and Stouffer fusion.</li>
+<li><strong>C4, suppression</strong> (optional). Skip an identity alerted in the last <em>k</em> days. Validation
+  selected <em>k = 0</em> (off).</li>
+</ul>
+<p><strong>Explanations (O3).</strong> For each alert: the family with the smallest p-value, its top-3 features by
+deviation, today's value and the identity's usual value, plus any other family with p &lt; 0.01. A
+Kernel-SHAP cross-check on 20 alerts compares SHAP's top feature with the named features.</p>
+<h3>4.4 Baselines</h3>
+<p>Isolation Forest (the baseline named in the problem statement; tuned on validation under the same
+protocol), Local Outlier Factor and an MLP autoencoder, all on the identical feature matrix. A
+12-rule signature engine in the style of commercial cloud threat detection (root use, public
+exposure, logging disabled, admin role assumed by a non-admin, brute force then success, and others).</p>
+<h2>5 Experimental Setup</h2>
+<ul>
+<li><strong>Splits.</strong> The first 14 days are history only. On the remaining days, each of 3 rolling origins
+  has an expanding train window, a 15% validation window and a 25% test window (42 days).
+  Empty windows abort the run.</li>
+<li><strong>Protocol.</strong> Tuning used only the validation windows of seeds 100-101: 44
+  configurations, coordinate descent on mean DR@10, ties broken by P@10. The frozen settings were
+  then run on the <strong>test</strong> windows of seeds 0-4 (fit on train + validation).
+  That is 60 test windows, covering 1622 insider instances.</li>
+<li><strong>Metrics at budget B per day.</strong> <em>DR@B</em>: fraction of insiders active in the window with at least
+  one alert on a malicious day. <em>P@B</em>: true alerts / alerts. <em>Oracle P@B</em>: best precision achievable
+  given the positives per day. <em>MTTD</em>: hours from attack onset to the end of the alerting day
+  (alerts are a daily batch). AUC-ROC is reported for reference.</li>
+<li><strong>Statistics.</strong> Origins are averaged within a seed. We report the mean and 95% t-interval over
+  the five seeds (clipped to [0, 1] for rates), and a paired seed bootstrap (10,000 resamples) for
+  the hypotheses.</li>
+</ul>
+<h2>6 Results</h2>
+<h3>6.1 Detection at 10 alerts/day</h3>
+<table>
+<thead>
+<tr>
+<th>Workload</th>
+<th>Proposed DR@10</th>
+<th>Isolation Forest</th>
+<th>LOF</th>
+<th>Autoencoder</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>W1 baseline</td>
+<td><strong>0.956</strong></td>
+<td>0.653</td>
+<td>0.953</td>
+<td>0.863</td>
+<td>0.553</td>
+</tr>
+<tr>
+<td>W2 stealthy</td>
+<td><strong>0.954</strong></td>
+<td>0.536</td>
+<td>0.870</td>
+<td>0.877</td>
+<td>0.246</td>
+</tr>
+<tr>
+<td>W3 scale</td>
+<td><strong>0.948</strong></td>
+<td>0.451</td>
+<td>0.604</td>
+<td>0.796</td>
+<td>0.356</td>
+</tr>
+<tr>
+<td>W4 noisy</td>
+<td><strong>0.992</strong></td>
+<td>0.561</td>
+<td>0.948</td>
+<td>0.899</td>
+<td>0.383</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Workload</th>
+<th>Proposed P@10</th>
+<th>Isolation Forest</th>
+<th>LOF</th>
+<th>Autoencoder</th>
+<th>Rules</th>
+<th>Oracle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>W1</td>
+<td><strong>0.204</strong></td>
+<td>0.028</td>
+<td>0.063</td>
+<td>0.046</td>
+<td>0.027</td>
+<td>0.304</td>
+</tr>
+<tr>
+<td>W2</td>
+<td><strong>0.272</strong></td>
+<td>0.031</td>
+<td>0.069</td>
+<td>0.077</td>
+<td>0.014</td>
+<td>0.511</td>
+</tr>
+<tr>
+<td>W3</td>
+<td><strong>0.287</strong></td>
+<td>0.056</td>
+<td>0.094</td>
+<td>0.118</td>
+<td>0.044</td>
+<td>0.710</td>
+</tr>
+<tr>
+<td>W4</td>
+<td><strong>0.230</strong></td>
+<td>0.026</td>
+<td>0.070</td>
+<td>0.054</td>
+<td>0.016</td>
+<td>0.323</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table 1. Means over 5 seeds (each the average of 3 temporal origins). 95% intervals are in
+<code>results/campaign/summary.csv</code> and in Figure 1.</em></p>
+<p><img alt="Figure 1" src="../../figures/per_workload_dr10.png" /></p>
+<p><em>Figure 1. Detection rate and precision at 10 alerts/day per workload, mean and 95% CI over seeds.</em></p>
+<p><strong>Hypotheses.</strong></p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>W1</th>
+<th>W2</th>
+<th>W3</th>
+<th>W4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H1a DR@10 &gt;= +40%</td>
+<td>+46% [+31%, +65%] <strong>NOT SUPPORTED</strong></td>
+<td>+78% <strong>SUPPORTED</strong></td>
+<td>+110% <strong>SUPPORTED</strong></td>
+<td>+77% <strong>SUPPORTED</strong></td>
+</tr>
+<tr>
+<td>H1b P@10 &gt;= +30%</td>
+<td>+624% <strong>SUPPORTED</strong></td>
+<td>+769% <strong>SUPPORTED</strong></td>
+<td>+413% <strong>SUPPORTED</strong></td>
+<td>+796% <strong>SUPPORTED</strong></td>
+</tr>
+<tr>
+<td>H2 MTTD &lt;= -25%</td>
+<td>-35% <strong>NOT SUPPORTED</strong></td>
+<td>-81% <strong>SUPPORTED</strong></td>
+<td>-5% <strong>NOT SUPPORTED</strong></td>
+<td>-13% <strong>NOT SUPPORTED</strong></td>
+</tr>
+</tbody>
+</table>
+<p>H1 holds in 7 of 8 tests. On W1, H1a's point estimate exceeds +40% but its interval does not.
+H2 holds only on the stealthy workload: with daily batches, every detector that catches an insider
+does so within about a day, so there is little room to be faster.</p>
+<p><strong>Where the gain comes from (W1, DR@10 per scenario).</strong> Isolation Forest catches the loud
+single-day attacks (S1 100%, S4 100%) but misses most
+slow ones (S2 29%, S5 48%). The proposed detector
+reaches S2 100% and S5 88%: slow attacks are small
+deviations for the population but large ones for the individual.</p>
+<h3>6.2 The curve versus the operating point</h3>
+<p>Ranked by AUC-ROC, the proposed method is first on every workload, and the ranking at 10
+alerts/day agrees at the top. Between baselines the order changes: LOF and the autoencoder swap
+places in W2 and W4, and 9% of detector pairs flip across individual runs. More importantly, AUC
+compresses differences that matter at the operating point. On W4, Isolation Forest's AUC
+(0.753) is almost that of LOF (0.762),
+yet at 10 alerts/day it catches 56% of insiders against
+95% (Figure 2).</p>
+<p><img alt="Figure 2" src="../../figures/auc_vs_dr10.png" /></p>
+<p><em>Figure 2. Whole-curve AUC (x) vs detection rate at 10 alerts/day (y).</em></p>
+<h3>6.3 Ablation: which component causes the gain? (W1 / W2, seeds 0-2)</h3>
+<table>
+<thead>
+<tr>
+<th>Variant</th>
+<th>DR@10 W1</th>
+<th>P@10 W1</th>
+<th>DR@10 W2</th>
+<th>P@10 W2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Full (tuned)</td>
+<td>0.951</td>
+<td>0.168</td>
+<td>0.951</td>
+<td>0.238</td>
+</tr>
+<tr>
+<td>-C1 population baseline</td>
+<td>0.925</td>
+<td>0.040</td>
+<td>0.869</td>
+<td>0.052</td>
+</tr>
+<tr>
+<td>-C2 no calibration</td>
+<td>0.938</td>
+<td>0.046</td>
+<td>0.890</td>
+<td>0.064</td>
+</tr>
+<tr>
+<td>-C3 one pooled family</td>
+<td>0.932</td>
+<td>0.041</td>
+<td>0.878</td>
+<td>0.059</td>
+</tr>
+<tr>
+<td>+C4 suppress 3 days</td>
+<td>0.944</td>
+<td>0.072</td>
+<td>0.956</td>
+<td>0.112</td>
+</tr>
+<tr>
+<td>Fisher fusion</td>
+<td>0.892</td>
+<td>0.092</td>
+<td>0.773</td>
+<td>0.114</td>
+</tr>
+<tr>
+<td>-resource family</td>
+<td>0.658</td>
+<td>0.026</td>
+<td>0.310</td>
+<td>0.015</td>
+</tr>
+<tr>
+<td>-identity family</td>
+<td>0.951</td>
+<td>0.169</td>
+<td>0.956</td>
+<td>0.284</td>
+</tr>
+<tr>
+<td>Isolation Forest</td>
+<td>0.714</td>
+<td>0.029</td>
+<td>0.534</td>
+<td>0.030</td>
+</tr>
+</tbody>
+</table>
+<p>What the ablation shows:</p>
+<ul>
+<li>Removing per-identity baselines, calibration or family separation each cuts precision by
+  roughly 4x.</li>
+<li>Suppression lowers precision: a multi-day insider's repeated alerts are true positives.</li>
+<li>The resource family carries most of the signal. Identity, temporal and volume families add little
+  in these organisations (Section 7).</li>
+</ul>
+<h3>6.4 Sweeps: budget, scale and stealth</h3>
+<p><img alt="Figure 3" src="../../figures/dr_vs_budget.png" /></p>
+<p><em>Figure 3. Detection rate as the daily budget grows from 1 to 200 (W1, 5 seeds).</em></p>
+<p>At a budget of <strong>1</strong> alert/day the proposed detector catches 65%
+of insiders, against Isolation Forest's 36%. On this workload LOF
+matches it on detection at small budgets (71% at 1/day). The
+proposed method's advantage over LOF is precision, and robustness as the organisation grows.</p>
+<p>As the organisation grows from 250 to 3,000 identities, at 10 alerts/day:</p>
+<table>
+<thead>
+<tr>
+<th>Detector</th>
+<th>DR@10 at 250</th>
+<th>DR@10 at 3,000</th>
+<th>Fit + score time at 3,000</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Proposed</td>
+<td>1.00</td>
+<td>0.97</td>
+<td>1.2 s</td>
+</tr>
+<tr>
+<td>Isolation Forest</td>
+<td>0.96</td>
+<td>0.47</td>
+<td>4.0 s</td>
+</tr>
+<tr>
+<td>LOF</td>
+<td></td>
+<td></td>
+<td>104 s</td>
+</tr>
+</tbody>
+</table>
+<p>Isolation Forest and LOF degrade as identities are added; the proposed detector does not. With
+more identities, a global model sees more "normal-looking extremes", while a per-identity baseline is
+unaffected.</p>
+<p>Cutting attack magnitude to a quarter (stealth x0.25) does <strong>not</strong> lower the proposed detector's
+DR@10 (0.97, vs 0.95 at full
+strength; Isolation Forest 0.78). This matches the ablation:
+the signal is <em>novelty</em> (a sensitive resource this identity never touched), which is present whatever
+the volume. Attacks that avoid novel resources are the open problem.</p>
+<p><code>cal_fraction</code> (0.1-0.4) leaves DR@10 unchanged (0.951 to
+0.951), so the result is not sensitive to that choice.</p>
+<h3>6.5 Explanations and triage (O3, O4)</h3>
+<p>Every alert of the proposed detector carries an explanation, for example:</p>
+<pre><code>Resource access deviation (p = 0.00058)
+  - calls on sensitive buckets (finance / hr / pii / security): 9 (usually 0)
+  - share of calls on sensitive buckets: 21% (usually 0%)
+</code></pre>
+<p>Kernel SHAP's top feature was among the named features in all 20 cross-checked alerts. This is
+expected rather than strong independent validation, because the tuned score is driven by the
+largest single family deviation.</p>
+<p><strong>Triage study (pre-registered; <code>docs/triage_study/PROTOCOL.md</code>).</strong></p>
+<ul>
+<li>40 alerts (20 true, stratified over S1-S5; 20 false), 4 reviewers in a crossover design.</li>
+<li>Arm A shows the score only; arm B shows the explanation only.</li>
+<li>Balanced accuracy: arm A [PENDING: triage study not yet run], arm B [PENDING: triage study not yet run].</li>
+<li>H3 effect: [PENDING: triage study not yet run] [[PENDING: triage study not yet run], [PENDING: triage study not yet run]], verdict
+  [PENDING: triage study not yet run].</li>
+</ul>
+<h2>7 Limitations and Threats to Validity</h2>
+<ul>
+<li><strong>Synthetic data.</strong> All results come from our generator. CERT was not used, and LocalStack does
+  not provide CloudTrail lookups, so the detector never processed a real CloudTrail stream.</li>
+<li><strong>We wrote both the attacks and the detector.</strong> The ablation shows the signal is concentrated in
+  resource-access novelty. Attacks that stay inside an identity's usual resources are not modelled
+  and would be much harder.</li>
+<li><strong>Tuning favours our method.</strong> Only the proposed method and Isolation Forest were tuned (on
+  separate validation seeds); LOF, the autoencoder and the rules use defaults.</li>
+<li><strong>Small samples.</strong> Five seeds give wide intervals, there are 12 hypothesis tests without
+  family-wise correction, and the triage study has 4 reviewers who are also the authors.</li>
+<li><strong>Simplified operating model.</strong> Labels are per identity-day, and a fixed daily budget is one SOC
+  operating model among several.</li>
+</ul>
+<p><code>docs/THREATS_TO_VALIDITY.md</code> gives the full list, with numbers.</p>
+<h2>8 Conclusion</h2>
+<p>Evaluated where analysts actually operate, a fixed number of alerts per day, judging each cloud
+identity against its own history with pooled conformal calibration catches far more insiders, with
+several times higher precision, than global anomaly detectors and rule signatures on our synthetic
+organisations, and every alert explains which behaviour deviated. The negative and qualifying
+results matter as much: suppression does not help, the gain rests mainly on resource-access
+deviations, and whether explanations improve triage is settled by the human study rather than
+assumed. Next steps are real CloudTrail data, attacks that stay inside normal resource sets, and a
+triage study with outside analysts.</p>
+<h2>References</h2>
+<p>[1] Le &amp; Zincir-Heywood, IEEE TNSM 18(2), 2021. [2] Yuan &amp; Wu, Computers &amp; Security 104, 2021.
+[3] Li et al., arXiv:2108.10567, 2021. [4] Tian et al., Cybersecurity 8, 2025.
+[5] Kantchelian et al., Facade, arXiv:2412.06700, 2024. [6] Haunschild et al., Springer ISRL, 2026.
+[7] Zou et al., arXiv:2508.01844, 2025. [8] Bates et al., Annals of Statistics 51(1), 2023.
+[9] AlAhmadi et al., USENIX Security 2022. [10] Arp et al., USENIX Security 2022.
+[11] Nadeem et al., IEEE EuroS&amp;P 2023. [12] Grzeczkowicz et al., CRiSIS 2024 (LNCS 2025).
+[13] Faqihi et al., FGCS 2026. [14] Ndichu et al., arXiv:2605.22324 (ACSAC 2026).
+Full entries: <code>docs/references.bib</code>.</p></body></html>

@@ -61,7 +61,7 @@ sweep:
 
 # ── Live demo (Review 3) ─────────────────────────────────────────────────
 demo:
-	$(PYTHON) scripts/live_demo.py --scenario S1
+	$(PYTHON) scripts/live_demo.py --scenario S2
 
 dashboard:
 	streamlit run src/cti/demo/app.py

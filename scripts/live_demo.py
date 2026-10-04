@@ -8,7 +8,7 @@ What it shows, live, on data generated on the spot:
   4. the reveal: which alerts were the planted attacks, and DR / precision at B for the
      proposed detector vs Isolation Forest over the whole test window.
 
-    python scripts/live_demo.py --scenario S1          # night-time exfiltration
+    python scripts/live_demo.py                       # S2 departing insider (default)
     python scripts/live_demo.py --scenario S5 --budget 5
     python scripts/live_demo.py --scenario S2 --seed 7 --no-reveal
 
@@ -58,10 +58,10 @@ def rule(title: str) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--scenario", choices=list(SCENARIOS), default="S1")
+    ap.add_argument("--scenario", choices=list(SCENARIOS), default="S2")
     ap.add_argument("--seed", type=int, default=None, help="default: a fresh random company")
-    ap.add_argument("--principals", type=int, default=300)
-    ap.add_argument("--days", type=int, default=100)
+    ap.add_argument("--principals", type=int, default=1000)
+    ap.add_argument("--days", type=int, default=180)
     ap.add_argument("--budget", type=int, default=10)
     ap.add_argument("--no-reveal", action="store_true", help="hide ground truth (let the audience triage)")
     ap.add_argument("--pause", type=float, default=0.0, help="seconds to pause between steps (presenting)")
@@ -71,7 +71,7 @@ def main() -> None:
     cfg = apply_frozen_configs(load_config())
 
     rule(f"1. A brand-new company (seed {seed})")
-    raw, gt = generate_dataset(args.principals, args.days, [args.scenario], insider_rate=0.03, seed=seed,
+    raw, gt = generate_dataset(args.principals, args.days, [args.scenario], insider_rate=0.05, seed=seed,
                                warmup_days=cfg["warmup_days"], start_date=cfg["synthetic"]["start_date"])
     events = normalise_columns(raw)
     say(f"  {args.principals} identities, {args.days} days, {len(events):,} CloudTrail events generated just now.")
