@@ -1,199 +1,170 @@
 """
 cti.triage.score_study
------------------------
-Score the triage study responses and compute evaluation metrics.
+----------------------
+Scores the O4 triage study (hypothesis H3) from the reviewers' response sheets.
 
-Input: CSV of reviewer responses with columns:
-  reviewer, alert_id, verdict (TP or FP)
+Inputs
+  docs/triage_study/responses_R*.csv           filled in by the reviewers
+  docs/triage_study/_facilitator_only/answer_key.csv
 
-Output: balanced accuracy per arm, Cohen's kappa for inter-rater
-agreement, and a summary table.
+Analysis (pre-declared in docs/triage_study/PROTOCOL.md)
+  * Per arm, pooled over reviewers: balanced accuracy (primary), accuracy, sensitivity
+    (TP recall), specificity, mean confidence, mean seconds per alert.
+  * H3 effect: balanced accuracy of arm B minus arm A. 95% CI by bootstrap over alerts,
+    resampling TP and FP alerts separately (each alert carries its arm-A and arm-B judgements,
+    so the comparison is paired). SUPPORTED only if the whole interval lies above +0.20.
+  * Inter-rater agreement: Cohen's kappa for the two reviewers who judged the same alerts in
+    the same arm (R1/R2 on H1-A and H2-B, R3/R4 on H1-B and H2-A).
+  * Per-family accuracy in arm B (which kinds of explanation work).
 
-Usage::
+Incomplete sheets are reported, never filled in.
 
-    python -m cti.triage.score_study \\
-        --responses docs/triage_study/responses.csv \\
-        --answer-key docs/triage_study/answer_key.json \\
-        --output results/triage_results.csv
+    python -m cti.triage.score_study
 """
 from __future__ import annotations
 
 import argparse
 import json
-import logging
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-log = logging.getLogger(__name__)
+STUDY = Path("docs/triage_study")
+THRESHOLD = 0.20
 
 
-def _balanced_accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-    """Balanced accuracy: mean of per-class recall."""
-    classes = np.unique(y_true)
-    if len(classes) < 2:
-        return float(np.mean(y_true == y_pred))
-
-    recalls = []
-    for c in classes:
-        mask = y_true == c
-        if mask.sum() > 0:
-            recalls.append(np.mean(y_pred[mask] == c))
-    return float(np.mean(recalls))
+def load(study: Path = STUDY) -> tuple[pd.DataFrame, pd.DataFrame]:
+    key = pd.read_csv(study / "_facilitator_only" / "answer_key.csv")
+    sheets = sorted(study.glob("responses_R*.csv"))
+    if not sheets:
+        raise SystemExit(f"no response sheets in {study}")
+    resp = pd.concat([pd.read_csv(f, dtype={"verdict": str}) for f in sheets], ignore_index=True)
+    return resp, key
 
 
-def _cohens_kappa(y1: np.ndarray, y2: np.ndarray) -> float:
-    """Cohen's kappa for two raters on binary labels."""
-    n = len(y1)
-    if n == 0:
-        return 0.0
-    po = np.mean(y1 == y2)  # Observed agreement
-    # Expected agreement by chance
-    p1_pos = np.mean(y1 == 1)
-    p2_pos = np.mean(y2 == 1)
-    pe = p1_pos * p2_pos + (1 - p1_pos) * (1 - p2_pos)
-    if pe == 1.0:
-        return 1.0
-    return float((po - pe) / (1 - pe))
+def validate(resp: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
+    """Normalise verdicts; return usable rows and a list of problems (never imputed)."""
+    problems = []
+    v = resp["verdict"].fillna("").astype(str).str.strip().str.upper()
+    v = v.replace({"TRUE POSITIVE": "TP", "FALSE POSITIVE": "FP", "T": "TP", "F": "FP"})
+    bad = ~v.isin(["TP", "FP"])
+    for _, r in resp[bad].iterrows():
+        problems.append(f"{r['reviewer']} alert {r['alert_id']} (arm {r['arm']}): missing/invalid verdict "
+                        f"{r['verdict']!r}")
+    ok = resp.loc[~bad].copy()
+    ok["pred"] = (v[~bad] == "TP").astype(int)
+    ok["confidence_1to5"] = pd.to_numeric(ok["confidence_1to5"], errors="coerce")
+    ok["seconds_spent"] = pd.to_numeric(ok["seconds_spent"], errors="coerce")
+    return ok, problems
 
 
-def score_responses(
-    df_responses: pd.DataFrame,
-    answer_key: list[dict],
-) -> dict:
-    """Score triage responses.
+def balanced_accuracy(y: np.ndarray, pred: np.ndarray) -> float:
+    rec = [np.mean(pred[y == c] == c) for c in (0, 1) if (y == c).any()]
+    return float(np.mean(rec)) if rec else np.nan
 
-    Parameters
-    ----------
-    df_responses : pd.DataFrame
-        Columns: reviewer, arm (A or B), alert_id, verdict (TP or FP)
-    answer_key : list[dict]
-        Each dict has: alert_id, true_label (True Positive / False Positive)
 
-    Returns
-    -------
-    dict with results per arm and inter-rater metrics
-    """
-    # Build truth lookup
-    truth = {}
-    for entry in answer_key:
-        truth[entry["alert_id"]] = 1 if entry["true_label"] == "True Positive" else 0
+def cohens_kappa(a: np.ndarray, b: np.ndarray) -> float:
+    if len(a) == 0:
+        return np.nan
+    po = np.mean(a == b)
+    pa, pb = a.mean(), b.mean()
+    pe = pa * pb + (1 - pa) * (1 - pb)
+    return float((po - pe) / (1 - pe)) if pe < 1 else 1.0
 
-    # Map verdicts to binary
-    df = df_responses.copy()
-    df["pred"] = df["verdict"].map({"TP": 1, "FP": 0, "True Positive": 1, "False Positive": 0})
-    df["true"] = df["alert_id"].map(truth)
 
-    # Drop rows with missing mappings
-    df = df.dropna(subset=["pred", "true"])
-    df["pred"] = df["pred"].astype(int)
-    df["true"] = df["true"].astype(int)
+def arm_stats(df: pd.DataFrame) -> dict:
+    y, p = df["label"].to_numpy(), df["pred"].to_numpy()
+    return dict(n_judgements=len(df), n_reviewers=df["reviewer"].nunique(),
+                balanced_accuracy=balanced_accuracy(y, p), accuracy=float(np.mean(y == p)),
+                sensitivity=float(np.mean(p[y == 1] == 1)) if (y == 1).any() else np.nan,
+                specificity=float(np.mean(p[y == 0] == 0)) if (y == 0).any() else np.nan,
+                mean_confidence=float(df["confidence_1to5"].mean()),
+                mean_seconds=float(df["seconds_spent"].mean()))
 
-    results = {"arms": {}, "inter_rater": {}}
 
-    # Per-arm balanced accuracy
-    for arm in df["arm"].unique():
-        arm_df = df[df["arm"] == arm]
-        y_true = arm_df["true"].to_numpy()
-        y_pred = arm_df["pred"].to_numpy()
+def effect_ci(df: pd.DataFrame, n_boot: int = 10000, seed: int = 0) -> tuple[float, float, float]:
+    """BA(B) - BA(A) with a stratified bootstrap over alerts (paired: each alert keeps both arms)."""
+    rng = np.random.default_rng(seed)
+    per = df.groupby(["alert_id", "arm"]).agg(correct=("correct", "mean"), label=("label", "first")).reset_index()
+    wide = per.pivot(index="alert_id", columns="arm", values="correct").join(
+        per.groupby("alert_id")["label"].first()).dropna()
 
-        ba = _balanced_accuracy(y_true, y_pred)
-        accuracy = float(np.mean(y_true == y_pred))
-        n_reviewers = arm_df["reviewer"].nunique()
-        n_responses = len(arm_df)
+    tp, fp = wide[wide["label"] == 1], wide[wide["label"] == 0]
+    tpA, tpB, fpA, fpB = (tp["A"].to_numpy(), tp["B"].to_numpy(), fp["A"].to_numpy(), fp["B"].to_numpy())
+    point = 0.5 * (tpB.mean() + fpB.mean()) - 0.5 * (tpA.mean() + fpA.mean())
+    it = rng.integers(0, len(tp), (n_boot, len(tp)))          # stratified, paired resampling of alerts
+    jf = rng.integers(0, len(fp), (n_boot, len(fp)))
+    boots = 0.5 * (tpB[it].mean(1) + fpB[jf].mean(1)) - 0.5 * (tpA[it].mean(1) + fpA[jf].mean(1))
+    return float(point), float(np.percentile(boots, 2.5)), float(np.percentile(boots, 97.5))
 
-        results["arms"][arm] = {
-            "balanced_accuracy": round(ba, 4),
-            "raw_accuracy": round(accuracy, 4),
-            "n_reviewers": n_reviewers,
-            "n_responses": n_responses,
-        }
 
-    # Inter-rater agreement (Cohen's kappa between pairs of reviewers)
-    reviewers = df["reviewer"].unique()
+def score(resp: pd.DataFrame, key: pd.DataFrame) -> dict:
+    ok, problems = validate(resp)
+    df = ok.merge(key[["alert_id", "label", "primary_family", "scenario_id"]], on="alert_id", how="left")
+    if df["label"].isna().any():
+        problems.append(f"{int(df['label'].isna().sum())} responses reference unknown alert ids")
+        df = df.dropna(subset=["label"])
+    df["label"] = df["label"].astype(int)
+    df["correct"] = (df["pred"] == df["label"]).astype(int)
+
+    expected = len(key) * 4                       # each alert: 2 reviewers in arm A + 2 in arm B
+    res: dict = {"n_alerts": int(len(key)), "n_responses_usable": int(len(df)), "problems": problems}
+    res["arms"] = {arm: arm_stats(g) for arm, g in df.groupby("arm")}
+    res["per_reviewer"] = {f"{r}-{a}": arm_stats(g) for (r, a), g in df.groupby(["reviewer", "arm"])}
+
+    if {"A", "B"} <= set(df["arm"]):
+        pt, lo, hi = effect_ci(df)
+        res["h3"] = dict(effect_ba_B_minus_A=pt, ci_lo=lo, ci_hi=hi, threshold=THRESHOLD,
+                         verdict="SUPPORTED" if lo > THRESHOLD else "NOT SUPPORTED")
     kappas = []
-    for i in range(len(reviewers)):
-        for j in range(i + 1, len(reviewers)):
-            r1 = df[df["reviewer"] == reviewers[i]]
-            r2 = df[df["reviewer"] == reviewers[j]]
-            common = r1.merge(r2, on=["alert_id", "arm"], suffixes=("_1", "_2"))
-            if len(common) > 0:
-                k = _cohens_kappa(common["pred_1"].to_numpy(), common["pred_2"].to_numpy())
-                kappas.append({
-                    "reviewer_1": reviewers[i],
-                    "reviewer_2": reviewers[j],
-                    "kappa": round(k, 4),
-                    "n_common": len(common),
-                })
-
-    results["inter_rater"] = {
-        "pairwise_kappas": kappas,
-        "mean_kappa": round(float(np.mean([k["kappa"] for k in kappas])), 4) if kappas else None,
-    }
-
-    return results
+    for r1, r2 in (("R1", "R2"), ("R3", "R4")):
+        for arm in ("A", "B"):
+            a = df[(df.reviewer == r1) & (df.arm == arm)].set_index("alert_id")["pred"]
+            b = df[(df.reviewer == r2) & (df.arm == arm)].set_index("alert_id")["pred"]
+            common = a.index.intersection(b.index)
+            if len(common):
+                kappas.append(dict(pair=f"{r1}/{r2}", arm=arm, n=len(common),
+                                   kappa=cohens_kappa(a[common].to_numpy(), b[common].to_numpy())))
+    res["kappa"] = kappas
+    b = df[df["arm"] == "B"]
+    res["arm_B_accuracy_by_family"] = (b.groupby("primary_family")["correct"].agg(["mean", "size"])
+                                       .rename(columns={"mean": "accuracy", "size": "n"}).round(3)
+                                       .to_dict(orient="index"))
+    res["completeness"] = dict(expected_judgements=expected, usable=int(len(df)))
+    return res
 
 
-def print_results(results: dict) -> None:
-    """Pretty-print triage study results."""
-    print("\n" + "=" * 60)
-    print("  TRIAGE STUDY RESULTS")
-    print("=" * 60)
-
-    print(f"\n{'Arm':<10} {'Balanced Acc':<15} {'Raw Acc':<12} {'Reviewers':<12} {'Responses'}")
-    print("-" * 60)
-    for arm, data in results["arms"].items():
-        print(f"{arm:<10} {data['balanced_accuracy']:<15.4f} {data['raw_accuracy']:<12.4f} "
-              f"{data['n_reviewers']:<12} {data['n_responses']}")
-
-    # Improvement
-    arms = list(results["arms"].keys())
-    if len(arms) == 2:
-        ba_a = results["arms"][arms[0]]["balanced_accuracy"]
-        ba_b = results["arms"][arms[1]]["balanced_accuracy"]
-        diff = ba_b - ba_a
-        print(f"\n  Δ Balanced Accuracy (B - A) = {diff:+.4f} ({diff*100:+.1f} pp)")
-        if diff > 0.20:
-            print("  ✅ H3 SUPPORTED: Explanation arm is ≥20pp above score-only arm")
-        else:
-            print(f"  ⚠️  H3 requires ≥20pp improvement; observed {diff*100:.1f}pp")
-
-    # Inter-rater
-    ir = results["inter_rater"]
-    if ir["mean_kappa"] is not None:
-        print(f"\n  Mean Cohen's κ = {ir['mean_kappa']:.4f}")
-        if ir["mean_kappa"] >= 0.6:
-            print("  ✅ Substantial inter-rater agreement")
-        elif ir["mean_kappa"] >= 0.4:
-            print("  ⚠️  Moderate inter-rater agreement")
-        else:
-            print("  ⚠️  Fair/poor inter-rater agreement")
-
-    print("=" * 60)
+def report(res: dict) -> str:
+    lines = ["TRIAGE STUDY (O4 / H3)", f"usable judgements: {res['n_responses_usable']} "
+             f"(expected {res['completeness']['expected_judgements']})"]
+    for p in res["problems"]:
+        lines.append(f"  ! {p}")
+    for arm, s in sorted(res["arms"].items()):
+        lines.append(f"arm {arm}: balanced acc {s['balanced_accuracy']:.3f}  acc {s['accuracy']:.3f}  "
+                     f"sens {s['sensitivity']:.3f}  spec {s['specificity']:.3f}  "
+                     f"conf {s['mean_confidence']:.2f}  sec {s['mean_seconds']:.0f}  (n={s['n_judgements']})")
+    if "h3" in res:
+        h = res["h3"]
+        lines.append(f"H3: BA(B) - BA(A) = {h['effect_ba_B_minus_A']:+.3f}  95% CI [{h['ci_lo']:+.3f}, "
+                     f"{h['ci_hi']:+.3f}]  threshold +{h['threshold']:.2f}  -> {h['verdict']}")
+    for k in res["kappa"]:
+        lines.append(f"kappa {k['pair']} arm {k['arm']}: {k['kappa']:.3f} (n={k['n']})")
+    return "\n".join(lines)
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Score triage study responses")
-    parser.add_argument("--responses", required=True, help="CSV: reviewer, arm, alert_id, verdict")
-    parser.add_argument("--answer-key", required=True, help="JSON answer key")
-    parser.add_argument("--output", default="results/triage_results.json")
-    args = parser.parse_args()
-
-    df = pd.read_csv(args.responses)
-    with open(args.answer_key) as f:
-        answer_key = json.load(f)
-
-    results = score_responses(df, answer_key)
-    print_results(results)
-
-    out_path = Path(args.output)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(out_path, "w") as f:
-        json.dump(results, f, indent=2)
-    print(f"\n📁 Results saved to {out_path}")
+    ap = argparse.ArgumentParser(description="Score the triage study")
+    ap.add_argument("--study", default=str(STUDY))
+    ap.add_argument("--output", default="results/triage_results.json")
+    args = ap.parse_args()
+    resp, key = load(Path(args.study))
+    res = score(resp, key)
+    print(report(res))
+    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+    Path(args.output).write_text(json.dumps(res, indent=1, default=float))
+    print(f"\nsaved {args.output}")
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
     main()

@@ -1,210 +1,239 @@
 """
 cti.triage.generate_study
---------------------------
-Generate a triage study questionnaire from pipeline results.
+-------------------------
+Builds the triage study for objective O4 / hypothesis H3:
 
-The study has two arms:
-  Arm A (score-only):     reviewer sees anomaly score + principal + date
-  Arm B (with explanation): reviewer sees score + SHAP-based explanation
+    "Can a reviewer triage an alert correctly from the generated explanation alone?"
 
-Each reviewer classifies each alert as True Positive or False Positive.
-The study measures whether explanations improve triage accuracy.
+Design (see docs/triage_study/PROTOCOL.md - written before any response is collected)
+  * Source: alerts actually emitted by the proposed detector at B = 10 alerts/day on the
+    TEST windows of W1_baseline, seeds 0 and 1 (two independent synthetic organisations),
+    last rolling origin, frozen settings. Two seeds because one window holds too few distinct
+    insiders once each identity is capped at 2 alerts.
+  * 40 alerts: 20 true positives (principal-day with planted misuse), stratified round-robin
+    over attack scenarios S1-S5 (distinct identities first), + 20 false positives sampled
+    uniformly from the emitted false alerts; at most 2 alerts per identity; fixed seed.
+  * Two arms:  A = score only (anomaly score + rank in that day's queue)
+               B = explanation only (no score)
+    Both arms show the same context an analyst always has: pseudonymised identity, role, date.
+  * Crossover with 4 reviewers: alerts split into halves H1 / H2 (10 TP + 10 FP each).
+        R1: H1-A then H2-B     R2: H2-B then H1-A
+        R3: H1-B then H2-A     R4: H2-A then H1-B
+    Every alert is judged in both arms (by different reviewers); nobody sees an alert twice;
+    arm order is counterbalanced.
+  * Blinding: identities are pseudonymised, alert ids are random codes, the TP/FP mix is not
+    disclosed, and the answer key is written to a separate facilitator folder.
 
 Usage::
 
-    python -m cti.triage.generate_study \\
-        --scores results/scores.parquet \\
-        --shap   results/shap_alerts.json \\
-        --labels data/features/labels.parquet \\
-        --n-alerts 40 \\
-        --output docs/triage_study/
+    python -m cti.triage.generate_study            # writes docs/triage_study/
 """
 from __future__ import annotations
 
 import argparse
 import json
 import logging
+import string
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
+from cti.detectors.proposed import BudgetAwareConformal
+from cti.eval.evaluate import emit_alerts
+from cti.experiment import apply_frozen_configs, load_world, run_window
+from cti.explain.explain_proposed import explain_alerts
+from cti.util.config import load_config
+from cti.util.splits import make_splits
+
 log = logging.getLogger(__name__)
 
-# Feature name → human-readable description
-_FEATURE_DESCRIPTIONS = {
-    "vol_events_per_day":       "unusually high number of API calls",
-    "div_unique_event_names":   "used many different API actions (unusual variety)",
-    "div_unique_sources":       "accessed multiple AWS services (unusual breadth)",
-    "div_unique_regions":       "operated across multiple AWS regions",
-    "rar_fraction_rare_events": "high fraction of rarely-seen API actions",
-    "tmp_after_hours_ratio":    "activity outside business hours (off-hours)",
-    "tmp_burst_std_minutes":    "rapid burst of activity (short inter-arrival times)",
-    "err_error_rate":           "high rate of access-denied errors",
+OUT = Path("docs/triage_study")
+FACILITATOR = OUT / "_facilitator_only"
+STUDY_SEED = 2026
+N_PER_CLASS = 20
+MAX_PER_IDENTITY = 2
+
+# reviewer -> [(half, arm), (half, arm)] in presentation order
+SCHEDULE = {
+    "R1": [("H1", "A"), ("H2", "B")],
+    "R2": [("H2", "B"), ("H1", "A")],
+    "R3": [("H1", "B"), ("H2", "A")],
+    "R4": [("H2", "A"), ("H1", "B")],
 }
 
+ARM_TEXT = {
+    "A": "SCORE ONLY - you see the detector's anomaly score and the alert's rank in that day's queue.",
+    "B": "EXPLANATION ONLY - you see the generated explanation of what deviated; no score.",
+}
 
-def _explain_alert(shap_contrib: dict, top_k: int = 3) -> str:
-    """Turn SHAP contributions into a human-readable explanation string."""
-    sorted_feats = sorted(shap_contrib.items(), key=lambda x: abs(x[1]), reverse=True)
-    parts = []
-    for feat, value in sorted_feats[:top_k]:
-        desc = _FEATURE_DESCRIPTIONS.get(feat, feat.replace("_", " "))
-        direction = "high" if value > 0 else "low"
-        parts.append(f"  • {desc} (contribution: {value:+.3f})")
+INSTRUCTIONS = """\
+## Instructions
 
-    return "\n".join(parts)
+You are a SOC analyst. Each alert below was raised by an anomaly detector watching AWS CloudTrail
+logs. For each alert decide:
+
+* **TP** - this looks like genuine misuse of the identity (insider / stolen credentials) and you would
+  escalate it, or
+* **FP** - this looks like unusual but benign activity and you would close it.
+
+Rules:
+1. Use **only** what is shown for each alert. Do not look at code, data, results, other packets or
+   the facilitator folder, and do not discuss alerts with other reviewers until everyone is done.
+2. Work through the sections in the order given. Do not go back to change earlier answers.
+3. For every alert fill in your verdict (`TP` or `FP`), your confidence (1 = guess ... 5 = certain)
+   and roughly how many seconds you spent, in your response sheet
+   `responses_<you>.csv` (one row per alert, already listed).
+4. The proportion of TP and FP alerts is not disclosed - judge each alert on its own.
+
+Glossary (arm B): *p* is how unusual the deviation is compared with this identity's own history
+(smaller = more unusual). "usually" is this identity's typical value on a normal day.
+"""
 
 
-def generate_questionnaire(
-    df_scores: pd.DataFrame,
-    shap_alerts: list[dict],
-    df_labels: pd.DataFrame,
-    n_alerts: int = 40,
-) -> dict:
-    """Generate the two-arm triage study.
+def _codes(n: int, rng: np.random.Generator) -> list[str]:
+    letters = np.array(list(string.ascii_uppercase))
+    out: set[str] = set()
+    while len(out) < n:
+        out.add("".join(rng.choice(letters, 2)) + str(rng.integers(100, 1000)))
+    return sorted(out, key=lambda _: rng.random())
 
-    Returns a dict with:
-      - arm_a: list of score-only alerts
-      - arm_b: list of alerts with explanations
-      - answer_key: ground truth labels
+
+def select_alerts(cfg: dict, seed: int = 0, workload: str = "W1_baseline", budget: int = 10) -> pd.DataFrame:
+    """Alerts emitted by the frozen proposed detector on the test window, with labels + explanations."""
+    world = load_world(cfg, workload, seed)
+    split = make_splits(world.features["date"], cfg)                    # last origin
+    det = BudgetAwareConformal(cfg, seed)
+    run = run_window(world, cfg, split, "test", [det], budgets=[budget], with_ci=False)
+    name = det.name
+    alerts = emit_alerts(run.scores[name], budget, det.suppress_days, seed)
+    rows = alerts.merge(world.features, on=["principal", "date"], how="left")
+    expl = explain_alerts(run.detectors[name], rows, cfg["explain"]["top_k_features"])
+
+    labels = world.labels.set_index(["principal", "date"])["label"]
+    gt = {g["principal_id"]: g for g in world.ground_truth}
+    role = (world.events.groupby("principalId", observed=True)["roleName"].first().astype(str))
+    out = alerts.copy()
+    out["label"] = [int(labels.get((p, d), 0)) for p, d in zip(out["principal"], out["date"])]
+    out["scenario_id"] = [gt[p]["scenario_id"] if p in gt and lab else "" for p, lab in
+                          zip(out["principal"], out["label"])]
+    out["role"] = out["principal"].map(role).fillna("unknown")
+    out["explanation"] = [e["text"] for e in expl]
+    out["primary_family"] = [e["primary_family"] for e in expl]
+    out["n_alerts_that_day"] = out.groupby("date")["rank"].transform("max")
+    out["source_seed"] = seed
+    out["identity_key"] = f"s{seed}:" + out["principal"].astype(str)
+    out.attrs.update(workload=workload, seed=seed, origin=split.origin, budget=budget,
+                     split=split.describe())
+    return out
+
+
+def _round_robin_tp(pool: pd.DataFrame, n: int, rng: np.random.Generator) -> pd.DataFrame:
+    """TP alerts stratified by attack scenario: round-robin over scenarios, distinct identities first.
+
+    Sampling alerts uniformly would let multi-day attacks (S2/S5, ~20 alert-days each) crowd out the
+    single-day ones (S1/S3/S4), and the study would then measure one kind of explanation only.
     """
-    # Merge scores with labels
-    df = df_scores.merge(df_labels, on=["principal", "date"], how="left")
-    df["label"] = df["label"].fillna(0).astype(int)
-
-    # Take top n_alerts by score
-    df = df.sort_values("score", ascending=False).head(n_alerts).reset_index(drop=True)
-
-    # Build SHAP lookup
-    shap_lookup = {}
-    for alert in shap_alerts:
-        key = (alert.get("principal", ""), alert.get("date", ""))
-        shap_lookup[key] = alert.get("shap", {})
-
-    arm_a = []
-    arm_b = []
-    answer_key = []
-
-    for i, row in df.iterrows():
-        alert_id = i + 1
-        principal = row["principal"]
-        date = str(row["date"])[:10]
-        score = float(row["score"])
-        true_label = "True Positive" if row["label"] == 1 else "False Positive"
-
-        # Arm A: Score only
-        arm_a.append({
-            "alert_id": alert_id,
-            "text": (
-                f"Alert #{alert_id}\n"
-                f"  Principal: {principal}\n"
-                f"  Date: {date}\n"
-                f"  Anomaly Score: {score:.4f}\n"
-                f"\n"
-                f"  Is this a True Positive or False Positive? ___"
-            ),
-        })
-
-        # Arm B: With explanation
-        shap_contrib = shap_lookup.get((principal, date), {})
-        if not shap_contrib:
-            # Try with date string variations
-            for key in shap_lookup:
-                if key[0] == principal:
-                    shap_contrib = shap_lookup[key]
-                    break
-
-        explanation = _explain_alert(shap_contrib) if shap_contrib else "  • (explanation not available)"
-
-        arm_b.append({
-            "alert_id": alert_id,
-            "text": (
-                f"Alert #{alert_id}\n"
-                f"  Principal: {principal}\n"
-                f"  Date: {date}\n"
-                f"  Anomaly Score: {score:.4f}\n"
-                f"\n"
-                f"  WHY THIS WAS FLAGGED:\n"
-                f"{explanation}\n"
-                f"\n"
-                f"  Is this a True Positive or False Positive? ___"
-            ),
-        })
-
-        answer_key.append({
-            "alert_id": alert_id,
-            "principal": principal,
-            "date": date,
-            "true_label": true_label,
-        })
-
-    return {
-        "arm_a": arm_a,
-        "arm_b": arm_b,
-        "answer_key": answer_key,
-    }
+    queues = {}
+    for sc, g in pool.groupby("scenario_id"):
+        g = g.sample(frac=1.0, random_state=int(rng.integers(1 << 31)))
+        g = g.assign(_k=g.groupby("identity_key").cumcount()).query("_k < @MAX_PER_IDENTITY")
+        queues[sc] = list(g.sort_values("_k", kind="stable").index)      # first alert of each identity first
+    picked = []
+    while len(picked) < n and any(queues.values()):
+        for sc in sorted(queues):
+            if queues[sc] and len(picked) < n:
+                picked.append(queues[sc].pop(0))
+    if len(picked) < n:
+        raise ValueError(f"only {len(picked)} eligible TP alerts, need {n}")
+    return pool.loc[picked]
 
 
-def save_questionnaire(study: dict, output_dir: Path) -> None:
-    """Save the questionnaire as markdown files and JSON."""
-    output_dir.mkdir(parents=True, exist_ok=True)
+def sample_alerts(alerts: pd.DataFrame, n_per_class: int = N_PER_CLASS, seed: int = STUDY_SEED) -> pd.DataFrame:
+    """n TP (scenario-stratified) + n FP alerts, <= MAX_PER_IDENTITY per identity, split into H1/H2.
 
-    # Arm A markdown
-    with open(output_dir / "arm_a_score_only.md", "w", encoding="utf-8") as f:
-        f.write("# Triage Study — Arm A (Score Only)\n\n")
-        f.write("**Instructions**: For each alert below, decide whether it is a\n")
-        f.write("**True Positive** (real malicious activity) or a **False Positive**\n")
-        f.write("(benign/normal behaviour). Base your decision ONLY on the information shown.\n\n")
-        f.write("---\n\n")
-        for alert in study["arm_a"]:
-            f.write(f"```\n{alert['text']}\n```\n\n---\n\n")
+    Each half gets n/2 TP and n/2 FP; TPs are dealt to halves alternately in scenario order so both
+    halves contain every attack type.
+    """
+    rng = np.random.default_rng(seed)
+    tp = _round_robin_tp(alerts[alerts["label"] == 1], n_per_class, rng).copy()
+    tp = tp.sort_values("scenario_id", kind="stable")
+    fp = alerts[alerts["label"] == 0].sample(frac=1.0, random_state=int(rng.integers(1 << 31)))
+    fp = fp.groupby("identity_key", group_keys=False).head(MAX_PER_IDENTITY).head(n_per_class).copy()
+    if len(fp) < n_per_class:
+        raise ValueError(f"only {len(fp)} eligible FP alerts, need {n_per_class}")
+    halves = ["H1", "H2"] * (n_per_class // 2) + ["H1"] * (n_per_class % 2)
+    tp["half"], fp["half"] = halves, halves
+    study = pd.concat([tp, fp]).sample(frac=1.0, random_state=int(rng.integers(1 << 31))).reset_index(drop=True)
+    study["alert_id"] = _codes(len(study), rng)
+    ids = {p: f"identity-{i + 1:02d}" for i, p in enumerate(rng.permutation(study["identity_key"].unique()))}
+    study["identity"] = study["identity_key"].map(ids)
+    return study
 
-    # Arm B markdown
-    with open(output_dir / "arm_b_with_explanation.md", "w", encoding="utf-8") as f:
-        f.write("# Triage Study — Arm B (With Explanation)\n\n")
-        f.write("**Instructions**: For each alert below, decide whether it is a\n")
-        f.write("**True Positive** (real malicious activity) or a **False Positive**\n")
-        f.write("(benign/normal behaviour). You have both the anomaly score AND\n")
-        f.write("an explanation of WHY the alert was generated.\n\n")
-        f.write("---\n\n")
-        for alert in study["arm_b"]:
-            f.write(f"```\n{alert['text']}\n```\n\n---\n\n")
 
-    # Answer key (for grading)
-    with open(output_dir / "answer_key.json", "w", encoding="utf-8") as f:
-        json.dump(study["answer_key"], f, indent=2)
+def _card(r: pd.Series, arm: str) -> str:
+    head = (f"### Alert {r['alert_id']}\n\n"
+            f"- Identity: `{r['identity']}` (role: {r['role']})\n"
+            f"- Date: {pd.Timestamp(r['date']).date()}\n")
+    if arm == "A":
+        body = (f"- Anomaly score: **{r['score']:.2f}** (higher = more anomalous)\n"
+                f"- Position in that day's queue: {int(r['rank'])} of {int(r['n_alerts_that_day'])}\n")
+    else:
+        body = "\n```\n" + r["explanation"] + "\n```\n"
+    return head + body + "\n**Verdict (TP / FP):** ____  **Confidence (1-5):** ____\n\n---\n"
 
-    # Full study as JSON
-    with open(output_dir / "triage_study.json", "w", encoding="utf-8") as f:
-        json.dump(study, f, indent=2)
 
-    log.info("Saved triage study to %s", output_dir)
-    print(f"\n📋 Triage study saved to {output_dir}/")
-    print(f"   - arm_a_score_only.md       (give to half the reviewers)")
-    print(f"   - arm_b_with_explanation.md  (give to other half)")
-    print(f"   - answer_key.json            (for scoring)")
+def write_study(study: pd.DataFrame, meta: dict, out: Path = OUT) -> None:
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "_facilitator_only").mkdir(exist_ok=True)
+    rng = np.random.default_rng(STUDY_SEED + 1)
+    for reviewer, blocks in SCHEDULE.items():
+        md = [f"# Triage study - packet for reviewer {reviewer}\n\n", INSTRUCTIONS, "\n"]
+        resp = []
+        for k, (half, arm) in enumerate(blocks, 1):
+            part = study[study["half"] == half].sample(frac=1.0, random_state=int(rng.integers(1 << 31)))
+            md.append(f"\n## Section {k} of {len(blocks)} - arm {arm}: {ARM_TEXT[arm]}\n\n")
+            md += [_card(r, arm) for _, r in part.iterrows()]
+            resp += [dict(reviewer=reviewer, section=k, arm=arm, alert_id=a, verdict="", confidence_1to5="",
+                          seconds_spent="") for a in part["alert_id"]]
+        (out / f"packet_{reviewer}.md").write_text("".join(md), encoding="utf-8")
+        pd.DataFrame(resp).to_csv(out / f"responses_{reviewer}.csv", index=False)
+
+    key = study[["alert_id", "half", "identity", "source_seed", "principal", "date", "label", "scenario_id", "role",
+                 "primary_family", "score", "rank"]].copy()
+    key["date"] = key["date"].astype(str)
+    key["true_label"] = np.where(key["label"] == 1, "TP", "FP")
+    (out / "_facilitator_only" / "answer_key.csv").write_text(key.to_csv(index=False), encoding="utf-8")
+    (out / "_facilitator_only" / "README.md").write_text(
+        "# Facilitator only - reviewers must not open this folder\n\n"
+        "`answer_key.csv` holds the ground truth for every alert id (label from the planted scenarios).\n"
+        "Score the study with `python -m cti.triage.score_study` after all four response sheets are in.\n",
+        encoding="utf-8")
+    (out / "study_meta.json").write_text(json.dumps({**meta, "n_alerts": len(study),
+                                                     "n_tp": int(study["label"].sum()),
+                                                     "schedule": SCHEDULE, "study_seed": STUDY_SEED,
+                                                     "max_alerts_per_identity": MAX_PER_IDENTITY}, indent=1))
+    log.info("wrote %d alerts, 4 packets and 4 response sheets to %s", len(study), out)
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate triage study questionnaire")
-    parser.add_argument("--scores", required=True, help="Parquet with principal, date, score")
-    parser.add_argument("--shap", required=True, help="JSON with SHAP alerts")
-    parser.add_argument("--labels", required=True, help="Parquet with principal, date, label")
-    parser.add_argument("--n-alerts", type=int, default=40)
-    parser.add_argument("--output", default="docs/triage_study")
-    args = parser.parse_args()
-
-    df_scores = pd.read_parquet(args.scores)
-    with open(args.shap) as f:
-        shap_data = json.load(f)
-    shap_alerts = shap_data.get("alerts", shap_data) if isinstance(shap_data, dict) else shap_data
-    df_labels = pd.read_parquet(args.labels)
-
-    study = generate_questionnaire(df_scores, shap_alerts, df_labels, args.n_alerts)
-    save_questionnaire(study, Path(args.output))
+    ap = argparse.ArgumentParser(description="Generate the O4 triage study")
+    ap.add_argument("--seeds", type=int, nargs="+", default=[0, 1])
+    ap.add_argument("--workload", default="W1_baseline")
+    args = ap.parse_args()
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    logging.getLogger("cti.detectors.rules").setLevel(logging.WARNING)
+    cfg = apply_frozen_configs(load_config())
+    parts = [select_alerts(cfg, sd, args.workload) for sd in args.seeds]
+    alerts = pd.concat(parts, ignore_index=True)
+    study = sample_alerts(alerts)
+    meta = {"workload": args.workload, "seeds": args.seeds, "budget": 10,
+            "splits": {str(p.attrs["seed"]): p.attrs["split"] for p in parts},
+            "n_emitted_alerts": len(alerts), "emitted_tp": int(alerts["label"].sum()),
+            "emitted_tp_identities": int(alerts.loc[alerts["label"] == 1, "identity_key"].nunique())}
+    write_study(study, meta)
+    print(f"emitted {len(alerts)} alerts ({alerts['label'].sum()} TP); study: {len(study)} alerts -> {OUT}/")
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
     main()
