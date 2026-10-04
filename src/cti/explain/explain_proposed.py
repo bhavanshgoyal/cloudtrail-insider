@@ -96,7 +96,8 @@ def render(expl: dict) -> str:
     lines = [f"{FAMILY_TEXT.get(fam, fam)} (p = {p:.2g})"]
     for f in expl["top_features"]:
         desc, kind = FEATURE_TEXT.get(f["feature"], (f["feature"].replace("_", " "), "float"))
-        lines.append(f"  - {desc}: {_fmt(f['value'], kind)} (usually {_fmt(f['usual'], kind)})")
+        usual_kind = "float" if kind == "int" and abs(f["usual"] - round(f["usual"])) > 0.05 else kind
+        lines.append(f"  - {desc}: {_fmt(f['value'], kind)} (usually {_fmt(f['usual'], usual_kind)})")
     if len(lines) == 1:
         lines.append("  - no single feature stands out; several small deviations combined")
     if expl.get("secondary_families"):

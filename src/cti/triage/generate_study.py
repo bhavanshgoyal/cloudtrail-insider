@@ -92,11 +92,18 @@ Glossary (arm B): *p* is how unusual the deviation is compared with this identit
 
 
 def _codes(n: int, rng: np.random.Generator) -> list[str]:
+    """n distinct random alert codes, deterministic for a given generator state.
+
+    (A list, not a set: set iteration order of strings changes between Python processes,
+    which would make the study differ from run to run.)
+    """
     letters = np.array(list(string.ascii_uppercase))
-    out: set[str] = set()
+    out: list[str] = []
     while len(out) < n:
-        out.add("".join(rng.choice(letters, 2)) + str(rng.integers(100, 1000)))
-    return sorted(out, key=lambda _: rng.random())
+        code = "".join(rng.choice(letters, 2)) + str(rng.integers(100, 1000))
+        if code not in out:
+            out.append(code)
+    return out
 
 
 def select_alerts(cfg: dict, seed: int = 0, workload: str = "W1_baseline", budget: int = 10) -> pd.DataFrame:

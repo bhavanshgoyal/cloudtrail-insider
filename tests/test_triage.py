@@ -99,3 +99,15 @@ def test_metric_helpers():
     y = np.array([1, 1, 0, 0])
     assert balanced_accuracy(y, np.array([1, 0, 0, 0])) == 0.75
     assert cohens_kappa(np.array([1, 0, 1, 0]), np.array([1, 0, 1, 0])) == 1.0
+
+
+def test_alert_codes_do_not_depend_on_python_hash_seed():
+    """Regression: codes were once drawn via a set, whose order changes between processes."""
+    import os
+    import subprocess
+    import sys
+    code = ("import numpy as np; from cti.triage.generate_study import _codes; "
+            "print(_codes(40, np.random.default_rng(2026)))")
+    outs = {subprocess.run([sys.executable, "-c", code], capture_output=True, text=True,
+                           env={**os.environ, "PYTHONHASHSEED": str(h)}).stdout for h in (1, 2, 3)}
+    assert len(outs) == 1 and len(next(iter(outs))) > 10
