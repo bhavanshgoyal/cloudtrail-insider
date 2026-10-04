@@ -39,3 +39,6 @@ volume/
 venv/
 .venv/
 env/
+
+# Feature cache (regenerable)
+data/cache/
