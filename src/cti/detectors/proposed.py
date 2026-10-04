@@ -47,15 +47,14 @@ from scipy.stats import chi2
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
 
+from cti.features.pipeline import FAMILY_PREFIXES
+
 log = logging.getLogger(__name__)
 
 # ── Feature family definitions ───────────────────────────────────────────
-# Map canonical feature prefixes to families.
-_FAMILIES = {
-    "volume":   ["vol_"],
-    "diversity": ["div_", "rar_"],
-    "temporal":  ["tmp_", "err_"],
-}
+# Single source of truth: cti.features.pipeline.FAMILY_PREFIXES
+# (identity / resource / temporal / volume).
+_FAMILIES = {name: list(prefixes) for name, prefixes in FAMILY_PREFIXES.items()}
 
 
 def _family_columns(feat_cols: list[str], family: str) -> list[str]:
@@ -96,7 +95,7 @@ class _PerPrincipalIF:
                 n_estimators=self.n_estimators,
                 contamination=self.contamination,
                 random_state=self.seed,
-                n_jobs=-1,
+                n_jobs=1,          # tiny per-principal forests: thread start-up dominates otherwise
             )
             model.fit(X_scaled)
             self._models[principal] = model
@@ -241,28 +240,19 @@ class BudgetAwareConformal:
         # Calibration scores per family per principal
         self._calibration_scores: dict[str, dict[str, np.ndarray]] = {}
         self._feat_cols: list[str] = []
-        self._scaler = StandardScaler()
         self._fitted = False
 
-    def fit(self, X: np.ndarray, df_feat: Optional[pd.DataFrame] = None) -> "BudgetAwareConformal":
-        """Fit the detector.
+    needs_events = False
+
+    def fit(self, df_feat: pd.DataFrame, events: Optional[pd.DataFrame] = None) -> "BudgetAwareConformal":
+        """Fit on the TRAIN window.
 
         Parameters
         ----------
-        X : ndarray
-            Feature matrix (used for interface compatibility).
-        df_feat : pd.DataFrame, optional
-            Full feature DataFrame with 'principal' and 'date' columns.
-            Required for per-principal fitting.
+        df_feat : pd.DataFrame
+            Train-window feature rows with 'principal' and 'date' columns.
+        events : ignored (interface compatibility).
         """
-        if df_feat is None:
-            # Fallback: fit a global scaler, store X for calibration
-            self._scaler.fit(X)
-            self._global_X = X.copy()
-            self._fitted = True
-            log.warning("BudgetAwareConformal fitted without df_feat — using global fallback")
-            return self
-
         self._feat_cols = [c for c in df_feat.columns if c not in {"principal", "date"}]
 
         # ── Temporal split: 70 % fit / 30 % calibration ─────────────
@@ -309,20 +299,10 @@ class BudgetAwareConformal:
         log.info("BudgetAwareConformal fitted with %d families", len(self._family_models))
         return self
 
-    def score_samples(self, X: np.ndarray, df_feat: Optional[pd.DataFrame] = None) -> np.ndarray:
-        """Score test samples.
-
-        Returns per-sample fused anomaly scores (higher = more anomalous).
-        """
+    def score(self, df_feat: pd.DataFrame, events: Optional[pd.DataFrame] = None) -> np.ndarray:
+        """Per-row fused anomaly score (higher = more anomalous)."""
         if not self._fitted:
             raise RuntimeError("Detector not fitted. Call fit() first.")
-
-        if df_feat is None or not self._family_models:
-            # Global fallback — just use Isolation Forest
-            from sklearn.ensemble import IsolationForest as _IF
-            model = _IF(n_estimators=100, contamination=0.02, random_state=self.seed)
-            model.fit(self._global_X if hasattr(self, '_global_X') else X)
-            return -model.score_samples(X)
 
         feat_cols = [c for c in df_feat.columns if c not in {"principal", "date"}]
         df_feat = df_feat.reset_index(drop=True)
@@ -369,10 +349,7 @@ class BudgetAwareConformal:
         pd.DataFrame
             Top incidents ranked by fused score, limited to ``budget``.
         """
-        feat_cols = [c for c in df_feat.columns if c not in {"principal", "date"}]
-        X = df_feat[feat_cols].to_numpy(dtype=np.float32)
-
-        fused_scores = self.score_samples(X, df_feat)
+        fused_scores = self.score(df_feat)
 
         df_scored = df_feat[["principal", "date"]].copy()
         df_scored["fused_score"] = fused_scores

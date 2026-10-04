@@ -1,72 +1,94 @@
+# Rule-signature baseline, modelled on commercial cloud threat-detection services
+# (GuardDuty / Security Hub / CSPM style findings).
+#
+# Every rule names a Python predicate in cti/detectors/rules.py (no eval of strings).
+# Rules fire on individual events; the detector scores each (principal, day) as
+#   score = max_severity + 0.1 * (distinct_rules_fired - 1) + 0.001 * log1p(total_hits)
+# so the analyst queue is ordered by severity, then breadth, then volume.
+#
+# The rule set is deliberately *tuned like a competent team would*: service
+# accounts are exempt from volume rules and a corporate IP allow-list is
+# configured. Severities follow the 1-5 scale used by the original brief,
+# except R002, lowered from 4 to 2 because missing MFA is a hygiene finding
+# (it is "Low" in commercial tools) not an incident.
+
+params:
+  corporate_ip_prefixes: ["10."]            # source IPs outside these are "external"
+  brute_force_min_failures: 5               # failed logins from one IP in one day
+  mass_get_object_threshold: 35             # GetObject calls per principal-day (~p99.5 of human daily counts in W1, set without labels)
+  mass_get_exempt_roles: ["backup-service", "ci-runner"]
+  excessive_denied_threshold: 20            # AccessDenied calls per principal-day
+  min_external_mails: 1                     # SendEmail to external recipients per day
+
 rules:
   - id: R001
+    predicate: root_credential_usage
     description: "Root account credentials used"
     severity: 5
     finding_type: "PrivilegeEscalation:IAMUser/RootCredentialUsage"
-    condition: "principal == 'root'"
 
   - id: R002
-    description: "Console login without MFA"
-    severity: 4
+    predicate: console_login_without_mfa
+    description: "Successful console login without MFA"
+    severity: 2
     finding_type: "InitialAccess:IAMUser/ConsoleLoginWithoutMFA"
-    condition: "eventName == 'ConsoleLogin' and request_parameters_mfa_authenticated == False"
 
   - id: R003
-    description: "Multiple AccessDenied followed by success within 5 minutes"
+    predicate: brute_force_then_success
+    description: "Repeated failed console logins from one IP followed by a success"
     severity: 4
     finding_type: "CredentialAccess:IAMUser/BruteForceSuccess"
-    condition: "err_error_rate > 0.5 and eventName == 'ConsoleLogin'"
 
   - id: R004
-    description: "API call from a previously unseen region"
+    predicate: api_call_outside_corporate_ip
+    description: "API or console call from a source IP outside the corporate ranges"
     severity: 3
-    finding_type: "DefenseEvasion:IAMUser/UnseenRegion"
-    condition: "div_unique_regions > 3"
+    finding_type: "UnauthorizedAccess:IAMUser/ExternalSourceIP"
 
   - id: R005
-    description: "Resource made public (ModifySnapshotAttribute or PutBucketPolicy)"
+    predicate: public_exposure
+    description: "Snapshot or bucket policy made public (ModifySnapshotAttribute / PutBucketPolicy to all)"
     severity: 5
     finding_type: "Exfiltration:S3/PublicExposure"
-    condition: "eventName in ('ModifySnapshotAttribute', 'PutBucketPolicy') and 'public' in request_parameters"
 
   - id: R006
+    predicate: create_access_key_for_other
     description: "CreateAccessKey for a different principal"
     severity: 4
     finding_type: "Persistence:IAMUser/CreateAccessKeyForOther"
-    condition: "eventName == 'CreateAccessKey'"
 
   - id: R007
-    description: "AssumeRole into admin by non-admin"
+    predicate: assume_admin_by_non_admin
+    description: "AssumeRole into an admin role by a non-admin principal"
     severity: 5
     finding_type: "PrivilegeEscalation:IAMUser/AssumeAdminRole"
-    condition: "eventName == 'AssumeRole' and role_name != 'admin' and 'admin' in request_parameters"
 
   - id: R008
-    description: "Mass GetObject exceeding per-role threshold"
+    predicate: mass_get_object
+    description: "Mass GetObject by a human principal in one day"
     severity: 4
     finding_type: "Collection:S3/MassGetObject"
-    condition: "eventName == 'GetObject' and vol_events_per_day > 100"
 
   - id: R009
-    description: "CloudTrail logging disabled or deleted"
+    predicate: logging_disabled
+    description: "CloudTrail logging stopped or trail deleted"
     severity: 5
     finding_type: "DefenseEvasion:CloudTrail/LoggingDisabled"
-    condition: "eventName in ('DeleteTrail', 'StopLogging')"
 
   - id: R010
-    description: "SendEmail to large number of external recipients"
+    predicate: external_mail
+    description: "SendEmail to external recipients"
     severity: 3
-    finding_type: "Exfiltration:SES/MassEmail"
-    condition: "eventName == 'SendEmail' and vol_events_per_day > 20"
+    finding_type: "Exfiltration:SES/ExternalEmail"
 
   - id: R011
-    description: "Console login outside historical hour range"
+    predicate: console_login_new_ip
+    description: "Console login from an IP never before seen for this principal"
     severity: 3
-    finding_type: "InitialAccess:IAMUser/AnomalousLoginTime"
-    condition: "eventName == 'ConsoleLogin' and tmp_after_hours_ratio > 0.5"
+    finding_type: "InitialAccess:IAMUser/ConsoleLoginUnusualIP"
 
   - id: R012
-    description: "New source IP country"
+    predicate: excessive_access_denied
+    description: "Excessive AccessDenied API errors in one day (reconnaissance)"
     severity: 2
-    finding_type: "InitialAccess:IAMUser/UnseenCountry"
-    condition: "div_unique_sources > 5"
+    finding_type: "Recon:IAMUser/ExcessiveAccessDenied"

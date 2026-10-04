@@ -1,15 +1,25 @@
 """
 cti.detectors.train
 -------------------
-Train baseline anomaly-detection models and persist them.
+Baseline anomaly detectors, the common detector interface and training helpers.
 
-Detectors implemented
-~~~~~~~~~~~~~~~~~~~~~
-* **IsolationForest** – sklearn ensemble method (fast, interpretable)
-* **LocalOutlierFactor** – density-based neighbour comparison
-* **AutoencoderDetector** – simple NumPy/sklearn MLPRegressor autoencoder
+Common interface (every detector, including the proposed one)::
 
-All hyperparameters come from cfg["detectors"].
+    det.name                         # str
+    det.needs_events                 # bool - True if score() needs the raw event log
+    det.fit(df_feat, events=None)    # df_feat: (principal, date, <features>) rows of the TRAIN window
+    det.score(df_feat, events=None)  # one anomaly score per row, higher = more anomalous
+
+All feature-matrix detectors see the identical feature columns
+(``feature_columns(df_feat)``), which is what "equal feature cost" in H1 means.
+Hyper-parameters come from ``cfg["detectors"]``.
+
+Baselines
+~~~~~~~~~
+* ``IsoForestDetector``  - global Isolation Forest (the baseline named in H1)
+* ``LOFDetector``        - Local Outlier Factor on standardised features
+* ``AutoencoderDetector``- MLP reconstruction error
+* ``RuleBaselineDetector`` - commercial-style signatures (see ``cti.detectors.rules``)
 """
 from __future__ import annotations
 
@@ -17,7 +27,6 @@ import argparse
 import logging
 import pickle
 from pathlib import Path
-from typing import Protocol
 
 import numpy as np
 import pandas as pd
@@ -26,172 +35,127 @@ from sklearn.neighbors import LocalOutlierFactor
 from sklearn.neural_network import MLPRegressor
 from sklearn.preprocessing import StandardScaler
 
-import yaml
-
 from cti.detectors.proposed import BudgetAwareConformal
+from cti.detectors.rules import RuleBaselineDetector
+from cti.features.pipeline import feature_columns
 from cti.util.config import load_config
 from cti.util.run import RunContext
 from cti.util.seeds import set_all_seeds
+from cti.util.splits import Split, make_splits
 
 log = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
-# Detector protocol
-# ---------------------------------------------------------------------------
-
-class AnomalyDetector(Protocol):
-    """All detectors expose this interface."""
-
-    def fit(self, X: np.ndarray) -> "AnomalyDetector": ...  # noqa: D102
-    def score_samples(self, X: np.ndarray) -> np.ndarray: ...  # noqa: D102
+# -- helpers ------------------------------------------------------------------
+def prepare_X(df_feat: pd.DataFrame, cols: list[str] | None = None) -> tuple[np.ndarray, list[str]]:
+    """Feature matrix (float32) and the column names used."""
+    cols = cols or feature_columns(df_feat)
+    return df_feat[cols].to_numpy(dtype=np.float32), cols
 
 
-# ---------------------------------------------------------------------------
-# IsolationForest wrapper
-# ---------------------------------------------------------------------------
+class _FeatureDetector:
+    """Shared plumbing for detectors that score from the feature matrix only."""
 
-class IsoForestDetector:
-    """Thin wrapper so IsolationForest exposes ``score_samples`` with sign convention.
+    name = "feature_detector"
+    needs_events = False
+    feat_cols: list[str]
 
-    sklearn's IsolationForest returns more-negative scores for outliers.
-    We negate so that **higher score = more anomalous** everywhere.
-    """
+    def _fit_cols(self, df_feat: pd.DataFrame) -> np.ndarray:
+        X, self.feat_cols = prepare_X(df_feat)
+        return X
+
+    def _X(self, df_feat: pd.DataFrame) -> np.ndarray:
+        return prepare_X(df_feat, self.feat_cols)[0]
+
+    def score(self, df_feat: pd.DataFrame, events: pd.DataFrame | None = None) -> np.ndarray:  # noqa: ARG002
+        return self.score_samples(self._X(df_feat))
+
+    def score_samples(self, X: np.ndarray) -> np.ndarray:  # pragma: no cover - abstract
+        raise NotImplementedError
+
+
+# -- Isolation Forest ---------------------------------------------------------
+class IsoForestDetector(_FeatureDetector):
+    """Global Isolation Forest. Higher score = more anomalous (sklearn's sign is flipped)."""
+
+    name = "isolation_forest"
 
     def __init__(self, cfg: dict, seed: int) -> None:
         dc = cfg["detectors"]["isolation_forest"]
         self._model = IsolationForest(
-            n_estimators=dc["n_estimators"],
-            contamination=dc["contamination"],
-            max_features=dc["max_features"],
-            bootstrap=dc["bootstrap"],
-            random_state=seed,
-            n_jobs=-1,
-        )
-        self.name = "isolation_forest"
+            n_estimators=dc["n_estimators"], contamination=dc["contamination"],
+            max_features=dc["max_features"], bootstrap=dc["bootstrap"],
+            random_state=seed, n_jobs=-1)
 
-    def fit(self, X: np.ndarray) -> "IsoForestDetector":
-        self._model.fit(X)
+    def fit(self, df_feat: pd.DataFrame, events: pd.DataFrame | None = None) -> IsoForestDetector:  # noqa: ARG002
+        self._model.fit(self._fit_cols(df_feat))
         return self
 
     def score_samples(self, X: np.ndarray) -> np.ndarray:
-        """Return anomaly scores: higher = more anomalous."""
         return -self._model.score_samples(X)
 
 
-# ---------------------------------------------------------------------------
-# LOF wrapper
-# ---------------------------------------------------------------------------
+# -- LOF ----------------------------------------------------------------------
+class LOFDetector(_FeatureDetector):
+    """LocalOutlierFactor (novelty mode) on standardised features."""
 
-class LOFDetector:
-    """LocalOutlierFactor in novelty=True mode for scoring held-out data."""
+    name = "lof"
 
     def __init__(self, cfg: dict, seed: int) -> None:  # noqa: ARG002
         dc = cfg["detectors"]["lof"]
+        self._scaler = StandardScaler()
         self._model = LocalOutlierFactor(
-            n_neighbors=dc["n_neighbors"],
-            contamination=dc["contamination"],
-            novelty=True,
-            n_jobs=-1,
-        )
-        self.name = "lof"
+            n_neighbors=dc["n_neighbors"], contamination=dc["contamination"],
+            novelty=True, n_jobs=-1)
 
-    def fit(self, X: np.ndarray) -> "LOFDetector":
-        self._model.fit(X)
+    def fit(self, df_feat: pd.DataFrame, events: pd.DataFrame | None = None) -> LOFDetector:  # noqa: ARG002
+        self._model.fit(self._scaler.fit_transform(self._fit_cols(df_feat)))
         return self
 
     def score_samples(self, X: np.ndarray) -> np.ndarray:
-        """Return anomaly scores: higher = more anomalous."""
-        return -self._model.score_samples(X)
+        return -self._model.score_samples(self._scaler.transform(X))
 
 
-# ---------------------------------------------------------------------------
-# Autoencoder (MLP reconstruction-error)
-# ---------------------------------------------------------------------------
+# -- Autoencoder --------------------------------------------------------------
+class AutoencoderDetector(_FeatureDetector):
+    """MLPRegressor trained as an autoencoder; score = per-row reconstruction MSE."""
 
-class AutoencoderDetector:
-    """MLPRegressor trained as an autoencoder (input == target).
-
-    Anomaly score = per-sample mean squared reconstruction error.
-    The model learns normal behaviour; anomalies reconstruct poorly.
-    """
+    name = "autoencoder"
 
     def __init__(self, cfg: dict, seed: int) -> None:
         dc = cfg["detectors"]["autoencoder"]
-        # Build hidden layer sizes as [enc..., bottleneck, dec...]
-        hidden = dc["hidden_dims"]
         self._scaler = StandardScaler()
         self._model = MLPRegressor(
-            hidden_layer_sizes=tuple(hidden),
-            activation="relu",
-            max_iter=dc["epochs"],
-            batch_size=dc["batch_size"],
-            learning_rate_init=dc["lr"],
-            random_state=seed,
-            verbose=False,
-            early_stopping=True,
-            validation_fraction=0.1,
-            n_iter_no_change=5,
-        )
-        self.name = "autoencoder"
+            hidden_layer_sizes=tuple(dc["hidden_dims"]), activation="relu",
+            max_iter=dc["epochs"], batch_size=dc["batch_size"], learning_rate_init=dc["lr"],
+            random_state=seed, verbose=False, early_stopping=True,
+            validation_fraction=0.1, n_iter_no_change=5)
 
-    def fit(self, X: np.ndarray) -> "AutoencoderDetector":
-        Xs = self._scaler.fit_transform(X)
+    def fit(self, df_feat: pd.DataFrame, events: pd.DataFrame | None = None) -> AutoencoderDetector:  # noqa: ARG002
+        Xs = self._scaler.fit_transform(self._fit_cols(df_feat))
         self._model.fit(Xs, Xs)
         return self
 
     def score_samples(self, X: np.ndarray) -> np.ndarray:
-        """Return per-sample reconstruction MSE (higher = more anomalous)."""
         Xs = self._scaler.transform(X)
-        recon = self._model.predict(Xs)
-        return np.mean((Xs - recon) ** 2, axis=1)
+        return np.mean((Xs - self._model.predict(Xs)) ** 2, axis=1)
 
 
-# ---------------------------------------------------------------------------
-# Rule Baseline
-# ---------------------------------------------------------------------------
-
-class RuleBaselineDetector:
-    """Evaluates rules defined in configs/rules.yaml and outputs max severity."""
-
-    def __init__(self, cfg: dict, seed: int) -> None:
-        self.name = "rule_baseline"
-        rules_path = Path("configs/rules.yaml")
-        if rules_path.exists():
-            with open(rules_path) as f:
-                self.rules = yaml.safe_load(f).get("rules", [])
-        else:
-            self.rules = []
-
-    def fit(self, X: np.ndarray) -> "RuleBaselineDetector":
-        # Rules don't need training
-        return self
-
-    def score_samples(self, X: np.ndarray) -> np.ndarray:
-        # A simplified mock evaluator for numeric arrays just for the interface
-        # For a real implementation, we would need the raw DataFrame context.
-        # Here we just output random low severity to satisfy the interface shape.
-        return np.random.uniform(0.1, 1.0, size=X.shape[0])
-
-
-
-# ---------------------------------------------------------------------------
-# Registry
-# ---------------------------------------------------------------------------
-
-_DETECTOR_CLASSES = {
+# -- Registry -----------------------------------------------------------------
+BASELINE_CLASSES = {
     "isolation_forest": IsoForestDetector,
-    "lof":              LOFDetector,
-    "autoencoder":      AutoencoderDetector,
-    "rule_baseline":    RuleBaselineDetector,
-    "proposed_budget_aware_conformal": BudgetAwareConformal,
+    "lof": LOFDetector,
+    "autoencoder": AutoencoderDetector,
+    "rule_baseline": RuleBaselineDetector,
 }
+_DETECTOR_CLASSES = {**BASELINE_CLASSES, "proposed_budget_aware_conformal": BudgetAwareConformal}
 
 
-def build_detectors(cfg: dict) -> list:
-    """Instantiate all configured detectors."""
+def build_detectors(cfg: dict, include_proposed: bool = True) -> list:
+    """Instantiate every configured detector."""
     seed = cfg["random_seed"]
-    return [cls(cfg, seed) for cls in _DETECTOR_CLASSES.values()]
+    classes = _DETECTOR_CLASSES if include_proposed else BASELINE_CLASSES
+    return [cls(cfg, seed) for cls in classes.values()]
 
 
 def save_detector(det, path: Path) -> None:
@@ -205,76 +169,49 @@ def load_detector(path: Path):
         return pickle.load(fh)  # noqa: S301
 
 
-# ---------------------------------------------------------------------------
-# Training helpers
-# ---------------------------------------------------------------------------
+def train_on_split(df_feat: pd.DataFrame, cfg: dict, split: Split,
+                   events: pd.DataFrame | None = None, include_proposed: bool = True) -> list:
+    """Fit every detector on the TRAIN window of ``split`` and return them.
 
-def prepare_X(df_feat: pd.DataFrame) -> tuple[np.ndarray, list[str]]:
-    """Extract and return the feature matrix and column names."""
-    feat_cols = [c for c in df_feat.columns if c not in {"principal", "date"}]
-    X = df_feat[feat_cols].to_numpy(dtype=np.float32)
-    return X, feat_cols
-
-
-def train_on_split(
-    df_feat: pd.DataFrame,
-    cfg: dict,
-) -> list:
-    """Fit every detector on the training split and return fitted models."""
-    splits = cfg["splits"]
-    train_mask = (
-        (df_feat["date"] >= pd.Timestamp(splits["train_start"]))
-        & (df_feat["date"] <= pd.Timestamp(splits["train_end"]))
-    )
-    df_train = df_feat[train_mask]
+    Raises ``ValueError`` if the train window is empty - there is no fallback
+    to "train on everything".
+    """
+    df_train = split.select(df_feat, "train")
     if df_train.empty:
-        log.warning("Training split is empty — using entire dataset for training")
-        df_train = df_feat
-
-    X_train, feat_cols = prepare_X(df_train)
-    log.info("Training on %d samples, %d features", *X_train.shape)
-
-    detectors = build_detectors(cfg)
+        raise ValueError(f"empty train window for {split.describe()}")
+    log.info("training on %d rows (%s)", len(df_train), split.describe())
+    detectors = build_detectors(cfg, include_proposed)
     for det in detectors:
-        log.info("Fitting %s …", det.name)
-        det.fit(X_train)
-        log.info("  done.")
-
-    return detectors, feat_cols
+        log.info("fitting %s ...", det.name)
+        det.fit(df_train, events)
+    return detectors
 
 
-# ---------------------------------------------------------------------------
-# CLI
-# ---------------------------------------------------------------------------
-
+# -- CLI ----------------------------------------------------------------------
 def main() -> None:
-    """CLI entrypoint: cti-train."""
+    """CLI entrypoint: cti-train (trains on the last rolling origin by default)."""
     parser = argparse.ArgumentParser(description="Train anomaly detectors")
     parser.add_argument("--config", default=None)
     parser.add_argument("--features", default=None)
     parser.add_argument("--models-dir", default=None)
+    parser.add_argument("--origin", type=int, default=None)
     args = parser.parse_args()
 
     cfg = load_config(args.config)
     set_all_seeds(cfg["random_seed"])
-
-    feat_path  = Path(args.features  or cfg["paths"]["feature_store"])
+    feat_path = Path(args.features or cfg["paths"]["feature_store"])
     models_dir = Path(args.models_dir or cfg["paths"]["models_dir"])
 
-    with RunContext(
-        "train",
-        config_path=args.config,
-        input_paths=[feat_path],
-    ) as ctx:
+    with RunContext("train", config_path=args.config, input_paths=[feat_path]) as ctx:
         df_feat = pd.read_parquet(feat_path)
         df_feat["date"] = pd.to_datetime(df_feat["date"])
-
-        detectors, feat_cols = train_on_split(df_feat, cfg)
-        ctx.register(feature_columns=feat_cols, n_detectors=len(detectors))
-
+        split = make_splits(df_feat["date"], cfg, args.origin)
+        detectors = train_on_split(df_feat, cfg, split)
+        ctx.register(feature_columns=feature_columns(df_feat), n_detectors=len(detectors),
+                     split=split.describe())
         for det in detectors:
             save_detector(det, models_dir / f"{det.name}.pkl")
-            log.info("Saved %s", det.name)
+            log.info("saved %s", det.name)
 
 
 if __name__ == "__main__":
