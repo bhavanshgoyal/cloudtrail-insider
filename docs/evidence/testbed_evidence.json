@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-24T07:45:34Z",
+  "timestamp": "2026-10-07T17:27:59Z",
   "environment": "LocalStack (CloudSim)",
   "checks": [
     {
@@ -30,7 +30,7 @@
     {
       "check": "Pipeline Results",
       "status": "PASS",
-      "detail": "Pipeline produced metrics for 5 detectors across 60 evaluations"
+      "detail": "Pipeline produced metrics for 5 detectors across 145 evaluations"
     },
     {
       "check": "Trained Models",
@@ -39,12 +39,12 @@
     }
   ],
   "outputs": {
-    "Docker Container Status": "NAMES                             STATUS                   PORTS\ncloudtrail-insider-localstack-1   Up 5 minutes (healthy)   127.0.0.1:4510-4559->4510-4559/tcp, 127.0.0.1:4566->4566/tcp\ncloudtrail-insider-app-1          Up 5 minutes",
-    "LocalStack Health": "{\n  \"services\": {\n    \"acm\": \"available\",\n    \"apigateway\": \"available\",\n    \"cloudformation\": \"available\",\n    \"cloudwatch\": \"available\",\n    \"config\": \"available\",\n    \"dynamodb\": \"available\",\n    \"dynamodbstreams\": \"available\",\n    \"ec2\": \"available\",\n    \"es\": \"available\",\n    \"events\": \"available\",\n    \"firehose\": \"available\",\n    \"iam\": \"available\",\n    \"kinesis\": \"available\",\n    \"kms\": \"available\",\n    \"lambda\": \"available\",\n    \"logs\": \"available\",\n    \"opensearch\": \"available\",\n    \"redshift\": \"available\",\n    \"resource-groups\": \"available\",\n    \"resourcegroupstaggingapi\": \"available\",\n    \"route53\": \"available\",\n    \"route53resolver\": \"available\",\n    \"s3\": \"running\",\n    \"s3control\": \"available\",\n    \"scheduler\": \"available\",\n    \"secretsmanager\": \"available\",\n    \"ses\": \"available\",\n    \"sns\": \"available\",\n    \"sqs\": \"available\",\n    \"ssm\": \"available\",\n    \"stepfunctions\": \"available\",\n    \"sts\": \"available\",\n    \"support\": \"available\",\n    \"swf\": \"available\",\n    \"transcribe\": \"available\"\n  },\n  \"edition\": \"community\",\n  \"version\": \"3.8.1\"\n}",
+    "Docker Container Status": "NAMES                             STATUS                    PORTS\ncloudtrail-insider-localstack-1   Up 28 minutes (healthy)   127.0.0.1:4510-4559->4510-4559/tcp, 127.0.0.1:4566->4566/tcp",
+    "LocalStack Health": "{\n  \"services\": {\n    \"acm\": \"available\",\n    \"apigateway\": \"available\",\n    \"cloudformation\": \"available\",\n    \"cloudwatch\": \"available\",\n    \"config\": \"available\",\n    \"dynamodb\": \"available\",\n    \"dynamodbstreams\": \"available\",\n    \"ec2\": \"available\",\n    \"es\": \"available\",\n    \"events\": \"available\",\n    \"firehose\": \"available\",\n    \"iam\": \"available\",\n    \"kinesis\": \"available\",\n    \"kms\": \"available\",\n    \"lambda\": \"available\",\n    \"logs\": \"available\",\n    \"opensearch\": \"available\",\n    \"redshift\": \"available\",\n    \"resource-groups\": \"available\",\n    \"resourcegroupstaggingapi\": \"available\",\n    \"route53\": \"available\",\n    \"route53resolver\": \"available\",\n    \"s3\": \"running\",\n    \"s3control\": \"available\",\n    \"scheduler\": \"available\",\n    \"secretsmanager\": \"available\",\n    \"ses\": \"available\",\n    \"sns\": \"available\",\n    \"sqs\": \"available\",\n    \"ssm\": \"available\",\n    \"stepfunctions\": \"available\",\n    \"sts\": \"running\",\n    \"support\": \"available\",\n    \"swf\": \"available\",\n    \"transcribe\": \"available\"\n  },\n  \"edition\": \"community\",\n  \"version\": \"3.8.1\"\n}",
     "STS Caller Identity": "{\n  \"UserId\": \"AKIAIOSFODNN7EXAMPLE\",\n  \"Account\": \"000000000000\",\n  \"Arn\": \"arn:aws:iam::000000000000:root\"\n}",
     "CloudTrail Events": "LocalStack Community does not implement CloudTrail LookupEvents (Pro feature).\nThis is expected and documented. The project uses a synthetic CloudTrail generator\n(cti.ingest.synthetic) that produces events with identical schema to real CloudTrail.\nRaw error: An error occurred (InternalFailure) when calling the LookupEvents operation: API for service 'cloudtrail' not yet implemented or pro feature - please check https://docs.localstack.cloud/references/coverage/ for further information",
     "S3 Buckets": "{\n  \"Buckets\": [\n    \"cloudtrail-logs-bucket\",\n    \"finance-archive\",\n    \"public-assets-bucket\"\n  ]\n}",
-    "Pipeline Metrics": "5 detectors evaluated, 60 metric rows in results/metrics.csv",
+    "Pipeline Metrics": "5 detectors evaluated, 145 metric rows in results/metrics.csv",
     "Trained Models": "5 models saved: autoencoder, isolation_forest, lof, proposed_budget_aware_conformal, rule_baseline"
   }
 }

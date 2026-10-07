@@ -1,13 +1,12 @@
 ======================================================================
   TESTBED EVIDENCE — Insider-Threat Detection on Cloud Audit Logs
-  Captured: 2026-09-24T07:45:34Z
+  Captured: 2026-10-07T17:27:59Z
   Environment: LocalStack (CloudSim) on local Windows
 ======================================================================
 
 --- Docker Container Status ---
-NAMES                             STATUS                   PORTS
-cloudtrail-insider-localstack-1   Up 5 minutes (healthy)   127.0.0.1:4510-4559->4510-4559/tcp, 127.0.0.1:4566->4566/tcp
-cloudtrail-insider-app-1          Up 5 minutes
+NAMES                             STATUS                    PORTS
+cloudtrail-insider-localstack-1   Up 28 minutes (healthy)   127.0.0.1:4510-4559->4510-4559/tcp, 127.0.0.1:4566->4566/tcp
 
 --- LocalStack Health ---
 {
@@ -43,7 +42,7 @@ cloudtrail-insider-app-1          Up 5 minutes
     "sqs": "available",
     "ssm": "available",
     "stepfunctions": "available",
-    "sts": "available",
+    "sts": "running",
     "support": "available",
     "swf": "available",
     "transcribe": "available"
@@ -75,7 +74,7 @@ Raw error: An error occurred (InternalFailure) when calling the LookupEvents ope
 }
 
 --- Pipeline Metrics ---
-5 detectors evaluated, 60 metric rows in results/metrics.csv
+5 detectors evaluated, 145 metric rows in results/metrics.csv
 
 --- Trained Models ---
 5 models saved: autoencoder, isolation_forest, lof, proposed_budget_aware_conformal, rule_baseline
