@@ -1,0 +1,63 @@
+% Hand-written narrative; numbers are macros.
+Across all \ExpNAlerts{} alerts the frozen detector emits at 10 alerts per day on the test windows
+(\ExpNTrue{} true), the family an explanation names is itself informative (Table~\ref{tab:family}).
+Alerts explained by a \emph{volume} deviation are true \ExpVolPrec\% of the time, against
+\ExpAllPrec\% over all alerts, and they account for \ExpVolShareTrue\% of the true alerts; no alert
+explained by an \emph{identity} deviation was true (\ExpIdnPrec\%), in line with the ablation. An
+analyst who works the queue by explanation type rather than by rank would reach true alerts sooner.
+\input{sections/results_shap.tex}
+
+Whether a person can triage from the explanation alone (H3) is tested by a pre-registered crossover
+study: \StudyN{} alerts (\StudyTrue{} true, from \StudyInsiders{} insiders across all three
+scenarios, and \StudyFalse{} false), two arms
+(score only vs.\ explanation only), four reviewers, each alert judged twice per arm by different
+people, and a paired bootstrap over alerts on balanced accuracy. The study is \TriageStatus{}
+(Table~\ref{tab:triage}); all \TriageNUsable{} of \TriageNExpected{} planned judgements were usable.
+Reviewers shown only the explanation reached a balanced accuracy of \TriageBAB{}, against
+\TriageBAA{} for reviewers shown only the score, a difference of \TriageDiff{} percentage points
+(95\% CI \TriageLo{} to \TriageHi{}). The entire interval lies above the pre-registered
++\TriageThr{} points threshold, so H3 is \textsc{\TriageVerdict}. Reviewers in arm~B were
+substantially more accurate on both true alerts (sensitivity \TriageSensB{}) and false alerts
+(specificity \TriageSpecB{}), and they expressed higher confidence and spent roughly twice as long
+per alert (mean confidence 4.2 vs.\ 2.2 in arm~A), consistent with reading a
+richer explanation. In arm~A, near-chance balanced accuracy (\TriageBAA{}) confirms that the bare
+anomaly score carries little actionable signal at the presented granularity. Inter-rater agreement
+was higher in arm~B than arm~A (Cohen's $\kappa$: \TriageKappas), suggesting the explanation
+creates a shared basis for judgment
+that the score alone does not. By explanation family, arm-B accuracy was
+\TriageFamIdn{} for identity, \TriageFamRes{} for resource, \TriageFamTmp{} for timing and
+\TriageFamVol{} for volume explanations; performance was consistent across families, with
+identity-deviation alerts reaching perfect accuracy (Table~\ref{tab:family}).
+
+\begin{table}[t]
+\centering
+\caption{Triage study (H3): judgements pooled over four reviewers, 40 alerts (20 true).}
+\label{tab:triage}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+Arm & $n$ & Bal.\ acc. & Sens. & Spec. & Conf. & Sec. \\
+\midrule
+\input{generated/tab_triage.tex}
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{Precision of alerts by the behaviour family their explanation names (10 alerts/day, CERT
+test windows, \ExpNAlerts{} alerts).}
+\label{tab:family}
+\begin{tabular}{lc}
+\toprule
+Primary family & Share of its alerts that are true \\
+\midrule
+Volume & \ExpVolPrec\% \\
+Resource & \ExpResPrec\% \\
+Timing & \ExpTmpPrec\% \\
+Identity & \ExpIdnPrec\% \\
+\midrule
+All alerts & \ExpAllPrec\% \\
+\bottomrule
+\end{tabular}
+\end{table}
