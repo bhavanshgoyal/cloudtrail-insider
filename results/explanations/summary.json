@@ -1,0 +1,22 @@
+{
+ "n_alerts": 2064,
+ "n_true": 59,
+ "precision_by_primary_family": {
+  "identity": 0.0,
+  "resource": 0.0134,
+  "temporal": 0.0077,
+  "volume": 0.1072
+ },
+ "share_true_explained_by": {
+  "identity": 0.0,
+  "resource": 0.1525,
+  "temporal": 0.0678,
+  "volume": 0.7797
+ },
+ "share_false_explained_by": {
+  "identity": 0.2214,
+  "resource": 0.3297,
+  "temporal": 0.2579,
+  "volume": 0.191
+ }
+}

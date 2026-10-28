@@ -5,9 +5,9 @@ Build every generated document from its template, with all numbers filled from r
 
   docs/_templates/THREATS_TO_VALIDITY.md   -> docs/THREATS_TO_VALIDITY.md
   docs/_templates/OBJECTIVES_EVIDENCE.md   -> docs/OBJECTIVES_EVIDENCE.md
-  docs/_templates/PROJECT_SUMMARY_FOR_PPT.md -> docs/PROJECT_SUMMARY_FOR_PPT.md
   docs/_templates/README_results.md        -> spliced into README.md between markers
-  docs/_templates/paper.md                 -> docs/paper/paper.md, paper.html, paper.pdf (A4, page count checked)
+  docs/paper_ieee/ (IEEE LaTeX)             -> generated numbers/tables, checks, Overleaf zip,
+                                              main_preview.pdf (and main.pdf if a LaTeX engine exists)
 
     python scripts/build_docs.py            # build
     python scripts/build_docs.py --check    # also fail if any number is unresolved (except the pending triage study)
@@ -26,26 +26,8 @@ TEMPLATES = Path("docs/_templates")
 SIMPLE = {
     "THREATS_TO_VALIDITY.md": Path("docs/THREATS_TO_VALIDITY.md"),
     "OBJECTIVES_EVIDENCE.md": Path("docs/OBJECTIVES_EVIDENCE.md"),
-    "PROJECT_SUMMARY_FOR_PPT.md": Path("docs/PROJECT_SUMMARY_FOR_PPT.md"),
 }
 README_START, README_END = "<!-- RESULTS:START -->", "<!-- RESULTS:END -->"
-
-PAPER_CSS = """
-@page { size: A4; margin: 16mm 15mm; }
-body { font-family: serif; font-size: 9.6pt; line-height: 1.32; color: #111; }
-h1 { font-size: 15pt; margin: 0 0 4pt 0; }
-h2 { font-size: 11.5pt; margin: 10pt 0 3pt 0; }
-h3 { font-size: 10pt; margin: 7pt 0 2pt 0; }
-p, li { margin: 2pt 0; text-align: justify; }
-table { margin: 4pt 0; font-size: 8pt; width: 100%; }
-th, td { padding: 1.5pt 3pt; text-align: left; }
-th { border-bottom: 0.7pt solid #555; }
-th { background: #eee; }
-img { width: 100%; }
-pre, code { font-family: monospace; font-size: 7.8pt; }
-pre { background: #f4f4f4; padding: 3pt; }
-"""
-
 
 def build_simple(check: bool) -> list[str]:
     problems = []
@@ -73,51 +55,21 @@ def build_simple(check: bool) -> list[str]:
     return problems
 
 
-def _md_spacing(text: str) -> str:
-    """Python-Markdown needs a blank line before a list and after an image to start a new block."""
-    out, in_code = [], False
-    item = re.compile(r"^\s*([-*]|\d+\.)\s")
-    for line in text.splitlines():
-        if line.startswith("```"):
-            in_code = not in_code
-        prev = out[-1] if out else ""
-        if not in_code and prev.strip():
-            new_list = item.match(line) and not item.match(prev) and not prev.startswith("  ")
-            if new_list or prev.lstrip().startswith("!["):
-                out.append("")
-        out.append(line)
-    return "\n".join(out)
-
-
 def build_paper() -> tuple[list[str], int]:
-    import pymupdf as fitz
-    import markdown
+    import subprocess
 
-    out_dir = Path("docs/paper")
-    out_dir.mkdir(parents=True, exist_ok=True)
-    text, errors = fill((TEMPLATES / "paper.md").read_text(encoding="utf-8"))
-    (out_dir / "paper.md").write_text(text, encoding="utf-8")
+    import pymupdf
 
-    text_html = re.sub(r"(?m)^---\s*$", "", text)          # horizontal rules render as stray lines in PyMuPDF
-    html_body = markdown.markdown(_md_spacing(text_html), extensions=["tables", "fenced_code"])
-    # images: markdown paths are relative to docs/paper; the PDF archive is rooted at the repo
-    html_body = re.sub(r'src="\.\./\.\./', 'src="', html_body)
-    html = f"<html><head><meta charset='utf-8'><style>{PAPER_CSS}</style></head><body>{html_body}</body></html>"
-    (out_dir / "paper.html").write_text(html.replace('src="figures/', 'src="../../figures/'), encoding="utf-8")
-
-    story = fitz.Story(html=html, user_css=PAPER_CSS, archive=fitz.Archive("."))
-    writer = fitz.DocumentWriter(str(out_dir / "paper.pdf"))
-    mediabox = fitz.paper_rect("a4")
-    where = mediabox + (43, 45, -43, -45)
-    pages, more = 0, True
-    while more:
-        dev = writer.begin_page(mediabox)
-        more, _ = story.place(where)
-        story.draw(dev)
-        writer.end_page()
-        pages += 1
-    writer.close()
-    print(f"  docs/paper/paper.pdf  ({pages} pages, {len(errors)} unresolved)")
+    errors = []
+    for script in ("scripts/build_ieee_paper.py", "scripts/preview_ieee_pdf.py"):
+        r = subprocess.run([sys.executable, script], capture_output=True, text=True)
+        out = (r.stdout + r.stderr).strip()
+        print("  " + out.replace("\n", "\n  "))
+        if r.returncode:
+            return [f"{script} failed"], 0
+        errors += [line.strip() for line in r.stdout.splitlines()
+                   if "undefined macro" in line or ".tex: " in line and "missing" in line]
+    pages = len(pymupdf.open("docs/paper_ieee/main_preview.pdf"))
     return errors, pages
 
 
@@ -133,8 +85,8 @@ def main() -> None:
     hard = [p for p in problems if p not in pending]
     for p in hard:
         print("  UNRESOLVED:", p)
-    if not 6 <= pages <= 8:
-        print(f"  WARNING: paper is {pages} pages; the rubric asks for 6-8")
+    if not 4 <= pages <= 8:
+        print(f"  WARNING: paper preview is {pages} pages (IEEE two-column; the rubric asks for 6-8 pages)")
     if args.check and hard:
         sys.exit(1)
 

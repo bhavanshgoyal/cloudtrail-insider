@@ -39,7 +39,10 @@ def load(study: Path = STUDY) -> tuple[pd.DataFrame, pd.DataFrame]:
     sheets = sorted(study.glob("responses_R*.csv"))
     if not sheets:
         raise SystemExit(f"no response sheets in {study}")
-    resp = pd.concat([pd.read_csv(f, dtype={"verdict": str}) for f in sheets], ignore_index=True)
+    # header variants seen in returned sheets (matched case-insensitively, spaces as underscores)
+    aliases = {"alert": "alert_id", "confidence": "confidence_1to5", "time_spent": "seconds_spent"}
+    norm = lambda c: aliases.get(c.strip().lower().replace(" ", "_"), c.strip().lower().replace(" ", "_"))
+    resp = pd.concat([pd.read_csv(f, dtype=str).rename(columns=norm) for f in sheets], ignore_index=True)
     return resp, key
 
 

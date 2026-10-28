@@ -35,8 +35,6 @@ dev = [
 ]
 
 [project.scripts]
-cti-ingest    = "cti.ingest.loader:main"
-cti-features  = "cti.features.pipeline:main"
 cti-train     = "cti.detectors.train:main"
 cti-eval      = "cti.eval.evaluate:main"
 cti-explain   = "cti.explain.shap_explain:main"

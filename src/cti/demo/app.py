@@ -5,7 +5,7 @@ Streamlit dashboard: the analyst's view of one run of ``python run_pipeline.py``
 
   * pick a detector, a day and a budget -> that day's alert queue
   * for the proposed detector, the generated explanation of each alert (O3)
-  * campaign results (all workloads x 5 seeds) with confidence intervals
+  * campaign results (all seeds x rolling origins) with bootstrap confidence intervals
 
 Run with::
 
@@ -28,7 +28,7 @@ PROPOSED = "proposed_budget_aware_conformal"
 NAMES = {PROPOSED: "Proposed (BudgetAwareConformal)", "isolation_forest": "Isolation Forest", "lof": "LOF",
          "autoencoder": "Autoencoder", "rule_baseline": "Rule signatures"}
 
-st.set_page_config(page_title="CloudTrail insider-threat queue", layout="wide")
+st.set_page_config(page_title="Insider-threat alert queue (CERT r4.2)", layout="wide")
 
 
 @st.cache_data(show_spinner=False)
@@ -48,7 +48,7 @@ def main() -> None:
     scores, metrics, expl, campaign = load()
     by_key = {(e["principal"], e["date"]): e for e in expl["alerts"]}
 
-    st.title("CloudTrail insider-threat alert queue")
+    st.title("Insider-threat alert queue - CERT r4.2")
     st.caption(f"One run: workload {expl['workload']}, seed {expl['seed']}, rolling origin {expl['origin']}, "
                "test window only. Detector settings frozen on validation data.")
 
@@ -58,7 +58,7 @@ def main() -> None:
         days = sorted(scores["date"].unique())
         day = st.select_slider("Day", options=days, value=days[0], format_func=lambda d: str(d)[:10])
 
-    tab_queue, tab_metrics, tab_campaign = st.tabs(["Today's queue", "This run's metrics", "Campaign (5 seeds)"])
+    tab_queue, tab_metrics, tab_campaign = st.tabs(["Today's queue", "This run's metrics", "Campaign (all runs)"])
 
     with tab_queue:
         s = scores[scores["detector"] == det]
@@ -74,7 +74,7 @@ def main() -> None:
                 if e:
                     st.code(render(e), language=None)
                     pv = pd.Series(e["family_pvalues"]).rename(index=lambda f: FAMILY_TEXT.get(f, f))
-                    st.caption("How unusual each behaviour family is for this identity (smaller p = more unusual)")
+                    st.caption("How unusual each behaviour family is for this user (smaller p = more unusual)")
                     st.dataframe(pv.rename("p-value").to_frame().T, hide_index=True)
                 elif det == PROPOSED:
                     st.caption("Explanation stored for the 10-alerts/day queue only; set the budget to 10.")
@@ -86,18 +86,18 @@ def main() -> None:
                                                "mttd_hours_median"]) & (metrics["budget"] > 0)]
         st.dataframe(show.pivot_table(index="detector", columns=["metric", "budget"], values="value")
                      .rename(index=NAMES).round(3))
-        st.caption("Single run; see the Campaign tab for means and 95% CIs over seeds.")
+        st.caption("Single run; see the Campaign tab for pooled results with 95% bootstrap CIs over insiders / days.")
 
     with tab_campaign:
         if campaign is None:
-            st.info("Run `python scripts/run_campaign.py` for multi-seed results.")
+            st.info("Run `python scripts/run_campaign.py` for the full campaign results.")
         else:
             m = st.radio("Metric", ["dr_at_b", "precision_at_b"], horizontal=True,
                          format_func={"dr_at_b": "Detection rate", "precision_at_b": "Precision"}.get)
             c = campaign[(campaign["metric"] == m) & (campaign["budget"] == 10)].copy()
             c["value"] = c.apply(lambda r: f"{r['mean']:.3f}  [{r['ci_lo']:.3f}, {r['ci_hi']:.3f}]", axis=1)
             st.dataframe(c.pivot(index="detector", columns="workload", values="value").rename(index=NAMES))
-            for fig in ("per_workload_dr10.png", "precision_vs_budget.png", "ablation.png"):
+            for fig in ("dr_by_scenario.png", "precision_vs_budget.png", "ablation.png"):
                 if (Path("figures") / fig).exists():
                     st.image(str(Path("figures") / fig))
 

@@ -1,0 +1,12 @@
+# Frozen by scripts/tune_proposed.py on 2026-10-04 (validation windows only:
+# W1_baseline, seeds [100, 101], 3 origins). Do not edit by hand; the campaign
+# must use these values unchanged. Log: results\tuning_log.csv
+detectors:
+  proposed:
+    family_agg: max
+    fusion: min_p
+    suppress_days: 0
+    scale_alpha: 1.0
+    shrink_k: 3.0
+    cal_fraction: 0.3
+    transform: log1p

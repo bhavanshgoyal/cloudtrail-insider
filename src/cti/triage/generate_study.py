@@ -7,11 +7,12 @@ Builds the triage study for objective O4 / hypothesis H3:
 
 Design (see docs/triage_study/PROTOCOL.md - written before any response is collected)
   * Source: alerts actually emitted by the proposed detector at B = 10 alerts/day on the
-    TEST windows of W1_baseline, seeds 0 and 1 (two independent synthetic organisations),
-    last rolling origin, frozen settings. Two seeds because one window holds too few distinct
-    insiders once each identity is capped at 2 alerts.
-  * 40 alerts: 20 true positives (principal-day with planted misuse), stratified round-robin
-    over attack scenarios S1-S5 (distinct identities first), + 20 false positives sampled
+    CERT r4.2 TEST windows of all 3 rolling origins, frozen settings. Origins overlap in
+    time, so an alert (user, day) raised in several origins is kept once (first origin).
+    All origins are pooled because one window holds too few distinct insiders once each
+    identity is capped at 2 alerts.
+  * 40 alerts: 20 true positives (user-day with malicious activity per the CERT answers),
+    stratified round-robin over scenarios S1-S3 (distinct identities first), + 20 false positives sampled
     uniformly from the emitted false alerts; at most 2 alerts per identity; fixed seed.
   * Two arms:  A = score only (anomaly score + rank in that day's queue)
                B = explanation only (no score)
@@ -44,7 +45,7 @@ from cti.eval.evaluate import emit_alerts
 from cti.experiment import apply_frozen_configs, load_world, run_window
 from cti.explain.explain_proposed import explain_alerts
 from cti.util.config import load_config
-from cti.util.splits import make_splits
+from cti.util.splits import all_splits
 
 log = logging.getLogger(__name__)
 
@@ -70,8 +71,9 @@ ARM_TEXT = {
 INSTRUCTIONS = """\
 ## Instructions
 
-You are a SOC analyst. Each alert below was raised by an anomaly detector watching AWS CloudTrail
-logs. For each alert decide:
+You are a SOC analyst. Each alert below was raised by an anomaly detector watching a company's
+activity logs (logons, USB devices, files copied to removable media, email and web browsing).
+For each alert decide:
 
 * **TP** - this looks like genuine misuse of the identity (insider / stolen credentials) and you would
   escalate it, or
@@ -106,40 +108,51 @@ def _codes(n: int, rng: np.random.Generator) -> list[str]:
     return out
 
 
-def select_alerts(cfg: dict, seed: int = 0, workload: str = "W1_baseline", budget: int = 10) -> pd.DataFrame:
-    """Alerts emitted by the frozen proposed detector on the test window, with labels + explanations."""
-    world = load_world(cfg, workload, seed)
-    split = make_splits(world.features["date"], cfg)                    # last origin
-    det = BudgetAwareConformal(cfg, seed)
-    run = run_window(world, cfg, split, "test", [det], budgets=[budget], with_ci=False)
-    name = det.name
-    alerts = emit_alerts(run.scores[name], budget, det.suppress_days, seed)
-    rows = alerts.merge(world.features, on=["principal", "date"], how="left")
-    expl = explain_alerts(run.detectors[name], rows, cfg["explain"]["top_k_features"])
+def _scenario_of(gt: list[dict]) -> dict[tuple[str, str], str]:
+    """(account, day) -> scenario, including days on a stolen account (scenario 3)."""
+    out = {}
+    for g in gt:
+        out.update({(g["principal_id"], d): g["scenario_id"] for d in g["malicious_days"]})
+        out.update({(u, d): g["scenario_id"] for u, d in g.get("other_account_days", [])})
+    return out
 
+
+def select_alerts(cfg: dict, seed: int = 0, budget: int = 10) -> pd.DataFrame:
+    """Alerts emitted by the frozen proposed detector on every origin's test window, with labels
+    and explanations; an alert (user, day) seen in several overlapping origins is kept once."""
+    world = load_world(cfg, None, seed)
     labels = world.labels.set_index(["principal", "date"])["label"]
-    gt = {g["principal_id"]: g for g in world.ground_truth}
-    role = (world.events.groupby("principalId", observed=True)["roleName"].first().astype(str))
-    out = alerts.copy()
+    scen = _scenario_of(world.ground_truth)
+    role = world.events.set_index("principalId")["roleName"].astype(str)
+    parts, splits = [], {}
+    for split in all_splits(world.features["date"], cfg):
+        det = BudgetAwareConformal(cfg, seed)
+        run = run_window(world, cfg, split, "test", [det], budgets=[budget], with_ci=False)
+        alerts = emit_alerts(run.scores[det.name], budget, det.suppress_days, seed)
+        alerts["n_alerts_that_day"] = alerts.groupby("date")["rank"].transform("max")
+        rows = alerts.merge(world.features, on=["principal", "date"], how="left")
+        expl = explain_alerts(run.detectors[det.name], rows, cfg["explain"]["top_k_features"])
+        alerts["explanation"] = [e["text"] for e in expl]
+        alerts["primary_family"] = [e["primary_family"] for e in expl]
+        alerts["origin"] = split.origin
+        parts.append(alerts)
+        splits[split.origin] = split.describe()
+    out = pd.concat(parts, ignore_index=True).drop_duplicates(["principal", "date"]).reset_index(drop=True)
     out["label"] = [int(labels.get((p, d), 0)) for p, d in zip(out["principal"], out["date"])]
-    out["scenario_id"] = [gt[p]["scenario_id"] if p in gt and lab else "" for p, lab in
-                          zip(out["principal"], out["label"])]
+    out["scenario_id"] = [scen.get((p, pd.Timestamp(d).strftime("%Y-%m-%d")), "") if lab else ""
+                          for p, d, lab in zip(out["principal"], out["date"], out["label"])]
     out["role"] = out["principal"].map(role).fillna("unknown")
-    out["explanation"] = [e["text"] for e in expl]
-    out["primary_family"] = [e["primary_family"] for e in expl]
-    out["n_alerts_that_day"] = out.groupby("date")["rank"].transform("max")
     out["source_seed"] = seed
-    out["identity_key"] = f"s{seed}:" + out["principal"].astype(str)
-    out.attrs.update(workload=workload, seed=seed, origin=split.origin, budget=budget,
-                     split=split.describe())
+    out["identity_key"] = out["principal"].astype(str)
+    out.attrs.update(workload=world.workload, seed=seed, budget=budget, splits=splits)
     return out
 
 
 def _round_robin_tp(pool: pd.DataFrame, n: int, rng: np.random.Generator) -> pd.DataFrame:
     """TP alerts stratified by attack scenario: round-robin over scenarios, distinct identities first.
 
-    Sampling alerts uniformly would let multi-day attacks (S2/S5, ~20 alert-days each) crowd out the
-    single-day ones (S1/S3/S4), and the study would then measure one kind of explanation only.
+    Sampling alerts uniformly would let the multi-day scenario (S2, ~29 malicious days each) crowd
+    out the short ones (S1, S3: 1-5 days), and the study would then measure one kind of explanation only.
     """
     queues = {}
     for sc, g in pool.groupby("scenario_id"):
@@ -213,7 +226,7 @@ def write_study(study: pd.DataFrame, meta: dict, out: Path = OUT) -> None:
     (out / "_facilitator_only" / "answer_key.csv").write_text(key.to_csv(index=False), encoding="utf-8")
     (out / "_facilitator_only" / "README.md").write_text(
         "# Facilitator only - reviewers must not open this folder\n\n"
-        "`answer_key.csv` holds the ground truth for every alert id (label from the planted scenarios).\n"
+        "`answer_key.csv` holds the ground truth for every alert id (label from the CERT r4.2 answers).\n"
         "Score the study with `python -m cti.triage.score_study` after all four response sheets are in.\n",
         encoding="utf-8")
     (out / "study_meta.json").write_text(json.dumps({**meta, "n_alerts": len(study),
@@ -225,17 +238,14 @@ def write_study(study: pd.DataFrame, meta: dict, out: Path = OUT) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Generate the O4 triage study")
-    ap.add_argument("--seeds", type=int, nargs="+", default=[0, 1])
-    ap.add_argument("--workload", default="W1_baseline")
+    ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(message)s")
-    logging.getLogger("cti.detectors.rules").setLevel(logging.WARNING)
     cfg = apply_frozen_configs(load_config())
-    parts = [select_alerts(cfg, sd, args.workload) for sd in args.seeds]
-    alerts = pd.concat(parts, ignore_index=True)
+    alerts = select_alerts(cfg, args.seed)
     study = sample_alerts(alerts)
-    meta = {"workload": args.workload, "seeds": args.seeds, "budget": 10,
-            "splits": {str(p.attrs["seed"]): p.attrs["split"] for p in parts},
+    meta = {"workload": alerts.attrs["workload"], "seed": args.seed, "budget": 10,
+            "splits": alerts.attrs["splits"],
             "n_emitted_alerts": len(alerts), "emitted_tp": int(alerts["label"].sum()),
             "emitted_tp_identities": int(alerts.loc[alerts["label"] == 1, "identity_key"].nunique())}
     write_study(study, meta)

@@ -1,118 +1,65 @@
-﻿"""
+"""
 cti.ingest.toy
 --------------
-Generate a synthetic 500-event CloudTrail-like toy log for smoke tests and
-CI.  No external data needed.
-
-Usage::
-
-    python -m cti.ingest.toy --output data/raw/toy_logs.jsonl.gz --n 500 --seed 42
+Tiny CERT-shaped synthetic datasets for tests and fast offline checks
+(hand-made; contains no licensed CERT data).
 """
 from __future__ import annotations
 
-import argparse
-import gzip
-import json
-import logging
-import random
-from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from cti.util.config import load_config
-from cti.util.seeds import set_all_seeds
+import numpy as np
+import pandas as pd
 
-log = logging.getLogger(__name__)
+from cti.features.cert import SOURCES
 
-_EVENT_SOURCES = [
-    "s3.amazonaws.com",
-    "ec2.amazonaws.com",
-    "iam.amazonaws.com",
-    "sts.amazonaws.com",
-    "kms.amazonaws.com",
-]
-_EVENT_NAMES = {
-    "s3.amazonaws.com":  ["GetObject", "PutObject", "DeleteObject", "ListBuckets"],
-    "ec2.amazonaws.com": ["DescribeInstances", "RunInstances", "TerminateInstances"],
-    "iam.amazonaws.com": ["CreateUser", "AttachUserPolicy", "ListUsers", "DeleteUser"],
-    "sts.amazonaws.com": ["AssumeRole", "GetCallerIdentity"],
-    "kms.amazonaws.com": ["Decrypt", "Encrypt", "GenerateDataKey"],
-}
-_REGIONS   = ["us-east-1", "eu-west-1", "ap-southeast-1"]
-_IPS       = [f"192.168.{i}.{j}" for i in range(1, 5) for j in range(1, 20)]
-_USERS     = [f"arn:aws:iam::123456789012:user/user{i:02d}" for i in range(1, 11)]
-# user05 is the "insider" — inject anomalous events
-_INSIDER   = "arn:aws:iam::123456789012:user/user05"
-_ERROR_CODES = [None, None, None, None, "AccessDenied", "InvalidParameter"]
+COLS = {"logon": ["is_logon"], "device": ["is_connect"], "file": ["ext"],
+        "email": ["n_ext", "size", "n_attach"], "http": ["domain"]}
+DOMAINS = ["news.com", "intranet.dtaa.com", "weather.com", "search.com", "shop.com"]
 
 
-def _random_event(rng: random.Random, ts: datetime, insider: bool = False) -> dict:
-    source = rng.choice(_EVENT_SOURCES)
-    if insider and source not in ("iam.amazonaws.com", "kms.amazonaws.com"):
-        source = rng.choice(["iam.amazonaws.com", "kms.amazonaws.com"])
-    name   = rng.choice(_EVENT_NAMES[source])
-    user   = _INSIDER if insider else rng.choice([u for u in _USERS if u != _INSIDER])
-    record = {
-        "eventTime":     ts.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "eventSource":   source,
-        "eventName":     name,
-        "awsRegion":     rng.choice(_REGIONS),
-        "sourceIPAddress": rng.choice(_IPS),
-        "userAgent":     "aws-sdk-python/1.34",
-        "errorCode":     rng.choice(_ERROR_CODES),
-        "requestID":     f"req-{rng.randint(10**8, 10**9)}",
-        "eventID":       f"evt-{rng.randint(10**8, 10**9)}",
-        "userIdentity":  {
-            "type":       "IAMUser",
-            "arn":        user,
-            "accountId":  "123456789012",
-            "principalId": user.split("/")[-1],
-        },
-    }
-    return record
+def toy_events(n_users: int = 20, n_days: int = 120, seed: int = 0,
+               insider: str = "U00", attack_from: int = 100) -> tuple[dict[str, pd.DataFrame], list[dict]]:
+    """Benign office workers; ``insider`` copies files to USB after hours and visits a leak site."""
+    rng = np.random.default_rng(seed)
+    rows = {s: [] for s in SOURCES}
+    base = pd.Timestamp("2010-01-04")
+    users = [f"U{i:02d}" for i in range(n_users)]
+    mal_days = []
+    for d in range(n_days):
+        day = base + pd.Timedelta(days=d)
+        if day.weekday() >= 5 and rng.random() < 0.8:
+            continue
+        for i, u in enumerate(users):
+            pc = f"PC-{i}"
+            start = 8 + rng.normal(0.5, 0.3)
+            t0 = day + pd.Timedelta(hours=start)
+            rows["logon"].append((u, t0, pc, True))
+            rows["logon"].append((u, t0 + pd.Timedelta(hours=8.5), pc, False))
+            for _ in range(rng.poisson(15)):
+                rows["http"].append((u, t0 + pd.Timedelta(minutes=float(rng.uniform(5, 500))), pc,
+                                     DOMAINS[rng.integers(len(DOMAINS))]))
+            for _ in range(rng.poisson(3)):
+                rows["email"].append((u, t0 + pd.Timedelta(minutes=float(rng.uniform(5, 500))), pc,
+                                      int(rng.random() < 0.1), int(rng.integers(1000, 30000)), 0))
+            if u == insider and d >= attack_from and rng.random() < 0.5:
+                night = day + pd.Timedelta(hours=22)
+                rows["logon"].append((u, night, pc, True))
+                rows["device"].append((u, night + pd.Timedelta(minutes=2), pc, True))
+                for k in range(5):
+                    rows["file"].append((u, night + pd.Timedelta(minutes=3 + k), pc, "doc"))
+                rows["http"].append((u, night + pd.Timedelta(minutes=9), pc, "wikileaks.org"))
+                mal_days.append(night)
+    frames = {s: pd.DataFrame(rows[s], columns=["user", "t", "pc", *COLS[s]]) for s in SOURCES}
+    gt = [{"principal_id": insider, "scenario_id": "S1",
+           "malicious_days": sorted({t.strftime("%Y-%m-%d") for t in mal_days}),
+           "first_event_time": min(mal_days).tz_localize("UTC").isoformat() if mal_days else None,
+           "other_account_days": []}]
+    return frames, gt
 
 
-def generate_toy_logs(n: int, seed: int, start: datetime | None = None) -> list[dict]:
-    """Return *n* synthetic CloudTrail records."""
-    rng = random.Random(seed)
-    start = start or datetime(2023, 12, 1, 0, 0, 0, tzinfo=timezone.utc)
-
-    records = []
-    insider_count = max(1, n // 10)  # 10 % of events are from the insider
-
-    for i in range(n):
-        delta = timedelta(minutes=rng.randint(0, 60 * 24 * 30))  # spread over ~30 days
-        ts = start + delta
-        insider = i < insider_count
-        records.append(_random_event(rng, ts, insider=insider))
-
-    records.sort(key=lambda r: r["eventTime"])
-    return records
-
-
-def save_toy_logs(records: list[dict], path: str | Path) -> None:
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with gzip.open(path, "wt", encoding="utf-8") as fh:
-        for rec in records:
-            fh.write(json.dumps(rec) + "\n")
-    log.info("Wrote %d toy records to %s", len(records), path)
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate toy CloudTrail logs")
-    parser.add_argument("--config", default=None)
-    parser.add_argument("--output", default="data/raw/toy_logs.jsonl.gz")
-    parser.add_argument("--n",      type=int, default=500)
-    parser.add_argument("--seed",   type=int, default=None)
-    args = parser.parse_args()
-
-    cfg  = load_config(args.config)
-    seed = args.seed if args.seed is not None else cfg["random_seed"]
-    set_all_seeds(seed)
-
-    records = generate_toy_logs(args.n, seed)
-    save_toy_logs(records, args.output)
-
-
-if __name__ == "__main__":
-    main()
+def write_parquet(frames: dict[str, pd.DataFrame], out: Path) -> Path:
+    out.mkdir(parents=True, exist_ok=True)
+    for s, df in frames.items():
+        df.to_parquet(out / f"{s}.parquet", index=False)
+    return out

@@ -1,0 +1,15 @@
+% Hand-written narrative; numbers are macros.
+Evaluated where a SOC actually operates, at a fixed number of alerts per day, judging each user
+against their own history with pooled conformal calibration roughly quadruples the precision of
+Isolation Forest on CERT r4.2 (\POursBA{} vs.\ \PIFBA{} at 10 alerts per day) and gives the highest
+precision of all five detectors at every budget, while fitting in under a second. It does not
+reliably detect more insiders at 10 alerts per day than Isolation Forest, LOF or an autoencoder
+(H1a and H2 not supported), although at 50 alerts per day it reaches \DROursBB{} against \DRIFBB{}.
+The ablation locates the gain in the per-user baseline and shows that the settings chosen on a
+short development period did not transfer fully to later months. Every alert names the behaviour
+that deviated, and in our pre-registered triage study reviewers shown only the explanation triaged
+alerts with a balanced accuracy of \TriageBAB{} against \TriageBAA{} for the score-only arm
+(\TriageDiff{} points, 95\% CI \TriageLo{} to \TriageHi{}; H3 \TriageVerdict{}), confirming that
+the explanations carry actionable signal. Future work: a longer development period or rolling
+re-tuning, the remaining CERT releases and real cloud control-plane logs, and replication of the
+triage finding with independent analysts on a larger alert set.

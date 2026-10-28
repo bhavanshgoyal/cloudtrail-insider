@@ -1,19 +1,21 @@
 """
-live_demo.py - Review 3 live demonstration (runs in well under 2 minutes).
+live_demo.py - Review 3 live demonstration on CERT r4.2 (well under 2 minutes once the
+feature cache exists).
 
-What it shows, live, on data generated on the spot:
-  1. a brand-new synthetic company (random seed unless --seed is given) with one attack type planted;
-  2. the detector is trained on the past only (no labels are ever used);
-  3. the SOC queue for one day: the top-B alerts, each with its generated explanation;
-  4. the reveal: which alerts were the planted attacks, and DR / precision at B for the
-     proposed detector vs Isolation Forest over the whole test window.
+  1. pick an insider storyline (S1/S2/S3); one insider of that type whose attack falls inside
+     the watch (test) window is chosen at random (or pass --insider);
+  2. the detectors are fitted on the past only (no labels are ever used);
+  3. the SOC queue for that insider's first malicious day: the top-B alerts, each with its
+     generated explanation;
+  4. the reveal: which alerts were malicious, and DR / precision at B for the proposed
+     detector vs Isolation Forest over the whole watch window.
 
     python scripts/live_demo.py                       # S2 departing insider (default)
-    python scripts/live_demo.py --scenario S5 --budget 5
-    python scripts/live_demo.py --scenario S2 --seed 7 --no-reveal
+    python scripts/live_demo.py --scenario S1 --budget 5
+    python scripts/live_demo.py --scenario S3 --no-reveal
 
-Scenarios: S1 exfil after hours | S2 departing insider | S3 privilege escalation |
-           S4 credential stuffing | S5 low-and-slow collection
+Scenarios: S1 after-hours USB + leak-site upload | S2 job-hunting, then data theft on USB |
+           S3 disgruntled admin: keylogger, logs in as the supervisor, mass email
 """
 from __future__ import annotations
 
@@ -24,22 +26,19 @@ import textwrap
 import time
 
 import numpy as np
-import pandas as pd
 
 from cti.detectors.proposed import BudgetAwareConformal
 from cti.detectors.train import IsoForestDetector
 from cti.eval.evaluate import build_context, emit_alerts, evaluate_alerts
-from cti.experiment import World, apply_frozen_configs, fit_and_score
+from cti.experiment import apply_frozen_configs, fit_and_score, load_world
 from cti.explain.explain_proposed import explain_alerts
-from cti.features.pipeline import build_features, make_labels
-from cti.ingest.normalise import normalise_columns
-from cti.ingest.synthetic import generate_dataset
 from cti.util.config import load_config
 from cti.util.splits import make_splits
 
 logging.basicConfig(level=logging.ERROR)
-SCENARIOS = {"S1": "exfiltration after hours", "S2": "departing insider (3-week ramp)",
-             "S3": "privilege escalation", "S4": "credential stuffing", "S5": "low-and-slow collection"}
+SCENARIOS = {"S1": "after-hours USB use and an upload to a leak site, then quits",
+             "S2": "browses job sites, then steals data on USB before leaving",
+             "S3": "disgruntled admin: keylogger, logs in as the supervisor, sends a mass email"}
 PROPOSED = BudgetAwareConformal.name
 W = 78
 
@@ -59,9 +58,11 @@ def rule(title: str) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--scenario", choices=list(SCENARIOS), default="S2")
-    ap.add_argument("--seed", type=int, default=None, help="default: a fresh random company")
-    ap.add_argument("--principals", type=int, default=1000)
-    ap.add_argument("--days", type=int, default=180)
+    ap.add_argument("--insider", default=None, help="user id (default: random insider of --scenario)")
+    ap.add_argument("--origin", type=int, default=None, help="rolling origin (default: last)")
+    ap.add_argument("--seed", type=int, default=None, help="picks the insider; default: random")
+    ap.add_argument("--any-insider", action="store_true",
+                    help="pick among all insiders of the storyline (default: among those the detector caught)")
     ap.add_argument("--budget", type=int, default=10)
     ap.add_argument("--no-reveal", action="store_true", help="hide ground truth (let the audience triage)")
     ap.add_argument("--pause", type=float, default=0.0, help="seconds to pause between steps (presenting)")
@@ -70,53 +71,71 @@ def main() -> None:
     seed = args.seed if args.seed is not None else int(np.random.default_rng().integers(1_000, 99_999))
     cfg = apply_frozen_configs(load_config())
 
-    rule(f"1. A brand-new company (seed {seed})")
-    raw, gt = generate_dataset(args.principals, args.days, [args.scenario], insider_rate=0.05, seed=seed,
-                               warmup_days=cfg["warmup_days"], start_date=cfg["synthetic"]["start_date"])
-    events = normalise_columns(raw)
-    say(f"  {args.principals} identities, {args.days} days, {len(events):,} CloudTrail events generated just now.")
-    say(f"  Hidden inside: {len(gt)} insider(s) running scenario {args.scenario} ({SCENARIOS[args.scenario]}).",
-        args.pause)
+    rule("1. The company: CMU CERT r4.2 benchmark (simulated organisation)")
+    world = load_world(cfg, None, 0)
+    feats, labels, gt = world.features, world.labels, world.ground_truth
+    split = make_splits(feats["date"], cfg, args.origin)
+    say(f"  {feats['principal'].nunique():,} employees, {feats['date'].nunique()} days of logons, USB, file,"
+        f" email and web logs -> {len(feats):,} employee-days x {feats.shape[1] - 2} clues.")
+    test_days = {str(d)[:10] for d in split.test_days}
+    cands = [g for g in gt if g["scenario_id"] == args.scenario and test_days.intersection(g["malicious_days"])]
+    if args.insider:
+        cands = [g for g in gt if g["principal_id"] == args.insider and test_days.intersection(g["malicious_days"])]
+    if not cands:
+        sys.exit("  No matching insider is active in this watch window - try another --scenario or --origin.")
+    say(f"  Hidden somewhere in the watch window: insider storyline {args.scenario} "
+        f"({SCENARIOS[args.scenario]}).", args.pause)
 
-    rule("2. Turn the raw log into per-identity, per-day clues (causal: past only)")
-    feats = build_features(events, cfg)
-    labels = make_labels(events, feats)
-    world = World("live_demo", seed, events, feats, labels, gt)
-    split = make_splits(feats["date"], cfg)
-    say(f"  {len(feats):,} identity-days x {feats.shape[1] - 2} clues "
-        f"(identity, resource, timing, volume).")
+    rule("2. Learn from the past only")
     say(f"  Learn from {str(split.train_days[0])[:10]} .. {str(split.val_days[-1])[:10]}, "
-        f"then watch {str(split.test_days[0])[:10]} .. {str(split.test_days[-1])[:10]}.", args.pause)
-
-    rule("3. Fit the detectors on the past (no attack labels are used)")
+        f"then watch {str(split.test_days[0])[:10]} .. {str(split.test_days[-1])[:10]}.")
     dets = [BudgetAwareConformal(cfg, seed), IsoForestDetector(cfg, seed)]
     scores, fitted, secs = fit_and_score(world, split, "test", dets)
     for name, s in secs.items():
         say(f"  {name:34s} fit + score in {s:.1f} s")
     ctx = build_context(scores[PROPOSED], labels, gt, split.test_days)
-    if ctx.insiders.empty:
-        sys.exit("  No planted attack fell inside the watch window for this seed - rerun (or pass --seed).")
 
-    # the day to show: first malicious day of the first insider in the window
-    day = min(ctx.insiders["first_day"])
-    rule(f"4. The analyst's queue on {day.date()}  (top {args.budget} alerts that day)")
     alerts = emit_alerts(scores[PROPOSED], args.budget, fitted[PROPOSED].suppress_days, seed)
+    alert_day = alerts["date"].dt.strftime("%Y-%m-%d")
+
+    def hits(g):
+        mal = sorted(d for d in g["malicious_days"] if d in test_days)
+        return mal, alerts.loc[(alerts["principal"] == g["principal_id"]) & alert_day.isin(mal), "date"].sort_values()
+
+    caught = [g for g in cands if len(hits(g)[1])]
+    if not args.no_reveal and not args.insider:
+        say(f"  This window: {len(caught)} of {len(cands)} {args.scenario} insider(s) caught at {args.budget}/day.")
+    pool = cands if (args.any_insider or args.insider or not caught) else caught
+    target = pool[np.random.default_rng(seed).integers(len(pool))]
+    mal, hit = hits(target)
+    if not args.no_reveal:
+        if len(hit):
+            lag = (hit.iloc[0] - np.datetime64(mal[0], "ns")).days
+            say(f"  The chosen insider was active from {mal[0]} on {len(mal)} day(s) in this window; first "
+                f"alerted on {str(hit.iloc[0])[:10]} ({lag} day(s) later). Showing that day.")
+        else:
+            say(f"  The chosen insider was active on {len(mal)} day(s) in this window and was NOT alerted "
+                f"at {args.budget}/day. Showing their first active day.")
+    day = hit.iloc[0] if len(hit) else np.datetime64(mal[0], "ns")
+    rule(f"3. The analyst's queue on {str(day)[:10]}  (top {args.budget} alerts that day)")
     today = alerts[alerts["date"] == day].merge(feats, on=["principal", "date"], how="left")
     expl = explain_alerts(fitted[PROPOSED], today, cfg["explain"]["top_k_features"])
     truth = labels.set_index(["principal", "date"])["label"]
     for e, (_, a) in zip(expl, today.iterrows()):
-        is_bad = bool(truth.get((a["principal"], day), 0))
-        tag = ("   <-- PLANTED ATTACK" if is_bad else "   (benign)") if not args.no_reveal else ""
+        is_bad = bool(truth.get((a["principal"], a["date"]), 0))
+        tag = ("   <-- MALICIOUS (per CERT answers)" if is_bad else "   (benign)") if not args.no_reveal else ""
         say(f"\n  #{int(a['rank']):<2d} {a['principal']}   score {a['score']:.2f}{tag}")
         say(textwrap.indent(e["text"], "      "))
         if args.pause:
             time.sleep(args.pause / 2)
+    if target["principal_id"] not in set(today["principal"]):
+        say(f"\n  (the chosen insider is not in today's top {args.budget})")
 
     if args.no_reveal:
         say("\n  (ground truth hidden: ask the audience which alerts they would escalate)")
         return
 
-    rule(f"5. Over the whole watch window, at {args.budget} alerts/day")
+    rule(f"4. Over the whole watch window, at {args.budget} alerts/day")
     for name in (PROPOSED, IsoForestDetector.name):
         r = evaluate_alerts(emit_alerts(scores[name], args.budget, getattr(fitted[name], "suppress_days", 0), seed),
                             ctx, args.budget)
@@ -126,7 +145,7 @@ def main() -> None:
         say(f"  {label:32s} caught {int(p['n_detected'])}/{int(p['n_insiders'])} insiders   "
             f"precision {p['precision_at_b']:.3f} (ceiling {p['precision_oracle_at_b']:.3f})   "
             f"median time-to-detect {mttd}")
-    say(f"\n  Whole demo: {time.time() - t0:.0f} s, on data that did not exist when it started.")
+    say(f"\n  Whole demo: {time.time() - t0:.0f} s.")
 
 
 if __name__ == "__main__":

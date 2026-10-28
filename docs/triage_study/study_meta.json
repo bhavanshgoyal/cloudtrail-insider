@@ -1,17 +1,15 @@
 {
- "workload": "W1_baseline",
- "seeds": [
-  0,
-  1
- ],
+ "workload": "CERT_r4.2",
+ "seed": 0,
  "budget": 10,
  "splits": {
-  "0": "origin 2: train 2023-01-15..2023-04-23 (99d) | val 2023-04-24..2023-05-18 (25d) | test 2023-05-19..2023-06-29 (42d)",
-  "1": "origin 2: train 2023-01-15..2023-04-23 (99d) | val 2023-04-24..2023-05-18 (25d) | test 2023-05-19..2023-06-29 (42d)"
+  "0": "origin 0: train 2010-01-16..2010-08-15 (212d) | val 2010-08-16..2010-10-27 (73d) | test 2010-10-28..2011-02-26 (122d)",
+  "1": "origin 1: train 2010-01-16..2010-09-24 (252d) | val 2010-09-25..2010-12-06 (73d) | test 2010-12-07..2011-04-07 (122d)",
+  "2": "origin 2: train 2010-01-16..2010-11-03 (292d) | val 2010-11-04..2011-01-15 (73d) | test 2011-01-16..2011-05-17 (122d)"
  },
- "n_emitted_alerts": 840,
- "emitted_tp": 247,
- "emitted_tp_identities": 27,
+ "n_emitted_alerts": 2064,
+ "emitted_tp": 59,
+ "emitted_tp_identities": 16,
  "n_alerts": 40,
  "n_tp": 20,
  "schedule": {

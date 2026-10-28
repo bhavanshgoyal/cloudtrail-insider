@@ -1,0 +1,44 @@
+% Hand-written narrative; numbers are macros.
+Table~\ref{tab:ablation} changes one component at a time on the same test windows (seeds 0--2).
+The per-user baseline (C1) carries the method: replacing it with a population baseline drops the
+detection rate from \AblFullDR{} to \AblNoCOneDR{} and the precision from \AblFullP{} to
+\AblNoCOneP{}, the level of Isolation Forest. Removing the resource family lowers the detection rate
+to \AblNoResourceDR{}, and removing the volume family lowers the precision to \AblNoVolumeP{}.
+Repeat-alert suppression (C4), switched off by tuning, lowers precision (\AblCFourP).
+
+Several variants do \emph{better} on the test windows than the tuned model: Fisher fusion
+(DR \AblFisherDR, P \AblFisherP), no calibration (DR \AblNoCTwoDR, P \AblNoCTwoP) and dropping the
+identity family (DR \AblNoIdentityDR, P \AblNoIdentityP). Validation had preferred the tuned
+settings (validation DR@10 \ValDROurs{} for the selected configuration). We do not switch to any of
+these variants, because choosing among them now would select on the test windows; we report the gap
+as evidence that the short development period, whose validation windows hold fewer insiders than
+the test windows, is a weak guide to the later months.
+
+\textbf{Fusion method.} Validation selected Bonferroni min-$p$ fusion over Fisher and Stouffer
+combinations. Min-$p$ is conservative: it is driven by whichever behaviour family produced the
+most extreme $p$-value, which in practice means the family with the largest $\ell_2$ deviation.
+Fisher's method, which combines evidence across all four families, performs better on the test
+windows, suggesting that true threats in this dataset tend to deviate in multiple families
+simultaneously. This is consistent with S2 insiders, whose job-site browsing (resource family)
+and unusual USB activity (volume family) often co-occur on the same day.
+
+\textbf{Calibration.} Removing pooled conformal calibration (C2) and replacing it with a
+rank-based score improves the test detection rate. This is surprising: calibration was chosen on
+validation, but the score distributions differ between the development period and the later test
+months, so calibration thresholds that were correctly set on development data are slightly
+miscalibrated on later data. The paper reports this openly as evidence of the distribution shift
+noted throughout the evaluation.
+
+\begin{table}[t]
+\centering
+\caption{Ablation at 10 alerts/day on the test windows (DR with 95\% CI over insiders; P@10).}
+\label{tab:ablation}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lcc}
+\toprule
+Variant & DR@10 [95\% CI] & P@10 \\
+\midrule
+\input{generated/tab_ablation.tex}
+\bottomrule
+\end{tabular}}
+\end{table}

@@ -1,0 +1,53 @@
+% Hand-written narrative; every number is a macro from generated/numbers.tex.
+\textbf{Precision.} At 10 alerts per day BudgetAwareConformal reaches $\text{P@10}=\POursBA$,
+against \PIFBA{} for Isolation Forest, \PLOFBA{} for LOF,
+\PAEBA{} for the autoencoder and \PRulesBA{} for the signature rules. The relative gain over
+Isolation Forest is \HypOneBDiff{} with a 95\% interval of [\HypOneBLo, \HypOneBHi], so H1b is
+\HypOneBVerdict. Precision stays low in absolute terms: only about \PosRate\% of user-days are
+malicious, and the best achievable precision at 10 alerts per day is \OracleP{}, because on most days
+fewer than ten user-days are malicious.
+
+\textbf{Detection rate.} BudgetAwareConformal alerts on at least one malicious day of \DROursBA{} of
+the insiders active in the test windows, against \DRIFBA{} for Isolation Forest (\HypOneADiff,
+95\% CI [\HypOneALo, \HypOneAHi]). The interval includes small and negative gains, so H1a is
+\HypOneAVerdict. LOF (\DRLOFBA) and the autoencoder (\DRAEBA) reach a similar detection rate at
+roughly half the precision, i.e.\ they buy the same coverage with twice as many false alerts. With
+more budget the detection rate grows to \DROursBB{} at 50 and \DROursBC{} at 100 alerts per day
+(Fig.~\ref{fig:budget}).
+
+\textbf{Time to detection.} The median time from attack onset to alert is \HypTwoDiff{} relative to
+Isolation Forest (95\% CI [\HypTwoLo, \HypTwoHi]); H2 is \HypTwoVerdict. Alerts are a daily batch, so
+12--24 hours is the floor for every detector.
+
+\textbf{Curve versus operating point.} AUC-ROC ranks the detectors differently from the budgeted
+metrics (BudgetAwareConformal \AUCOurs, Isolation Forest \AUCIF, LOF \AUCLOF, autoencoder \AUCAE;
+Table~\ref{tab:main}): a whole-curve summary is not a reliable guide to a queue of ten alerts.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/dr_vs_budget.png}
+\caption{Detection rate against the daily alert budget on the CERT r4.2 test windows (95\% bootstrap
+CI over insiders where available).}
+\label{fig:budget}
+\end{figure}
+
+\subsection{Scenarios}
+Table~\ref{tab:scenario} splits the detection rate at 10 alerts per day by scenario.
+\input{sections/results_scenarios.tex}
+
+\begin{table}[t]
+\centering
+\caption{Detection rate at 10 alerts/day per insider scenario (insiders pooled over origins).}
+\label{tab:scenario}
+\begin{tabular}{lccc}
+\toprule
+\input{generated/tab_scenario.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Ablation}
+\input{sections/results_ablation.tex}
+
+\subsection{Explanations and triage (O3, O4)}
+\input{sections/results_triage.tex}

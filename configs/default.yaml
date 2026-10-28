@@ -3,30 +3,35 @@
 # No literal magic numbers anywhere in source code.
 
 paths:
-  raw_logs:          "data/raw/cloudtrail_logs.jsonl.gz"
-  processed_events:  "data/processed/events.parquet"
-  principals:        "data/interim/principals.parquet"
-  feature_store:     "data/features/features.parquet"
-  label_store:       "data/features/labels.parquet"
-  ground_truth:      "data/raw/ground_truth.json"
+  feature_store:     "data/cache/CERT_r4.2/features.parquet"
   results_dir:       "results"
   models_dir:        "models"
   figures_dir:       "figures"
 
 random_seed: 42
 
-# Causal windowing — Phase 1 leakage test enforces these
+# CMU SEI CERT Insider Threat Test Dataset (ExactData DDG). Licensed: never commit or share
+# raw rows or derived files. Keyword lists are fixed a priori from general security
+# knowledge and the public scenario descriptions, never from the answers files.
+cert:
+  release:      "4.2"
+  raw_dir:      "data/raw/cert/r4.2"
+  answers_dir:  "data/raw/cert/answers"
+  parquet_dir:  "data/processed/cert_r4.2"
+  internal_email_domain: "dtaa.com"
+  business_hours: [8, 18]           # local time; outside = after hours
+  job_site_keywords:  ["job", "career", "monster", "indeed", "simplyhired", "linkedin",
+                       "hire", "recruit", "resume", "glassdoor"]
+  leak_site_keywords: ["wikileaks", "dropbox", "pastebin", "mediafire", "rapidshare",
+                       "megaupload", "4shared", "sendspace", "upload"]
+  executable_extensions: ["exe", "bat", "dll", "msi", "vbs", "ps1"]
+
+# Causal windowing: the first warmup_days are history only (never trained on, never scored)
 warmup_days:               14
-calibration_window_events: 2000
-calibration_window_days:   30
-min_calibration_events:    50
-session_gap_minutes:       30
 
 budgets: [10, 50, 100]
 
 max_alerts_per_principal_day: 1
-max_alerts_per_role:          5
-suppress_days:                3
 
 # Relative, rolling-origin temporal splits (see cti.util.splits).
 # The first `warmup_days` days are history only: never trained on, never scored.
@@ -43,24 +48,7 @@ splits:
   min_test_insiders: 8
 
 features:
-  entity_columns: ["principalId"]
-  time_bucket_hours: 1
-  rare_event_threshold: 5
-  dirichlet_alpha: 0.1
-  peer_group_backoff_lambda: 0.5
-  privilege_escalating_actions:
-    - "CreateAccessKey"
-    - "AssumeRole"
-    - "PutBucketPolicy"
-    - "PutBucketAcl"
-    - "ModifySnapshotAttribute"
-    - "DeleteTrail"
-    - "StopLogging"
-  sensitive_resource_prefixes:
-    - "finance-"
-    - "hr-"
-    - "security-"
-    - "pii-"
+  rare_event_threshold: 5         # a website with fewer prior company-wide visits is "rare"
 
 detectors:
   isolation_forest:
@@ -106,47 +94,6 @@ explain:
   shap_max_display:  20
   background_samples: 100
   surrogate_fidelity_floor: 0.7
-
-synthetic:
-  start_date: "2023-01-01"
-  default_workload: "W1_baseline"
-  # Role mix and per-role volume (events/day) ranges.
-  role_weights: {analyst: 0.30, developer: 0.30, admin: 0.08, backup-service: 0.12, ci-runner: 0.20}
-  scenarios_all: ["S1", "S2", "S3", "S4", "S5"]
-  workloads:
-    W1_baseline:                       # reference workload
-      principals: 1000
-      days: 180
-      insider_rate: 0.05
-      scenario_weights: {S1: 1, S2: 1, S3: 1, S4: 1, S5: 1}
-      stealth: 1.0                     # scales planted-attack magnitude
-      noise: 1.0                       # scales benign lookalike frequency
-    W2_stealthy:                       # low-and-slow attacks, weaker magnitudes
-      principals: 1000
-      days: 180
-      insider_rate: 0.05
-      scenario_weights: {S1: 0.5, S2: 2, S3: 0.5, S4: 0.5, S5: 2}
-      stealth: 0.5
-      noise: 1.0
-    W3_scale:                          # more identities
-      principals: 3000
-      days: 180
-      insider_rate: 0.05
-      scenario_weights: {S1: 1, S2: 1, S3: 1, S4: 1, S5: 1}
-      stealth: 1.0
-      noise: 1.0
-    W4_noisy:                          # more benign lookalikes, more service accounts
-      principals: 1000
-      days: 180
-      insider_rate: 0.05
-      scenario_weights: {S1: 1, S2: 1, S3: 1, S4: 1, S5: 1}
-      stealth: 1.0
-      noise: 2.5
-      role_weights: {analyst: 0.22, developer: 0.28, admin: 0.10, backup-service: 0.15, ci-runner: 0.25}
-  fast:                                # python run_pipeline.py --fast (quick sanity check only)
-    principals: 200
-    days: 100
-    insider_rate: 0.20
 
 demo:
   port: 8501

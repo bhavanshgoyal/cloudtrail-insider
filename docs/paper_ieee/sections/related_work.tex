@@ -1,0 +1,41 @@
+% Hand-written narrative; numbers are macros.
+\emph{Insider-threat detection.} Most work uses the CERT data~\cite{glasser2013bridging,lindauer2020cert}
+and reports AUC, accuracy or F1~\cite{yuan2021deep,li2021image,tian2025scenarios}. Le and
+Zincir-Heywood~\cite{le2021ensembles} evaluate unsupervised ensembles against an investigation
+budget expressed as a share of all user sessions over the whole period; we instead fix the number
+of alerts \emph{per day}, which is how an analyst queue operates. Facade~\cite{kantchelian2024facade}
+shows at industrial scale that judging an action in the context of its user and resource is what
+makes precision workable. Tuor et al.\ use LSTMs that learn each user's sequential behavioural
+pattern~\cite{yuan2021deep}, while Yuan et al.\ encode user-day feature vectors as images and apply
+CNNs~\cite{li2021image}; both achieve strong AUC values but neither evaluates at a fixed daily
+alert capacity. Our evaluation instead selects the alert queue directly: the top \B{} scored
+user-days are what an analyst sees each day, and every metric is computed on that queue.
+
+\emph{Cloud audit logs.} Isolation Forest~\cite{liu2008isolation} is applied directly to cloud
+control-plane logs for credential-abuse detection and evaluated with F1~\cite{haunschild2026devsecops};
+cloud anomaly benchmarks target operational faults rather than insiders~\cite{zou2025cloudanobench}.
+The audit log structure we use (who, what resource, when) is the same shape as a cloud API log,
+and the features we build are causal in the sense that no feature for day $d$ uses any future
+event. This property is essential for cloud deployment, where the model must score a user-day as
+soon as the daily log closes without knowing what comes later.
+
+\emph{Calibration and explanation.} Conformal $p$-values give distribution-free outlier
+tests~\cite{bates2023conformal}. We use them in a pooled setting: rather than maintaining a
+calibration set per user (which would be too small for most employees), we pool the calibrated
+family scores of all users into a single reference distribution. This is valid because the
+per-user $z$-scores are already normalised, so no user dominates the pool.
+Security ML often suffers from temporal snooping, inappropriate
+metrics and the base-rate fallacy~\cite{arp2022dos}; only a small share of security XAI studies
+evaluate explanations with users~\cite{nadeem2023sok}. SHAP~\cite{lundberg2017shap}-based
+insider-threat work re-classifies or labels detections
+automatically~\cite{grzeczkowicz2025xai,faqihi2026shap}, and alert-fatigue work acts downstream with
+supervision~\cite{ndichu2026pact}. In contrast, our explanations are generated at alert time from
+the model's own attribution, without a second post-hoc model, and are evaluated with human
+reviewers rather than measured only by agreement with a separate explanation method.
+
+\emph{Evaluation methodology.} The field has documented multiple threats to validity in security
+ML: threshold-free metrics that do not reflect operational deployment, seed-based confidence
+intervals that confound randomness with genuine uncertainty, and tuning on held-out
+windows~\cite{arp2022dos}. Our evaluation addresses all three: we report budgeted metrics in
+addition to AUC-ROC, compute intervals by resampling insiders and days rather than seeds, and
+tune exclusively inside a development period whose last day precedes the first test day.

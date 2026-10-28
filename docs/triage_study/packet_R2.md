@@ -2,8 +2,9 @@
 
 ## Instructions
 
-You are a SOC analyst. Each alert below was raised by an anomaly detector watching AWS CloudTrail
-logs. For each alert decide:
+You are a SOC analyst. Each alert below was raised by an anomaly detector watching a company's
+activity logs (logons, USB devices, files copied to removable media, email and web browsing).
+For each alert decide:
 
 * **TP** - this looks like genuine misuse of the identity (insider / stolen credentials) and you would
   escalate it, or
@@ -24,304 +25,300 @@ Glossary (arm B): *p* is how unusual the deviation is compared with this identit
 
 ## Section 1 of 2 - arm B: EXPLANATION ONLY - you see the generated explanation of what deviated; no score.
 
-### Alert MM622
+### Alert YW961
 
-- Identity: `identity-39` (role: developer)
-- Date: 2023-06-28
-
-```
-Resource access deviation (p = 3.2e-05)
-  - writes to an external bucket: 1 (usually 0)
-  - share of calls on sensitive buckets: 48% (usually 15%)
-  - calls on sensitive buckets (finance / hr / pii / security): 20 (usually 3.6)
-```
-
-**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
-
----
-### Alert NT393
-
-- Identity: `identity-25` (role: ci-runner)
-- Date: 2023-06-03
+- Identity: `identity-11` (role: Director)
+- Date: 2011-01-09
 
 ```
-Timing deviation (p = 0.0023)
-  - API calls at the weekend: 193 (usually 0)
-  - hours away from this identity's usual working time: 5.5 h (usually 5.0 h)
-  - share of activity outside 08:00-18:00 UTC: 51% (usually 49%)
+Timing deviation (p = 0.00024)
+  - activity at the weekend: 250 (usually 0)
+  - hours away from this user's usual working time: 2.9 h (usually 2.5 h)
+  - distinct hours with activity: 10 (usually 9)
 ```
 
 **Verdict (TP / FP):** ____  **Confidence (1-5):** ____
 
 ---
-### Alert VR503
+### Alert MW522
 
-- Identity: `identity-34` (role: analyst)
-- Date: 2023-05-29
+- Identity: `identity-05` (role: ProductionLineWorker)
+- Date: 2010-11-04
 
 ```
-Resource access deviation (p = 0.0024)
-  - resources this identity never accessed before: 4 (usually 0)
-  - distinct resources touched: 16 (usually 10.9)
-  - privilege-sensitive actions (CreateAccessKey, AssumeRole, PutBucketPolicy, ...): 4 (usually 2)
+Activity volume deviation (p = 0.00087)
+  - web page visits: 16 (usually 10.6)
+  - logged actions: 29 (usually 20.9)
+  - distinct websites visited: 12 (usually 8.3)
 ```
 
 **Verdict (TP / FP):** ____  **Confidence (1-5):** ____
 
 ---
-### Alert RH968
+### Alert QC368
 
-- Identity: `identity-16` (role: analyst)
-- Date: 2023-05-31
+- Identity: `identity-07` (role: ITAdmin)
+- Date: 2011-04-28
 
 ```
-Identity / access-origin deviation (p = 6.5e-05)
-  - client user agents never seen for this identity: 1 (usually 0)
-  - console logins without MFA: 16 (usually 0)
-  - console logins from a never-seen IP: 16 (usually 0)
+Resource access deviation (p = 1.1e-05)
+  - first USB device use ever by this user: 1 (usually 0)
+  - visits to websites almost nobody in the company has visited: 5 (usually 0)
+  - share of web visits to rarely-visited websites: 4% (usually 0%)
+```
+
+**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
+
+---
+### Alert HR847
+
+- Identity: `identity-02` (role: ComputerProgrammer)
+- Date: 2010-12-24
+
+```
+Identity / access-origin deviation (p = 0.0055)
+  - distinct PCs used: 2 (usually 1)
 Also unusual: resource access
 ```
 
 **Verdict (TP / FP):** ____  **Confidence (1-5):** ____
 
 ---
-### Alert LI241
+### Alert XH672
 
-- Identity: `identity-07` (role: analyst)
-- Date: 2023-06-06
-
-```
-Resource access deviation (p = 0.00077)
-  - calls on sensitive buckets (finance / hr / pii / security): 9 (usually 0)
-  - share of calls on sensitive buckets: 28% (usually 0%)
-  - distinct resources touched: 11 (usually 10.9)
-```
-
-**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
-
----
-### Alert HE970
-
-- Identity: `identity-08` (role: developer)
-- Date: 2023-06-23
+- Identity: `identity-09` (role: Technician)
+- Date: 2010-12-20
 
 ```
-Activity volume deviation (p = 0.0014)
-  - API calls: 182 (usually 34.1)
-  - S3 object reads (GetObject): 54 (usually 9.1)
-  - data transferred: 863 KB (usually 177 KB)
-```
-
-**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
-
----
-### Alert LQ131
-
-- Identity: `identity-17` (role: analyst)
-- Date: 2023-06-24
-
-```
-Identity / access-origin deviation (p = 3.2e-05)
-  - client user agents never seen for this identity: 1 (usually 0)
-  - console logins without MFA: 16 (usually 0.9)
-  - console logins from a never-seen IP: 16 (usually 0)
+Activity volume deviation (p = 0.0016)
+  - files copied to removable media: 25 (usually 0)
+  - logged actions: 61 (usually 35)
+  - distinct websites visited: 18 (usually 15.2)
 Also unusual: resource access
 ```
 
 **Verdict (TP / FP):** ____  **Confidence (1-5):** ____
 
 ---
-### Alert WN182
+### Alert US914
 
-- Identity: `identity-36` (role: developer)
-- Date: 2023-06-06
-
-```
-Identity / access-origin deviation (p = 0.00081)
-  - console logins without MFA: 2 (usually 0.9)
-  - failed console logins: 1 (usually 0)
-  - share of calls that failed: 9% (usually 5%)
-```
-
-**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
-
----
-### Alert BU886
-
-- Identity: `identity-28` (role: ci-runner)
-- Date: 2023-06-04
+- Identity: `identity-28` (role: SoftwareEngineer)
+- Date: 2011-01-29
 
 ```
-Timing deviation (p = 0.00039)
-  - API calls at the weekend: 245 (usually 0)
-  - hours away from this identity's usual working time: 5.2 h (usually 5.0 h)
-  - distinct hours with activity: 24 (usually 23.2)
+Identity / access-origin deviation (p = 6.4e-05)
+  - PCs this user has never used before: 1 (usually 0)
+  - logons on a PC this user has never used before: 1 (usually 0)
+  - distinct PCs used: 3 (usually 1)
+Also unusual: timing
 ```
 
 **Verdict (TP / FP):** ____  **Confidence (1-5):** ____
 
 ---
-### Alert SX354
+### Alert KS470
 
-- Identity: `identity-21` (role: developer)
-- Date: 2023-06-10
-
-```
-Resource access deviation (p = 3.2e-05)
-  - share of calls using rarely-seen API actions: 10% (usually 0%)
-  - calls on sensitive buckets this identity never accessed before: 5 (usually 0)
-  - IAM write actions: 2 (usually 0)
-Also unusual: activity volume
-```
-
-**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
-
----
-### Alert LZ428
-
-- Identity: `identity-09` (role: ci-runner)
-- Date: 2023-05-20
+- Identity: `identity-23` (role: ElectricalEngineer)
+- Date: 2011-02-10
 
 ```
-Timing deviation (p = 0.0009)
-  - API calls at the weekend: 217 (usually 0)
-  - share of activity outside 08:00-18:00 UTC: 59% (usually 48%)
-  - hours away from this identity's usual working time: 5.9 h (usually 5.1 h)
+Resource access deviation (p = 0.002)
+  - executable files copied to removable media: 1 (usually 0)
+  - visits to job-search sites: 27 (usually 0)
+  - USB device connections: 9 (usually 8.4)
 ```
 
 **Verdict (TP / FP):** ____  **Confidence (1-5):** ____
 
 ---
-### Alert QE239
+### Alert NQ843
 
-- Identity: `identity-32` (role: analyst)
-- Date: 2023-06-01
-
-```
-Activity volume deviation (p = 0.0011)
-  - API calls: 110 (usually 22.5)
-  - S3 object reads (GetObject): 57 (usually 10.6)
-  - data transferred: 604 KB (usually 158 KB)
-```
-
-**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
-
----
-### Alert OP489
-
-- Identity: `identity-04` (role: developer)
-- Date: 2023-06-21
+- Identity: `identity-30` (role: SystemsEngineer)
+- Date: 2010-11-25
 
 ```
-Resource access deviation (p = 0.00016)
-  - resources made public: 1 (usually 0)
-  - calls on sensitive buckets this identity never accessed before: 50 (usually 0)
-  - calls on sensitive buckets (finance / hr / pii / security): 50 (usually 0)
-Also unusual: activity volume, identity / access-origin
+Resource access deviation (p = 0.011)
+  - USB device connections outside 08:00-18:00: 1 (usually 0)
+  - USB device connections: 1 (usually 0)
 ```
 
 **Verdict (TP / FP):** ____  **Confidence (1-5):** ____
 
 ---
-### Alert HD303
+### Alert QA434
 
-- Identity: `identity-15` (role: developer)
-- Date: 2023-06-19
-
-```
-Resource access deviation (p = 0.001)
-  - calls on sensitive buckets (finance / hr / pii / security): 4 (usually 0)
-  - share of calls on sensitive buckets: 11% (usually 0%)
-  - resources this identity never accessed before: 1 (usually 0)
-```
-
-**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
-
----
-### Alert VA519
-
-- Identity: `identity-06` (role: analyst)
-- Date: 2023-05-30
+- Identity: `identity-24` (role: MechanicalEngineer)
+- Date: 2011-05-09
 
 ```
-Identity / access-origin deviation (p = 0.0022)
-  - calls from source IPs never seen for this identity: 37 (usually 0)
-  - source IPs never seen for this identity: 1 (usually 0)
-  - console logins from a never-seen IP: 1 (usually 0)
+Identity / access-origin deviation (p = 0.0018)
+  - PCs this user has never used before: 1 (usually 0)
+  - logons on a PC this user has never used before: 1 (usually 0)
+  - distinct PCs used: 2 (usually 1)
 ```
 
 **Verdict (TP / FP):** ____  **Confidence (1-5):** ____
 
 ---
-### Alert SM373
+### Alert SE872
 
-- Identity: `identity-38` (role: admin)
-- Date: 2023-05-22
-
-```
-Activity volume deviation (p = 0.0013)
-  - API calls: 148 (usually 13.7)
-  - distinct API actions: 15 (usually 7.9)
-  - S3 object reads (GetObject): 22 (usually 2.2)
-Also unusual: resource access
-```
-
-**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
-
----
-### Alert LH696
-
-- Identity: `identity-14` (role: developer)
-- Date: 2023-06-01
+- Identity: `identity-31` (role: SecurityGuard)
+- Date: 2011-01-16
 
 ```
-Resource access deviation (p = 0.00094)
-  - calls on sensitive buckets (finance / hr / pii / security): 4 (usually 0)
-  - share of calls on sensitive buckets: 19% (usually 0%)
-  - resources this identity never accessed before: 1 (usually 0)
+Timing deviation (p = 0.0044)
+  - activity at the weekend: 159 (usually 0)
+  - hours away from this user's usual working time: 2.5 h (usually 2.3 h)
+  - logons outside 08:00-18:00: 1 (usually 1)
 ```
 
 **Verdict (TP / FP):** ____  **Confidence (1-5):** ____
 
 ---
-### Alert WQ188
+### Alert DF868
 
-- Identity: `identity-35` (role: analyst)
-- Date: 2023-06-29
-
-```
-Identity / access-origin deviation (p = 0.0011)
-  - console logins without MFA: 2 (usually 0.9)
-  - failed console logins: 1 (usually 0)
-  - share of calls that failed: 7% (usually 0%)
-```
-
-**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
-
----
-### Alert LF586
-
-- Identity: `identity-22` (role: developer)
-- Date: 2023-06-12
+- Identity: `identity-33` (role: Salesman)
+- Date: 2010-11-25
 
 ```
-Resource access deviation (p = 0.0012)
-  - calls on sensitive buckets (finance / hr / pii / security): 3 (usually 0)
-  - share of calls on sensitive buckets: 16% (usually 0%)
+Resource access deviation (p = 0.01)
+  - USB device connections outside 08:00-18:00: 1 (usually 0)
+  - USB device connections: 1 (usually 0)
+  - visits to leak / file-upload sites: 1 (usually 0)
 ```
 
 **Verdict (TP / FP):** ____  **Confidence (1-5):** ____
 
 ---
-### Alert IK726
+### Alert UN646
 
-- Identity: `identity-33` (role: developer)
-- Date: 2023-06-27
+- Identity: `identity-06` (role: Salesman)
+- Date: 2010-12-11
 
 ```
-Resource access deviation (p = 0.00077)
-  - share of calls on sensitive buckets: 36% (usually 0%)
-  - calls on sensitive buckets (finance / hr / pii / security): 5 (usually 0)
+Timing deviation (p = 0.00086)
+  - activity at the weekend: 195 (usually 0)
+  - share of activity outside 08:00-18:00: 8% (usually 6%)
+  - logons outside 08:00-18:00: 1 (usually 1)
+```
+
+**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
+
+---
+### Alert AM502
+
+- Identity: `identity-32` (role: ProductionLineWorker)
+- Date: 2011-03-25
+
+```
+Activity volume deviation (p = 0.0025)
+  - logged actions: 24 (usually 13.5)
+  - files copied to removable media: 9 (usually 0)
+```
+
+**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
+
+---
+### Alert PT206
+
+- Identity: `identity-25` (role: ProductionLineWorker)
+- Date: 2010-11-01
+
+```
+Activity volume deviation (p = 0.00091)
+  - web page visits: 15 (usually 10.6)
+  - emails sent: 4 (usually 1.1)
+  - email data sent: 89 KB (usually 28 KB)
+```
+
+**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
+
+---
+### Alert IE350
+
+- Identity: `identity-12` (role: ITAdmin)
+- Date: 2010-11-04
+
+```
+Resource access deviation (p = 0.00029)
+  - visits to websites almost nobody in the company has visited: 6 (usually 0)
+  - share of web visits to rarely-visited websites: 5% (usually 0%)
+  - executable files copied to removable media: 2 (usually 0)
+```
+
+**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
+
+---
+### Alert TI754
+
+- Identity: `identity-34` (role: Manager)
+- Date: 2011-01-09
+
+```
+Timing deviation (p = 0.0036)
+  - activity at the weekend: 170 (usually 0)
+  - distinct hours with activity: 11 (usually 10)
+  - share of activity outside 08:00-18:00: 14% (usually 13%)
+```
+
+**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
+
+---
+### Alert RL514
+
+- Identity: `identity-08` (role: Technician)
+- Date: 2010-12-03
+
+```
+Activity volume deviation (p = 0.0018)
+  - files copied to removable media: 23 (usually 0)
+  - logged actions: 61 (usually 35)
+  - distinct websites visited: 23 (usually 18.2)
+```
+
+**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
+
+---
+### Alert MC433
+
+- Identity: `identity-27` (role: ProductionLineWorker)
+- Date: 2010-11-09
+
+```
+Activity volume deviation (p = 0.0047)
+  - web page visits: 13 (usually 10.6)
+  - logged actions: 20 (usually 13.7)
+  - logons: 2 (usually 1)
+```
+
+**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
+
+---
+### Alert HZ288
+
+- Identity: `identity-16` (role: AdministrativeAssistant)
+- Date: 2010-11-29
+
+```
+Resource access deviation (p = 0.00088)
+  - executable files copied to removable media: 1 (usually 0)
+  - USB device connections outside 08:00-18:00: 1 (usually 0)
+  - emails with attachments sent outside the company: 1 (usually 0)
+```
+
+**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
+
+---
+### Alert IL696
+
+- Identity: `identity-25` (role: ProductionLineWorker)
+- Date: 2010-11-08
+
+```
+Activity volume deviation (p = 0.00022)
+  - web page visits: 19 (usually 10.6)
+  - emails sent: 4 (usually 1.1)
+  - email data sent: 115 KB (usually 28 KB)
 ```
 
 **Verdict (TP / FP):** ____  **Confidence (1-5):** ____
@@ -330,202 +327,202 @@ Resource access deviation (p = 0.00077)
 
 ## Section 2 of 2 - arm A: SCORE ONLY - you see the detector's anomaly score and the alert's rank in that day's queue.
 
-### Alert DN680
+### Alert FM635
 
-- Identity: `identity-28` (role: ci-runner)
-- Date: 2023-06-10
-- Anomaly score: **2.28** (higher = more anomalous)
-- Position in that day's queue: 8 of 10
-
-**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
-
----
-### Alert UP943
-
-- Identity: `identity-20` (role: developer)
-- Date: 2023-06-19
-- Anomaly score: **2.74** (higher = more anomalous)
-- Position in that day's queue: 1 of 10
-
-**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
-
----
-### Alert QP777
-
-- Identity: `identity-10` (role: developer)
-- Date: 2023-06-08
-- Anomaly score: **3.89** (higher = more anomalous)
-- Position in that day's queue: 1 of 10
-
-**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
-
----
-### Alert FY887
-
-- Identity: `identity-11` (role: ci-runner)
-- Date: 2023-06-04
-- Anomaly score: **2.48** (higher = more anomalous)
-- Position in that day's queue: 4 of 10
-
-**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
-
----
-### Alert GC730
-
-- Identity: `identity-26` (role: admin)
-- Date: 2023-05-31
-- Anomaly score: **2.33** (higher = more anomalous)
+- Identity: `identity-04` (role: Technician)
+- Date: 2011-03-03
+- Anomaly score: **2.03** (higher = more anomalous)
 - Position in that day's queue: 6 of 10
 
 **Verdict (TP / FP):** ____  **Confidence (1-5):** ____
 
 ---
-### Alert PF410
+### Alert UA135
 
-- Identity: `identity-19` (role: developer)
-- Date: 2023-05-31
-- Anomaly score: **2.28** (higher = more anomalous)
-- Position in that day's queue: 8 of 10
-
-**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
-
----
-### Alert XS259
-
-- Identity: `identity-31` (role: analyst)
-- Date: 2023-06-09
-- Anomaly score: **3.89** (higher = more anomalous)
-- Position in that day's queue: 1 of 10
+- Identity: `identity-19` (role: ProductionLineWorker)
+- Date: 2011-01-28
+- Anomaly score: **1.74** (higher = more anomalous)
+- Position in that day's queue: 7 of 10
 
 **Verdict (TP / FP):** ____  **Confidence (1-5):** ____
 
 ---
-### Alert TM870
+### Alert ZJ248
 
-- Identity: `identity-24` (role: ci-runner)
-- Date: 2023-05-28
-- Anomaly score: **3.04** (higher = more anomalous)
-- Position in that day's queue: 1 of 10
-
-**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
-
----
-### Alert MY815
-
-- Identity: `identity-13` (role: ci-runner)
-- Date: 2023-06-11
-- Anomaly score: **3.11** (higher = more anomalous)
-- Position in that day's queue: 1 of 10
+- Identity: `identity-10` (role: Scientist)
+- Date: 2011-05-03
+- Anomaly score: **1.81** (higher = more anomalous)
+- Position in that day's queue: 6 of 10
 
 **Verdict (TP / FP):** ____  **Confidence (1-5):** ____
 
 ---
-### Alert KX103
+### Alert PL477
 
-- Identity: `identity-23` (role: developer)
-- Date: 2023-06-09
-- Anomaly score: **2.30** (higher = more anomalous)
-- Position in that day's queue: 8 of 10
-
-**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
-
----
-### Alert EF529
-
-- Identity: `identity-05` (role: developer)
-- Date: 2023-06-12
-- Anomaly score: **2.61** (higher = more anomalous)
+- Identity: `identity-15` (role: PurchasingClerk)
+- Date: 2011-03-04
+- Anomaly score: **2.05** (higher = more anomalous)
 - Position in that day's queue: 3 of 10
 
 **Verdict (TP / FP):** ____  **Confidence (1-5):** ____
 
 ---
-### Alert MA708
+### Alert EE758
 
-- Identity: `identity-27` (role: developer)
-- Date: 2023-06-08
-- Anomaly score: **2.15** (higher = more anomalous)
-- Position in that day's queue: 10 of 10
-
-**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
-
----
-### Alert KU101
-
-- Identity: `identity-37` (role: ci-runner)
-- Date: 2023-05-28
-- Anomaly score: **2.12** (higher = more anomalous)
-- Position in that day's queue: 8 of 10
+- Identity: `identity-35` (role: ITAdmin)
+- Date: 2010-12-09
+- Anomaly score: **3.69** (higher = more anomalous)
+- Position in that day's queue: 1 of 10
 
 **Verdict (TP / FP):** ____  **Confidence (1-5):** ____
 
 ---
-### Alert JJ478
+### Alert IC335
 
-- Identity: `identity-03` (role: developer)
-- Date: 2023-06-02
-- Anomaly score: **2.59** (higher = more anomalous)
+- Identity: `identity-29` (role: Salesman)
+- Date: 2011-02-19
+- Anomaly score: **2.02** (higher = more anomalous)
+- Position in that day's queue: 5 of 10
+
+**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
+
+---
+### Alert NC487
+
+- Identity: `identity-05` (role: ProductionLineWorker)
+- Date: 2010-11-08
+- Anomaly score: **2.89** (higher = more anomalous)
 - Position in that day's queue: 2 of 10
 
 **Verdict (TP / FP):** ____  **Confidence (1-5):** ____
 
 ---
-### Alert TZ593
+### Alert AR818
 
-- Identity: `identity-01` (role: developer)
-- Date: 2023-06-15
-- Anomaly score: **3.89** (higher = more anomalous)
-- Position in that day's queue: 1 of 10
-
-**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
-
----
-### Alert JQ419
-
-- Identity: `identity-30` (role: analyst)
-- Date: 2023-05-27
-- Anomaly score: **3.89** (higher = more anomalous)
-- Position in that day's queue: 1 of 10
-
-**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
-
----
-### Alert YU575
-
-- Identity: `identity-12` (role: analyst)
-- Date: 2023-06-07
-- Anomaly score: **3.89** (higher = more anomalous)
-- Position in that day's queue: 1 of 10
-
-**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
-
----
-### Alert PI491
-
-- Identity: `identity-02` (role: ci-runner)
-- Date: 2023-06-17
-- Anomaly score: **1.92** (higher = more anomalous)
-- Position in that day's queue: 6 of 10
-
-**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
-
----
-### Alert VU733
-
-- Identity: `identity-29` (role: analyst)
-- Date: 2023-06-12
+- Identity: `identity-13` (role: ComputerScientist)
+- Date: 2011-02-21
 - Anomaly score: **2.43** (higher = more anomalous)
+- Position in that day's queue: 2 of 10
+
+**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
+
+---
+### Alert CS485
+
+- Identity: `identity-22` (role: ProductionLineWorker)
+- Date: 2011-02-11
+- Anomaly score: **1.62** (higher = more anomalous)
+- Position in that day's queue: 8 of 10
+
+**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
+
+---
+### Alert FO543
+
+- Identity: `identity-14` (role: SoftwareEngineer)
+- Date: 2011-03-05
+- Anomaly score: **1.68** (higher = more anomalous)
+- Position in that day's queue: 7 of 10
+
+**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
+
+---
+### Alert FI516
+
+- Identity: `identity-20` (role: ProductionLineWorker)
+- Date: 2011-02-04
+- Anomaly score: **1.60** (higher = more anomalous)
+- Position in that day's queue: 10 of 10
+
+**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
+
+---
+### Alert PY474
+
+- Identity: `identity-17` (role: Scientist)
+- Date: 2011-01-03
+- Anomaly score: **1.91** (higher = more anomalous)
+- Position in that day's queue: 7 of 10
+
+**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
+
+---
+### Alert UW567
+
+- Identity: `identity-04` (role: Technician)
+- Date: 2011-03-02
+- Anomaly score: **1.69** (higher = more anomalous)
+- Position in that day's queue: 10 of 10
+
+**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
+
+---
+### Alert JK769
+
+- Identity: `identity-26` (role: Salesman)
+- Date: 2011-03-05
+- Anomaly score: **2.15** (higher = more anomalous)
+- Position in that day's queue: 3 of 10
+
+**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
+
+---
+### Alert ZO505
+
+- Identity: `identity-21` (role: SecurityGuard)
+- Date: 2011-01-20
+- Anomaly score: **2.32** (higher = more anomalous)
+- Position in that day's queue: 5 of 10
+
+**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
+
+---
+### Alert QJ847
+
+- Identity: `identity-26` (role: Salesman)
+- Date: 2011-05-01
+- Anomaly score: **2.35** (higher = more anomalous)
+- Position in that day's queue: 3 of 10
+
+**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
+
+---
+### Alert XA387
+
+- Identity: `identity-18` (role: ProductionLineWorker)
+- Date: 2011-02-08
+- Anomaly score: **1.76** (higher = more anomalous)
+- Position in that day's queue: 3 of 10
+
+**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
+
+---
+### Alert YU607
+
+- Identity: `identity-03` (role: Salesman)
+- Date: 2010-12-19
+- Anomaly score: **1.89** (higher = more anomalous)
+- Position in that day's queue: 9 of 10
+
+**Verdict (TP / FP):** ____  **Confidence (1-5):** ____
+
+---
+### Alert EZ755
+
+- Identity: `identity-18` (role: ProductionLineWorker)
+- Date: 2011-01-28
+- Anomaly score: **2.14** (higher = more anomalous)
 - Position in that day's queue: 4 of 10
 
 **Verdict (TP / FP):** ____  **Confidence (1-5):** ____
 
 ---
-### Alert KI170
+### Alert MP663
 
-- Identity: `identity-18` (role: analyst)
-- Date: 2023-06-02
-- Anomaly score: **2.28** (higher = more anomalous)
-- Position in that day's queue: 8 of 10
+- Identity: `identity-01` (role: Salesman)
+- Date: 2011-03-06
+- Anomaly score: **2.16** (higher = more anomalous)
+- Position in that day's queue: 3 of 10
 
 **Verdict (TP / FP):** ____  **Confidence (1-5):** ____
 

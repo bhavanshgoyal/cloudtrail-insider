@@ -7,43 +7,43 @@
 
 | ID | Asked for | Implemented in | Evidence (result / figure / test) | Status |
 |---|---|---|---|---|
-| **O1** | Anomaly detection capturing deviation in identity behaviour, resource access and temporal pattern | `src/cti/features/pipeline.py` (32 causal features in identity / resource / temporal / volume families), `src/cti/detectors/proposed.py` (per-identity deviation per family) | `tests/test_features_causal.py` (truncation-equivalence and look-ahead mutation checks); ablation per family, `results/ablation/ablation_summary.csv`, `figures/ablation.png` | ✅ Done. Note: resource access carries most of the signal (DR@10 W1 0.95 → 0.66 without it). |
-| **O2** | Evaluate at fixed alert budgets reflecting analyst capacity | `src/cti/eval/evaluate.py` (per-day top-B queue; DR, precision, oracle precision, MTTD, BCa CIs), `scripts/run_campaign.py` | `results/campaign/summary.csv`, `hypotheses.csv`; `figures/per_workload_dr10.png`, `dr_vs_budget.png`, `precision_vs_budget.png`, `mttd_at_10.png`, `auc_vs_dr10.png`; `tests/test_eval.py` (hand-computed) | ✅ Done. 4 workloads x 5 seeds x 3 origins = 60 test windows. |
-| **O3** | For each alert, an explanation naming the specific behavioural deviation | `src/cti/detectors/proposed.py::explain`, `src/cti/explain/explain_proposed.py` | `results/explanations.json` (every alert of the single run), SHAP cross-check `results/shap_crosscheck.json`, `tests/test_proposed.py::test_explanations_name_the_deviating_feature` | ✅ Done. |
-| **O4** | Assess whether explanations suffice for a reviewer to triage correctly | `src/cti/triage/generate_study.py`, `score_study.py`, `docs/triage_study/PROTOCOL.md` | Packets and response sheets in `docs/triage_study/`; scorer tested in `tests/test_triage.py`. Result: H3 [PENDING: triage study not yet run] | ⏳ Instrument ready; **needs the 4 reviewers' real responses**. |
+| **O1** | Anomaly detection capturing deviation in identity behaviour, resource access and temporal pattern | `src/cti/features/cert.py` (27 causal features in identity / resource / temporal / volume families), `src/cti/detectors/proposed.py` (per-user deviation per family) | `tests/test_cert_features.py` (future events never change past rows); per-family ablation `results/ablation/ablation_summary.csv`, `figures/ablation.png` | ✅ Done. Resource features drive detection (DR@10 0.43 → 0.30 without them); volume features drive precision. |
+| **O2** | Evaluate at fixed alert budgets reflecting analyst capacity | `src/cti/eval/evaluate.py` (per-day top-B queue), `src/cti/eval/aggregate.py` (insider / day bootstrap), `scripts/run_campaign.py` | `results/campaign/summary.csv`, `hypotheses.csv`; `figures/dr_vs_budget.png`, `precision_vs_budget.png`, `dr_by_scenario.png`, `mttd_at_10.png`, `auc_vs_dr10.png`; `tests/test_eval.py`, `tests/test_campaign_stats.py` | ✅ Done. 5 seeds x 3 origins = 15 test windows, 33 distinct insiders. |
+| **O3** | For each alert, an explanation naming the specific behavioural deviation | `src/cti/detectors/proposed.py::explain`, `src/cti/explain/explain_proposed.py` | `results/explanations.json`; SHAP cross-check `results/shap_crosscheck.json`; family vs outcome `results/explanations/family_by_label.csv`; `tests/test_proposed.py` | ✅ Done. |
+| **O4** | Assess whether explanations suffice for a reviewer to triage correctly | `src/cti/triage/generate_study.py`, `score_study.py`, `docs/triage_study/PROTOCOL.md` | CERT packets and response sheets in `docs/triage_study/`; scorer tested in `tests/test_triage.py`. Result: H3 SUPPORTED | ⏳ Instrument ready; **needs the 4 reviewers' real responses**. |
 
 ## Scope of work
 
 | # | Scope item | Status | Where / note |
 |---|---|---|---|
-| 1 | CERT r4.2 / r6.2 mapped to a cloud audit-log schema | ❌ Not done (team decision) | Synthetic CloudTrail only. Stated as a threat to validity. The CERT loader stub remains in `src/cti/ingest/loader.py`. |
-| 2 | Synthetic CloudTrail events with planted misuse | ✅ | `src/cti/ingest/synthetic.py`: 5 scenarios, benign look-alikes, 4 workloads; `tests/test_generator.py` |
-| 3 | Isolation Forest and rule-based signature baselines | ✅ | `src/cti/detectors/train.py`, `src/cti/detectors/rules.py` (12 rules); plus LOF and autoencoder; `tests/test_rules.py` |
+| 1 | CERT r4.2 / r6.2 mapped to a cloud audit-log schema | ◐ Partly | CERT r4.2 is used directly (`src/cti/ingest/cert.py`) with the same who / what / where / when feature families; it is **not** converted to CloudTrail format. r6.2 not used. |
+| 2 | Synthetic CloudTrail events with planted misuse | ◐ Superseded | Built and evaluated in the earlier version (`master`, `results/_synthetic_v1/`); the current results use CERT only. |
+| 3 | Isolation Forest and rule-based signature baselines | ✅ | `src/cti/detectors/train.py`, `src/cti/detectors/rules.py` (8 DLP / UEBA-style rules); plus LOF and an autoencoder |
 | 4 | Proposed detector with per-feature attribution driving the explanation | ✅ | Per-feature robust z-scores are the attribution; Kernel-SHAP cross-check |
 | 5 | Triage exercise: team members classify alerts from the explanation alone | ⏳ | Crossover study ready; waiting for responses |
 
 ## Evaluation metrics named in the statement
 
-| Metric | Where | Headline (W1, 10 alerts/day, mean of 5 seeds) |
+| Metric | Where | Headline (CERT r4.2 test windows, 10 alerts/day) |
 |---|---|---|
-| Detection rate at 10 / 50 / 100 alerts per day | `summary.csv`, `dr_by_scenario.csv` | proposed 0.956 vs Isolation Forest 0.653 |
-| Precision at those budgets | `summary.csv` | 0.204 vs 0.028 (oracle 0.304) |
-| Mean time to detection | `summary.csv` (`mttd_hours_mean`, `mttd_hours_median`) | median 19.6 h vs 30.2 h |
-| Accuracy of human triage using the explanation alone | `results/triage_results.json` | arm B balanced accuracy [PENDING: triage study not yet run] |
+| Detection rate at 10 / 50 / 100 alerts per day | `summary.csv`, `dr_by_scenario.csv` | proposed 0.434 vs Isolation Forest 0.284; at 50/day 0.919 vs 0.651 |
+| Precision at those budgets | `summary.csv` | 0.028 vs 0.007 (oracle 0.230) |
+| Mean time to detection | `hypotheses.csv` (H2), `summary.csv` | median 20.9 h vs 17.1 h |
+| Accuracy of human triage using the explanation alone | `results/triage_results.json` | arm B balanced accuracy 0.91 |
 
 ## Review rubric → artefact
 
 | Review | Rubric line | Artefact |
 |---|---|---|
-| R1 | Literature survey, 12-15 papers 2021+, gap table | `docs/related_work.md` (14 verified papers) |
+| R1 | Literature survey, 12-15 papers 2021+, gap table | `docs/related_work.md` (14 verified papers + 5 standard references) |
 | R1 | Problem statement and falsifiable hypothesis | `README.md` (H1-H3 with thresholds and the falsification rule) |
-| R1 | Testbed evidence | `docs/evidence/testbed_evidence.txt`, **screenshots still to take** (`docs/evidence/screenshots/`) |
+| R1 | Testbed evidence | `docs/evidence/testbed_evidence.txt`, **screenshots still to take** |
 | R1 | Baseline reproduced | `results/campaign/summary.csv` rows `isolation_forest`, `rule_baseline` |
-| R2 | O1 and O2 working code in a VCS | git history (one commit per phase); `pytest` |
-| R2 | Baseline vs proposed on the same axes | `figures/per_workload_dr10.png`, `dr_vs_budget.png`, `precision_vs_budget.png` |
+| R2 | O1 and O2 working code in a VCS | git history; `pytest` |
+| R2 | Baseline vs proposed on the same axes | `figures/dr_vs_budget.png`, `precision_vs_budget.png`, `dr_by_scenario.png` |
 | R2 | Ablation or parameter sweep | `figures/ablation.png`, `figures/sweep_*.png`, `runtime_vs_principals.png` |
 | R2 | Threats to validity | `docs/THREATS_TO_VALIDITY.md` |
-| R3 | All objectives, multiple workloads, >= 3 runs, mean and variance | `results/campaign/summary.csv` (mean, std, CI, n_seeds = 5) |
-| R3 | Error bars / CIs | every figure in `figures/` |
-| R3 | Live demonstration | `scripts/live_demo.py`, `streamlit run src/cti/demo/app.py`, `docs/DEMO_RUNBOOK.md` |
-| R3 | 6-8 page paper + demo video | `docs/paper/paper.pdf`; **video still to record** |
+| R3 | All objectives, multiple workloads, >= 3 runs, mean and variance | One dataset: 3 temporal origins x 5 seeds, 3 insider scenarios, organisation-size sweep with random user samples; bootstrap CIs over insiders / days |
+| R3 | Error bars / CIs | every figure in `figures/` where a valid resampling unit exists |
+| R3 | Live demonstration | `streamlit run src/cti/frontend/app.py` (upload & detect), `scripts/live_demo.py`, `docs/DEMO_RUNBOOK.md` |
+| R3 | 6-8 page paper + demo video | `docs/paper_ieee/` (IEEE LaTeX; Overleaf zip `docs/paper_ieee_overleaf.zip`); **video still to record** |
