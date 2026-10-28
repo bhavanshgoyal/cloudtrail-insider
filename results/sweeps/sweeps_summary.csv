@@ -1,0 +1,459 @@
+sweep,param,x,detector,budget,metric,n_seeds,mean,std,ci_lo,ci_hi
+budget,alerts per day,0.0,autoencoder,0,auc_roc,1,0.7538346318907688,,,
+budget,alerts per day,0.0,autoencoder,1,dr_at_b,1,0.10795454545454546,,,
+budget,alerts per day,0.0,autoencoder,1,mttd_hours_median,1,15.217037037037038,,,
+budget,alerts per day,0.0,autoencoder,1,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,autoencoder,1,precision_at_b,1,0.02185792349726776,,,
+budget,alerts per day,0.0,autoencoder,1,precision_oracle_at_b,1,0.6448087431693988,,,
+budget,alerts per day,0.0,autoencoder,2,dr_at_b,1,0.20643939393939395,,,
+budget,alerts per day,0.0,autoencoder,2,mttd_hours_median,1,33.67472222222222,,,
+budget,alerts per day,0.0,autoencoder,2,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,autoencoder,2,precision_at_b,1,0.01912568306010929,,,
+budget,alerts per day,0.0,autoencoder,2,precision_oracle_at_b,1,0.6133879781420765,,,
+budget,alerts per day,0.0,autoencoder,5,dr_at_b,1,0.2784090909090909,,,
+budget,alerts per day,0.0,autoencoder,5,mttd_hours_median,1,35.44699074074074,,,
+budget,alerts per day,0.0,autoencoder,5,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,autoencoder,5,precision_at_b,1,0.014758584798155177,,,
+budget,alerts per day,0.0,autoencoder,5,precision_oracle_at_b,1,0.4406175132574228,,,
+budget,alerts per day,0.0,autoencoder,10,dr_at_b,1,0.39678030303030304,,,
+budget,alerts per day,0.0,autoencoder,10,mttd_hours_median,1,100.80435185185185,,,
+budget,alerts per day,0.0,autoencoder,10,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,autoencoder,10,precision_at_b,1,0.010663839900613066,,,
+budget,alerts per day,0.0,autoencoder,10,precision_oracle_at_b,1,0.22979177357063765,,,
+budget,alerts per day,0.0,autoencoder,20,dr_at_b,1,0.5511363636363636,,,
+budget,alerts per day,0.0,autoencoder,20,mttd_hours_median,1,125.26513888888888,,,
+budget,alerts per day,0.0,autoencoder,20,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,autoencoder,20,precision_at_b,1,0.00916292448917023,,,
+budget,alerts per day,0.0,autoencoder,20,precision_oracle_at_b,1,0.11494346155927067,,,
+budget,alerts per day,0.0,autoencoder,50,dr_at_b,1,0.7888257575757575,,,
+budget,alerts per day,0.0,autoencoder,50,mttd_hours_median,1,98.49555555555555,,,
+budget,alerts per day,0.0,autoencoder,50,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,autoencoder,50,precision_at_b,1,0.008230998534097514,,,
+budget,alerts per day,0.0,autoencoder,50,precision_oracle_at_b,1,0.04774204629446085,,,
+budget,alerts per day,0.0,autoencoder,100,dr_at_b,1,0.8607954545454546,,,
+budget,alerts per day,0.0,autoencoder,100,mttd_hours_median,1,24.720185185185187,,,
+budget,alerts per day,0.0,autoencoder,100,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,autoencoder,100,precision_at_b,1,0.008821127999522815,,,
+budget,alerts per day,0.0,autoencoder,100,precision_oracle_at_b,1,0.027752891130442034,,,
+budget,alerts per day,0.0,autoencoder,200,dr_at_b,1,0.9592803030303031,,,
+budget,alerts per day,0.0,autoencoder,200,mttd_hours_median,1,19.035925925925927,,,
+budget,alerts per day,0.0,autoencoder,200,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,autoencoder,200,precision_at_b,1,0.008593241639498648,,,
+budget,alerts per day,0.0,autoencoder,200,precision_oracle_at_b,1,0.015163250463590744,,,
+budget,alerts per day,0.0,isolation_forest,0,auc_roc,1,0.7612923518776321,,,
+budget,alerts per day,0.0,isolation_forest,1,dr_at_b,1,0.10321969696969698,,,
+budget,alerts per day,0.0,isolation_forest,1,mttd_hours_median,1,15.656712962962963,,,
+budget,alerts per day,0.0,isolation_forest,1,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,isolation_forest,1,precision_at_b,1,0.01912568306010929,,,
+budget,alerts per day,0.0,isolation_forest,1,precision_oracle_at_b,1,0.6448087431693988,,,
+budget,alerts per day,0.0,isolation_forest,2,dr_at_b,1,0.16003787878787878,,,
+budget,alerts per day,0.0,isolation_forest,2,mttd_hours_median,1,14.981574074074075,,,
+budget,alerts per day,0.0,isolation_forest,2,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,isolation_forest,2,precision_at_b,1,0.01639344262295082,,,
+budget,alerts per day,0.0,isolation_forest,2,precision_oracle_at_b,1,0.6133879781420765,,,
+budget,alerts per day,0.0,isolation_forest,5,dr_at_b,1,0.21685606060606064,,,
+budget,alerts per day,0.0,isolation_forest,5,mttd_hours_median,1,15.891574074074073,,,
+budget,alerts per day,0.0,isolation_forest,5,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,isolation_forest,5,precision_at_b,1,0.009292309348838462,,,
+budget,alerts per day,0.0,isolation_forest,5,precision_oracle_at_b,1,0.4406175132574228,,,
+budget,alerts per day,0.0,isolation_forest,10,dr_at_b,1,0.2528409090909091,,,
+budget,alerts per day,0.0,isolation_forest,10,mttd_hours_median,1,16.566712962962963,,,
+budget,alerts per day,0.0,isolation_forest,10,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,isolation_forest,10,precision_at_b,1,0.006292255201159514,,,
+budget,alerts per day,0.0,isolation_forest,10,precision_oracle_at_b,1,0.22979177357063765,,,
+budget,alerts per day,0.0,isolation_forest,20,dr_at_b,1,0.3143939393939394,,,
+budget,alerts per day,0.0,isolation_forest,20,mttd_hours_median,1,22.294166666666666,,,
+budget,alerts per day,0.0,isolation_forest,20,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,isolation_forest,20,precision_at_b,1,0.004241284784216127,,,
+budget,alerts per day,0.0,isolation_forest,20,precision_oracle_at_b,1,0.11494346155927067,,,
+budget,alerts per day,0.0,isolation_forest,50,dr_at_b,1,0.6751893939393939,,,
+budget,alerts per day,0.0,isolation_forest,50,mttd_hours_median,1,57.63532407407408,,,
+budget,alerts per day,0.0,isolation_forest,50,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,isolation_forest,50,precision_at_b,1,0.004883499294518474,,,
+budget,alerts per day,0.0,isolation_forest,50,precision_oracle_at_b,1,0.04774204629446085,,,
+budget,alerts per day,0.0,isolation_forest,100,dr_at_b,1,0.96875,,,
+budget,alerts per day,0.0,isolation_forest,100,mttd_hours_median,1,23.49875,,,
+budget,alerts per day,0.0,isolation_forest,100,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,isolation_forest,100,precision_at_b,1,0.006378665318112653,,,
+budget,alerts per day,0.0,isolation_forest,100,precision_oracle_at_b,1,0.027752891130442034,,,
+budget,alerts per day,0.0,isolation_forest,200,dr_at_b,1,1.0,,,
+budget,alerts per day,0.0,isolation_forest,200,mttd_hours_median,1,17.25675925925926,,,
+budget,alerts per day,0.0,isolation_forest,200,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,isolation_forest,200,precision_at_b,1,0.009716217065232001,,,
+budget,alerts per day,0.0,isolation_forest,200,precision_oracle_at_b,1,0.015163250463590744,,,
+budget,alerts per day,0.0,lof,0,auc_roc,1,0.7807463319892157,,,
+budget,alerts per day,0.0,lof,1,dr_at_b,1,0.17045454545454544,,,
+budget,alerts per day,0.0,lof,1,mttd_hours_median,1,16.464907407407406,,,
+budget,alerts per day,0.0,lof,1,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,lof,1,precision_at_b,1,0.035519125683060114,,,
+budget,alerts per day,0.0,lof,1,precision_oracle_at_b,1,0.6448087431693988,,,
+budget,alerts per day,0.0,lof,2,dr_at_b,1,0.21685606060606064,,,
+budget,alerts per day,0.0,lof,2,mttd_hours_median,1,34.34925925925926,,,
+budget,alerts per day,0.0,lof,2,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,lof,2,precision_at_b,1,0.02459016393442623,,,
+budget,alerts per day,0.0,lof,2,precision_oracle_at_b,1,0.6133879781420765,,,
+budget,alerts per day,0.0,lof,5,dr_at_b,1,0.33996212121212127,,,
+budget,alerts per day,0.0,lof,5,mttd_hours_median,1,104.69162037037036,,,
+budget,alerts per day,0.0,lof,5,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,lof,5,precision_at_b,1,0.016399723635450034,,,
+budget,alerts per day,0.0,lof,5,precision_oracle_at_b,1,0.4406175132574228,,,
+budget,alerts per day,0.0,lof,10,dr_at_b,1,0.46875,,,
+budget,alerts per day,0.0,lof,10,mttd_hours_median,1,141.0153703703704,,,
+budget,alerts per day,0.0,lof,10,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,lof,10,precision_at_b,1,0.014219803566766593,,,
+budget,alerts per day,0.0,lof,10,precision_oracle_at_b,1,0.22979177357063765,,,
+budget,alerts per day,0.0,lof,20,dr_at_b,1,0.6032196969696969,,,
+budget,alerts per day,0.0,lof,20,mttd_hours_median,1,118.33203703703703,,,
+budget,alerts per day,0.0,lof,20,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,lof,20,precision_at_b,1,0.012721149164096737,,,
+budget,alerts per day,0.0,lof,20,precision_oracle_at_b,1,0.11494346155927067,,,
+budget,alerts per day,0.0,lof,50,dr_at_b,1,0.7945075757575758,,,
+budget,alerts per day,0.0,lof,50,mttd_hours_median,1,23.49875,,,
+budget,alerts per day,0.0,lof,50,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,lof,50,precision_at_b,1,0.011585662684889574,,,
+budget,alerts per day,0.0,lof,50,precision_oracle_at_b,1,0.04774204629446085,,,
+budget,alerts per day,0.0,lof,100,dr_at_b,1,0.8759469696969697,,,
+budget,alerts per day,0.0,lof,100,mttd_hours_median,1,22.997500000000002,,,
+budget,alerts per day,0.0,lof,100,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,lof,100,precision_at_b,1,0.011894036947822503,,,
+budget,alerts per day,0.0,lof,100,precision_oracle_at_b,1,0.027752891130442034,,,
+budget,alerts per day,0.0,lof,200,dr_at_b,1,0.9744318181818182,,,
+budget,alerts per day,0.0,lof,200,mttd_hours_median,1,20.51912037037037,,,
+budget,alerts per day,0.0,lof,200,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,lof,200,precision_at_b,1,0.009820337774946234,,,
+budget,alerts per day,0.0,lof,200,precision_oracle_at_b,1,0.015163250463590744,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,0,auc_roc,1,0.8496754260000512,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,1,dr_at_b,1,0.12405303030303032,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,1,mttd_hours_median,1,40.31259259259259,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,1,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,1,precision_at_b,1,0.09836065573770492,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,1,precision_oracle_at_b,1,0.6448087431693988,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,2,dr_at_b,1,0.19128787878787878,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,2,mttd_hours_median,1,59.386805555555554,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,2,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,2,precision_at_b,1,0.07513661202185792,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,2,precision_oracle_at_b,1,0.6133879781420765,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,5,dr_at_b,1,0.2528409090909091,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,5,mttd_hours_median,1,76.82583333333334,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,5,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,5,precision_at_b,1,0.04263641013217045,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,5,precision_oracle_at_b,1,0.4406175132574228,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,10,dr_at_b,1,0.40246212121212127,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,10,mttd_hours_median,1,23.408101851851853,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,10,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,10,precision_at_b,1,0.027901261241796524,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,10,precision_oracle_at_b,1,0.22979177357063765,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,20,dr_at_b,1,0.649621212121212,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,20,mttd_hours_median,1,18.86412037037037,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,20,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,20,precision_at_b,1,0.022713664809103862,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,20,precision_oracle_at_b,1,0.11494346155927067,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,50,dr_at_b,1,0.9280303030303031,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,50,mttd_hours_median,1,17.16560185185185,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,50,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,50,precision_at_b,1,0.020068535019803383,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,50,precision_oracle_at_b,1,0.04774204629446085,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,100,dr_at_b,1,0.9384469696969697,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,100,mttd_hours_median,1,16.54138888888889,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,100,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,100,precision_at_b,1,0.016187993924804266,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,100,precision_oracle_at_b,1,0.027752891130442034,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,200,dr_at_b,1,0.9744318181818182,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,200,mttd_hours_median,1,16.363796296296297,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,200,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,200,precision_at_b,1,0.012149200194365046,,,
+budget,alerts per day,0.0,proposed_budget_aware_conformal,200,precision_oracle_at_b,1,0.015163250463590744,,,
+budget,alerts per day,0.0,rule_baseline,0,auc_roc,1,0.589988030876954,,,
+budget,alerts per day,0.0,rule_baseline,1,dr_at_b,1,0.11837121212121211,,,
+budget,alerts per day,0.0,rule_baseline,1,mttd_hours_median,1,188.17675925925926,,,
+budget,alerts per day,0.0,rule_baseline,1,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,rule_baseline,1,precision_at_b,1,0.027322404371584702,,,
+budget,alerts per day,0.0,rule_baseline,1,precision_oracle_at_b,1,0.6448087431693988,,,
+budget,alerts per day,0.0,rule_baseline,2,dr_at_b,1,0.13920454545454544,,,
+budget,alerts per day,0.0,rule_baseline,2,mttd_hours_median,1,189.08416666666668,,,
+budget,alerts per day,0.0,rule_baseline,2,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,rule_baseline,2,precision_at_b,1,0.01639344262295082,,,
+budget,alerts per day,0.0,rule_baseline,2,precision_oracle_at_b,1,0.6133879781420765,,,
+budget,alerts per day,0.0,rule_baseline,5,dr_at_b,1,0.17518939393939395,,,
+budget,alerts per day,0.0,rule_baseline,5,mttd_hours_median,1,127.21449074074071,,,
+budget,alerts per day,0.0,rule_baseline,5,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,rule_baseline,5,precision_at_b,1,0.012026344360996708,,,
+budget,alerts per day,0.0,rule_baseline,5,precision_oracle_at_b,1,0.4406175132574228,,,
+budget,alerts per day,0.0,rule_baseline,10,dr_at_b,1,0.24242424242424243,,,
+budget,alerts per day,0.0,rule_baseline,10,mttd_hours_median,1,16.65189814814815,,,
+budget,alerts per day,0.0,rule_baseline,10,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,rule_baseline,10,precision_at_b,1,0.010121442911028887,,,
+budget,alerts per day,0.0,rule_baseline,10,precision_oracle_at_b,1,0.22979177357063765,,,
+budget,alerts per day,0.0,rule_baseline,20,dr_at_b,1,0.26799242424242425,,,
+budget,alerts per day,0.0,rule_baseline,20,mttd_hours_median,1,17.003796296296297,,,
+budget,alerts per day,0.0,rule_baseline,20,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,rule_baseline,20,precision_at_b,1,0.007526285415426788,,,
+budget,alerts per day,0.0,rule_baseline,20,precision_oracle_at_b,1,0.11494346155927067,,,
+budget,alerts per day,0.0,rule_baseline,50,dr_at_b,1,0.4583333333333333,,,
+budget,alerts per day,0.0,rule_baseline,50,mttd_hours_median,1,14.678055555555554,,,
+budget,alerts per day,0.0,rule_baseline,50,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,rule_baseline,50,precision_at_b,1,0.006392777631441106,,,
+budget,alerts per day,0.0,rule_baseline,50,precision_oracle_at_b,1,0.04774204629446085,,,
+budget,alerts per day,0.0,rule_baseline,100,dr_at_b,1,0.4895833333333333,,,
+budget,alerts per day,0.0,rule_baseline,100,mttd_hours_median,1,14.816064814814816,,,
+budget,alerts per day,0.0,rule_baseline,100,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,rule_baseline,100,precision_at_b,1,0.004682941036122224,,,
+budget,alerts per day,0.0,rule_baseline,100,precision_oracle_at_b,1,0.027752891130442034,,,
+budget,alerts per day,0.0,rule_baseline,200,dr_at_b,1,0.6335227272727272,,,
+budget,alerts per day,0.0,rule_baseline,200,mttd_hours_median,1,17.048148148148147,,,
+budget,alerts per day,0.0,rule_baseline,200,n_insiders,1,23.333333333333332,,,
+budget,alerts per day,0.0,rule_baseline,200,precision_at_b,1,0.003973803870646855,,,
+budget,alerts per day,0.0,rule_baseline,200,precision_oracle_at_b,1,0.015163250463590744,,,
+calfrac,cal_fraction,0.1,proposed_budget_aware_conformal,0,auc_roc,1,0.8539283810520817,,,
+calfrac,cal_fraction,0.1,proposed_budget_aware_conformal,10,dr_at_b,1,0.4232954545454546,,,
+calfrac,cal_fraction,0.1,proposed_budget_aware_conformal,10,mttd_hours_median,1,23.408101851851853,,,
+calfrac,cal_fraction,0.1,proposed_budget_aware_conformal,10,n_insiders,1,23.333333333333332,,,
+calfrac,cal_fraction,0.1,proposed_budget_aware_conformal,10,precision_at_b,1,0.030087053591523305,,,
+calfrac,cal_fraction,0.1,proposed_budget_aware_conformal,10,precision_oracle_at_b,1,0.22979177357063765,,,
+calfrac,cal_fraction,0.1,proposed_budget_aware_conformal,50,dr_at_b,1,0.9384469696969697,,,
+calfrac,cal_fraction,0.1,proposed_budget_aware_conformal,50,mttd_hours_median,1,16.851111111111113,,,
+calfrac,cal_fraction,0.1,proposed_budget_aware_conformal,50,n_insiders,1,23.333333333333332,,,
+calfrac,cal_fraction,0.1,proposed_budget_aware_conformal,50,precision_at_b,1,0.02142494507663764,,,
+calfrac,cal_fraction,0.1,proposed_budget_aware_conformal,50,precision_oracle_at_b,1,0.04774204629446085,,,
+calfrac,cal_fraction,0.2,proposed_budget_aware_conformal,0,auc_roc,1,0.8556263478384579,,,
+calfrac,cal_fraction,0.2,proposed_budget_aware_conformal,10,dr_at_b,1,0.4232954545454546,,,
+calfrac,cal_fraction,0.2,proposed_budget_aware_conformal,10,mttd_hours_median,1,23.408101851851853,,,
+calfrac,cal_fraction,0.2,proposed_budget_aware_conformal,10,n_insiders,1,23.333333333333332,,,
+calfrac,cal_fraction,0.2,proposed_budget_aware_conformal,10,precision_at_b,1,0.029815179913756627,,,
+calfrac,cal_fraction,0.2,proposed_budget_aware_conformal,10,precision_oracle_at_b,1,0.22979177357063765,,,
+calfrac,cal_fraction,0.2,proposed_budget_aware_conformal,50,dr_at_b,1,0.9384469696969697,,,
+calfrac,cal_fraction,0.2,proposed_budget_aware_conformal,50,mttd_hours_median,1,16.851111111111113,,,
+calfrac,cal_fraction,0.2,proposed_budget_aware_conformal,50,n_insiders,1,23.333333333333332,,,
+calfrac,cal_fraction,0.2,proposed_budget_aware_conformal,50,precision_at_b,1,0.021426210976036447,,,
+calfrac,cal_fraction,0.2,proposed_budget_aware_conformal,50,precision_oracle_at_b,1,0.04774204629446085,,,
+calfrac,cal_fraction,0.3,proposed_budget_aware_conformal,0,auc_roc,1,0.8543015916692743,,,
+calfrac,cal_fraction,0.3,proposed_budget_aware_conformal,10,dr_at_b,1,0.4441287878787879,,,
+calfrac,cal_fraction,0.3,proposed_budget_aware_conformal,10,mttd_hours_median,1,24.602083333333336,,,
+calfrac,cal_fraction,0.3,proposed_budget_aware_conformal,10,n_insiders,1,23.333333333333332,,,
+calfrac,cal_fraction,0.3,proposed_budget_aware_conformal,10,precision_at_b,1,0.030360277635239147,,,
+calfrac,cal_fraction,0.3,proposed_budget_aware_conformal,10,precision_oracle_at_b,1,0.22979177357063765,,,
+calfrac,cal_fraction,0.3,proposed_budget_aware_conformal,50,dr_at_b,1,0.9384469696969697,,,
+calfrac,cal_fraction,0.3,proposed_budget_aware_conformal,50,mttd_hours_median,1,17.069444444444443,,,
+calfrac,cal_fraction,0.3,proposed_budget_aware_conformal,50,n_insiders,1,23.333333333333332,,,
+calfrac,cal_fraction,0.3,proposed_budget_aware_conformal,50,precision_at_b,1,0.02108852571346516,,,
+calfrac,cal_fraction,0.3,proposed_budget_aware_conformal,50,precision_oracle_at_b,1,0.04774204629446085,,,
+calfrac,cal_fraction,0.4,proposed_budget_aware_conformal,0,auc_roc,1,0.8496754260000512,,,
+calfrac,cal_fraction,0.4,proposed_budget_aware_conformal,10,dr_at_b,1,0.40246212121212127,,,
+calfrac,cal_fraction,0.4,proposed_budget_aware_conformal,10,mttd_hours_median,1,23.408101851851853,,,
+calfrac,cal_fraction,0.4,proposed_budget_aware_conformal,10,n_insiders,1,23.333333333333332,,,
+calfrac,cal_fraction,0.4,proposed_budget_aware_conformal,10,precision_at_b,1,0.027901261241796524,,,
+calfrac,cal_fraction,0.4,proposed_budget_aware_conformal,10,precision_oracle_at_b,1,0.22979177357063765,,,
+calfrac,cal_fraction,0.4,proposed_budget_aware_conformal,50,dr_at_b,1,0.9280303030303031,,,
+calfrac,cal_fraction,0.4,proposed_budget_aware_conformal,50,mttd_hours_median,1,17.16560185185185,,,
+calfrac,cal_fraction,0.4,proposed_budget_aware_conformal,50,n_insiders,1,23.333333333333332,,,
+calfrac,cal_fraction,0.4,proposed_budget_aware_conformal,50,precision_at_b,1,0.020068535019803383,,,
+calfrac,cal_fraction,0.4,proposed_budget_aware_conformal,50,precision_oracle_at_b,1,0.04774204629446085,,,
+principals,principals,250.0,autoencoder,0,auc_roc,3,0.7806355072955221,0.04950760810973957,0.6576517909715616,0.9036192236194827
+principals,principals,250.0,autoencoder,10,dr_at_b,3,0.764057239057239,0.1667279374163919,0.34988208211883093,1.0
+principals,principals,250.0,autoencoder,10,mttd_hours_median,3,124.54694444444446,119.31410293915164,-171.84571821036303,420.939607099252
+principals,principals,250.0,autoencoder,10,n_insiders,3,6.888888888888889,1.7105338131489616,2.639687336421461,11.138090441356319
+principals,principals,250.0,autoencoder,10,precision_at_b,3,0.00918641784051458,0.0035627019122611934,0.00033617566454153397,0.018036660016487627
+principals,principals,250.0,autoencoder,10,precision_oracle_at_b,3,0.07906373603347731,0.05322744475964291,0.0,0.21128803886101377
+principals,principals,250.0,autoencoder,50,dr_at_b,3,1.0,0.0,1.0,1.0
+principals,principals,250.0,autoencoder,50,mttd_hours_median,3,19.633317901234566,2.22858860929972,14.09719689289591,25.169438909573223
+principals,principals,250.0,autoencoder,50,n_insiders,3,6.888888888888889,1.7105338131489616,2.639687336421461,11.138090441356319
+principals,principals,250.0,autoencoder,50,precision_at_b,3,0.012245693572823726,0.00826622215769227,0.0,0.03278012776845328
+principals,principals,250.0,autoencoder,50,precision_oracle_at_b,3,0.02054353959852542,0.013824972049607878,0.0,0.05488667403085061
+principals,principals,250.0,isolation_forest,0,auc_roc,3,0.7921337761377324,0.08656112762719333,0.577104014627388,1.0
+principals,principals,250.0,isolation_forest,10,dr_at_b,3,0.5916426166426166,0.3222920794041942,0.0,1.0
+principals,principals,250.0,isolation_forest,10,mttd_hours_median,3,288.79554012345676,262.8345702207325,-364.1217277135551,941.7128079604686
+principals,principals,250.0,isolation_forest,10,n_insiders,3,6.888888888888889,1.7105338131489616,2.639687336421461,11.138090441356319
+principals,principals,250.0,isolation_forest,10,precision_at_b,3,0.005779773309111026,0.0027595831340489724,0.0,0.012634957841112245
+principals,principals,250.0,isolation_forest,10,precision_oracle_at_b,3,0.07906373603347731,0.05322744475964291,0.0,0.21128803886101377
+principals,principals,250.0,isolation_forest,50,dr_at_b,3,1.0,0.0,1.0,1.0
+principals,principals,250.0,isolation_forest,50,mttd_hours_median,3,22.749120370370374,4.895642880675256,10.587669267222948,34.9105714735178
+principals,principals,250.0,isolation_forest,50,n_insiders,3,6.888888888888889,1.7105338131489616,2.639687336421461,11.138090441356319
+principals,principals,250.0,isolation_forest,50,precision_at_b,3,0.012292301948348815,0.007474245268699406,0.0,0.030859356487196486
+principals,principals,250.0,isolation_forest,50,precision_oracle_at_b,3,0.02054353959852542,0.013824972049607878,0.0,0.05488667403085061
+principals,principals,250.0,lof,0,auc_roc,3,0.7996784041907774,0.047995494071470114,0.6804509873737491,0.9189058210078057
+principals,principals,250.0,lof,10,dr_at_b,3,0.9362794612794613,0.0831864075649638,0.7296329691423018,1.0
+principals,principals,250.0,lof,10,mttd_hours_median,3,122.19746913580246,91.31932455591497,-104.65230880511388,349.0472470767188
+principals,principals,250.0,lof,10,n_insiders,3,6.888888888888889,1.7105338131489616,2.639687336421461,11.138090441356319
+principals,principals,250.0,lof,10,precision_at_b,3,0.017346312088321453,0.006899370680073304,0.00020732519460683885,0.03448529898203607
+principals,principals,250.0,lof,10,precision_oracle_at_b,3,0.07906373603347731,0.05322744475964291,0.0,0.21128803886101377
+principals,principals,250.0,lof,50,dr_at_b,3,0.9787878787878789,0.018432613728176415,0.932998727899589,1.0
+principals,principals,250.0,lof,50,mttd_hours_median,3,24.12484567901235,6.34728142605053,8.357324521467815,39.89236683655688
+principals,principals,250.0,lof,50,n_insiders,3,6.888888888888889,1.7105338131489616,2.639687336421461,11.138090441356319
+principals,principals,250.0,lof,50,precision_at_b,3,0.013384681673310042,0.008676358431592429,0.0,0.034937950853891744
+principals,principals,250.0,lof,50,precision_oracle_at_b,3,0.02054353959852542,0.013824972049607878,0.0,0.05488667403085061
+principals,principals,250.0,proposed_budget_aware_conformal,0,auc_roc,3,0.8425894135252049,0.0646272647007622,0.6820463880747706,1.0
+principals,principals,250.0,proposed_budget_aware_conformal,10,dr_at_b,3,0.8955387205387205,0.09579076500089405,0.6575812687625859,1.0
+principals,principals,250.0,proposed_budget_aware_conformal,10,mttd_hours_median,3,122.05658950617284,119.35085693566742,-174.42737513743702,418.5405541497827
+principals,principals,250.0,proposed_budget_aware_conformal,10,n_insiders,3,6.888888888888889,1.7105338131489616,2.639687336421461,11.138090441356319
+principals,principals,250.0,proposed_budget_aware_conformal,10,precision_at_b,3,0.01404043284102253,0.002663168499903594,0.007424755537666456,0.020656110144378605
+principals,principals,250.0,proposed_budget_aware_conformal,10,precision_oracle_at_b,3,0.07906373603347731,0.05322744475964291,0.0,0.21128803886101377
+principals,principals,250.0,proposed_budget_aware_conformal,50,dr_at_b,3,0.9638888888888889,0.03367876570272821,0.8802261969215381,1.0
+principals,principals,250.0,proposed_budget_aware_conformal,50,mttd_hours_median,3,16.89587962962963,1.5417565435096199,13.065944057559545,20.725815201699714
+principals,principals,250.0,proposed_budget_aware_conformal,50,n_insiders,3,6.888888888888889,1.7105338131489616,2.639687336421461,11.138090441356319
+principals,principals,250.0,proposed_budget_aware_conformal,50,precision_at_b,3,0.015102437908335764,0.009828383514647984,0.0,0.039517496042618075
+principals,principals,250.0,proposed_budget_aware_conformal,50,precision_oracle_at_b,3,0.02054353959852542,0.013824972049607878,0.0,0.05488667403085061
+principals,principals,250.0,rule_baseline,0,auc_roc,3,0.6726974047002918,0.09946098674574078,0.42562261667729745,0.9197721927232863
+principals,principals,250.0,rule_baseline,10,dr_at_b,3,0.519155844155844,0.11724601507634162,0.22790059655225603,0.810411091759432
+principals,principals,250.0,rule_baseline,10,mttd_hours_median,3,13.949876543209877,5.436193763749717,0.44562260629724015,27.454130480122515
+principals,principals,250.0,rule_baseline,10,n_insiders,3,6.888888888888889,1.7105338131489616,2.639687336421461,11.138090441356319
+principals,principals,250.0,rule_baseline,10,precision_at_b,3,0.013767461143067497,0.008187934454070457,0.0,0.034107417901763776
+principals,principals,250.0,rule_baseline,10,precision_oracle_at_b,3,0.07906373603347731,0.05322744475964291,0.0,0.21128803886101377
+principals,principals,250.0,rule_baseline,50,dr_at_b,3,0.7127344877344877,0.19633968548500327,0.22499967070799215,1.0
+principals,principals,250.0,rule_baseline,50,mttd_hours_median,3,17.619814814814813,2.1973904378531173,12.161194360704314,23.07843526892531
+principals,principals,250.0,rule_baseline,50,n_insiders,3,6.888888888888889,1.7105338131489616,2.639687336421461,11.138090441356319
+principals,principals,250.0,rule_baseline,50,precision_at_b,3,0.006800675780841166,0.004044052223354884,0.0,0.016846658417164803
+principals,principals,250.0,rule_baseline,50,precision_oracle_at_b,3,0.02054353959852542,0.013824972049607878,0.0,0.05488667403085061
+principals,principals,500.0,autoencoder,0,auc_roc,3,0.7867487946005919,0.02837369942619517,0.7162646178341118,0.857232971367072
+principals,principals,500.0,autoencoder,10,dr_at_b,3,0.6093674843674843,0.14970142151649116,0.23748853767573636,0.9812464310592324
+principals,principals,500.0,autoencoder,10,mttd_hours_median,3,128.81939814814814,80.17502060377133,-70.34639407403995,327.9851903703362
+principals,principals,500.0,autoencoder,10,n_insiders,3,11.333333333333334,1.4529663145135578,7.723964917547313,14.942701749119355
+principals,principals,500.0,autoencoder,10,precision_at_b,3,0.009303452940990201,0.001089284553241003,0.006597520103457115,0.012009385778523287
+principals,principals,500.0,autoencoder,10,precision_oracle_at_b,3,0.09232532472923034,0.025618806331389677,0.028684681791397118,0.15596596766706355
+principals,principals,500.0,autoencoder,50,dr_at_b,3,0.9203222703222703,0.03304964245569297,0.8382224071382186,1.0
+principals,principals,500.0,autoencoder,50,mttd_hours_median,3,21.675277777777776,3.5784871200213137,12.78582297192,30.564732583635553
+principals,principals,500.0,autoencoder,50,n_insiders,3,11.333333333333334,1.4529663145135578,7.723964917547313,14.942701749119355
+principals,principals,500.0,autoencoder,50,precision_at_b,3,0.009156206703036499,0.0016024272254974404,0.005175556801842857,0.01313685660423014
+principals,principals,500.0,autoencoder,50,precision_oracle_at_b,3,0.02268267788163146,0.006563379282895442,0.006378339888470055,0.03898701587479286
+principals,principals,500.0,isolation_forest,0,auc_roc,3,0.8009178712795378,0.03571294668493782,0.7122019936217548,0.8896337489373208
+principals,principals,500.0,isolation_forest,10,dr_at_b,3,0.3195045695045695,0.054863207738543834,0.18321680617366023,0.4557923328354788
+principals,principals,500.0,isolation_forest,10,mttd_hours_median,3,67.05842592592592,54.28757010496264,-67.7993742511016,201.91622610295343
+principals,principals,500.0,isolation_forest,10,n_insiders,3,11.333333333333334,1.4529663145135578,7.723964917547313,14.942701749119355
+principals,principals,500.0,isolation_forest,10,precision_at_b,3,0.004288930628069328,0.0009636211906583208,0.0018951628885132384,0.006682698367625418
+principals,principals,500.0,isolation_forest,10,precision_oracle_at_b,3,0.09232532472923034,0.025618806331389677,0.028684681791397118,0.15596596766706355
+principals,principals,500.0,isolation_forest,50,dr_at_b,3,0.9856481481481482,0.012448453388656237,0.954724475632421,1.0
+principals,principals,500.0,isolation_forest,50,mttd_hours_median,3,21.68092592592593,2.334813363006135,15.880928000983777,27.48092385086808
+principals,principals,500.0,isolation_forest,50,n_insiders,3,11.333333333333334,1.4529663145135578,7.723964917547313,14.942701749119355
+principals,principals,500.0,isolation_forest,50,precision_at_b,3,0.006965954751264737,0.0005161083162181422,0.005683870619599286,0.008248038882930188
+principals,principals,500.0,isolation_forest,50,precision_oracle_at_b,3,0.02268267788163146,0.006563379282895442,0.006378339888470055,0.03898701587479286
+principals,principals,500.0,lof,0,auc_roc,3,0.8219637121512657,0.02090293048399476,0.7700379542498788,0.8738894700526527
+principals,principals,500.0,lof,10,dr_at_b,3,0.690897065897066,0.1277121716582083,0.3736424440313791,1.0
+principals,principals,500.0,lof,10,mttd_hours_median,3,44.284120370370374,24.235053895412097,-15.91909095752456,104.48733169826531
+principals,principals,500.0,lof,10,n_insiders,3,11.333333333333334,1.4529663145135578,7.723964917547313,14.942701749119355
+principals,principals,500.0,lof,10,precision_at_b,3,0.017696306007076817,0.004706235288110519,0.006005369447511295,0.029387242566642338
+principals,principals,500.0,lof,10,precision_oracle_at_b,3,0.09232532472923034,0.025618806331389677,0.028684681791397118,0.15596596766706355
+principals,principals,500.0,lof,50,dr_at_b,3,0.9593434343434343,0.052366577537738934,0.8292576442466393,1.0
+principals,principals,500.0,lof,50,mttd_hours_median,3,21.351404320987655,2.894847926211211,14.16020341770415,28.54260522427116
+principals,principals,500.0,lof,50,n_insiders,3,11.333333333333334,1.4529663145135578,7.723964917547313,14.942701749119355
+principals,principals,500.0,lof,50,precision_at_b,3,0.011967255086269469,0.0029699043121337223,0.004589603784208166,0.019344906388330772
+principals,principals,500.0,lof,50,precision_oracle_at_b,3,0.02268267788163146,0.006563379282895442,0.006378339888470055,0.03898701587479286
+principals,principals,500.0,proposed_budget_aware_conformal,0,auc_roc,3,0.8779591659393494,0.01788745655311564,0.8335242605484593,0.9223940713302395
+principals,principals,500.0,proposed_budget_aware_conformal,10,dr_at_b,3,0.7333213083213083,0.0047799536242798335,0.721447245262817,0.7451953713797995
+principals,principals,500.0,proposed_budget_aware_conformal,10,mttd_hours_median,3,20.348626543209875,4.500312716884708,9.169230008526986,31.52802307789276
+principals,principals,500.0,proposed_budget_aware_conformal,10,n_insiders,3,11.333333333333334,1.4529663145135578,7.723964917547313,14.942701749119355
+principals,principals,500.0,proposed_budget_aware_conformal,10,precision_at_b,3,0.02527948837083399,0.008470961760240555,0.004236452807425468,0.046322523934242514
+principals,principals,500.0,proposed_budget_aware_conformal,10,precision_oracle_at_b,3,0.09232532472923034,0.025618806331389677,0.028684681791397118,0.15596596766706355
+principals,principals,500.0,proposed_budget_aware_conformal,50,dr_at_b,3,0.9078222703222704,0.03557829143220757,0.8194408948558799,0.9962036457886608
+principals,principals,500.0,proposed_budget_aware_conformal,50,mttd_hours_median,3,15.808533950617283,0.23696779195707393,15.21987332214651,16.397194579088058
+principals,principals,500.0,proposed_budget_aware_conformal,50,n_insiders,3,11.333333333333334,1.4529663145135578,7.723964917547313,14.942701749119355
+principals,principals,500.0,proposed_budget_aware_conformal,50,precision_at_b,3,0.014884066755508157,0.0036600491453018997,0.005792000646804145,0.02397613286421217
+principals,principals,500.0,proposed_budget_aware_conformal,50,precision_oracle_at_b,3,0.02268267788163146,0.006563379282895442,0.006378339888470055,0.03898701587479286
+principals,principals,500.0,rule_baseline,0,auc_roc,3,0.5828757430597823,0.062088456020966395,0.42863946799374786,0.7371120181258167
+principals,principals,500.0,rule_baseline,10,dr_at_b,3,0.21347402597402598,0.06004844174231397,0.06430542731010117,0.36264262463795083
+principals,principals,500.0,rule_baseline,10,mttd_hours_median,3,11.490262345679012,5.718965381818405,-2.7164352314907134,25.696959922848738
+principals,principals,500.0,rule_baseline,10,n_insiders,3,11.333333333333334,1.4529663145135578,7.723964917547313,14.942701749119355
+principals,principals,500.0,rule_baseline,10,precision_at_b,3,0.004467241522674862,0.00041689053983448424,0.0034316280110000662,0.005502855034349658
+principals,principals,500.0,rule_baseline,10,precision_oracle_at_b,3,0.09232532472923034,0.025618806331389677,0.028684681791397118,0.15596596766706355
+principals,principals,500.0,rule_baseline,50,dr_at_b,3,0.4680675805675805,0.09566667040039319,0.23041839686837476,0.7057167642667863
+principals,principals,500.0,rule_baseline,50,mttd_hours_median,3,11.394058641975311,2.4837225284743614,5.224149843468267,17.563967440482354
+principals,principals,500.0,rule_baseline,50,n_insiders,3,11.333333333333334,1.4529663145135578,7.723964917547313,14.942701749119355
+principals,principals,500.0,rule_baseline,50,precision_at_b,3,0.0025765151621928734,0.0005445272050521314,0.0012238345970488691,0.003929195727336878
+principals,principals,500.0,rule_baseline,50,precision_oracle_at_b,3,0.02268267788163146,0.006563379282895442,0.006378339888470055,0.03898701587479286
+principals,principals,1000.0,autoencoder,0,auc_roc,1,0.7538346318907688,,,
+principals,principals,1000.0,autoencoder,10,dr_at_b,1,0.39678030303030304,,,
+principals,principals,1000.0,autoencoder,10,mttd_hours_median,1,100.80435185185185,,,
+principals,principals,1000.0,autoencoder,10,n_insiders,1,23.333333333333332,,,
+principals,principals,1000.0,autoencoder,10,precision_at_b,1,0.010663839900613066,,,
+principals,principals,1000.0,autoencoder,10,precision_oracle_at_b,1,0.22979177357063765,,,
+principals,principals,1000.0,autoencoder,50,dr_at_b,1,0.7888257575757575,,,
+principals,principals,1000.0,autoencoder,50,mttd_hours_median,1,98.49555555555555,,,
+principals,principals,1000.0,autoencoder,50,n_insiders,1,23.333333333333332,,,
+principals,principals,1000.0,autoencoder,50,precision_at_b,1,0.008230998534097514,,,
+principals,principals,1000.0,autoencoder,50,precision_oracle_at_b,1,0.04774204629446085,,,
+principals,principals,1000.0,isolation_forest,0,auc_roc,1,0.7612923518776321,,,
+principals,principals,1000.0,isolation_forest,10,dr_at_b,1,0.2528409090909091,,,
+principals,principals,1000.0,isolation_forest,10,mttd_hours_median,1,16.566712962962963,,,
+principals,principals,1000.0,isolation_forest,10,n_insiders,1,23.333333333333332,,,
+principals,principals,1000.0,isolation_forest,10,precision_at_b,1,0.006292255201159514,,,
+principals,principals,1000.0,isolation_forest,10,precision_oracle_at_b,1,0.22979177357063765,,,
+principals,principals,1000.0,isolation_forest,50,dr_at_b,1,0.6751893939393939,,,
+principals,principals,1000.0,isolation_forest,50,mttd_hours_median,1,57.63532407407408,,,
+principals,principals,1000.0,isolation_forest,50,n_insiders,1,23.333333333333332,,,
+principals,principals,1000.0,isolation_forest,50,precision_at_b,1,0.004883499294518474,,,
+principals,principals,1000.0,isolation_forest,50,precision_oracle_at_b,1,0.04774204629446085,,,
+principals,principals,1000.0,lof,0,auc_roc,1,0.7807463319892157,,,
+principals,principals,1000.0,lof,10,dr_at_b,1,0.46875,,,
+principals,principals,1000.0,lof,10,mttd_hours_median,1,141.0153703703704,,,
+principals,principals,1000.0,lof,10,n_insiders,1,23.333333333333332,,,
+principals,principals,1000.0,lof,10,precision_at_b,1,0.014219803566766593,,,
+principals,principals,1000.0,lof,10,precision_oracle_at_b,1,0.22979177357063765,,,
+principals,principals,1000.0,lof,50,dr_at_b,1,0.7945075757575758,,,
+principals,principals,1000.0,lof,50,mttd_hours_median,1,23.49875,,,
+principals,principals,1000.0,lof,50,n_insiders,1,23.333333333333332,,,
+principals,principals,1000.0,lof,50,precision_at_b,1,0.011585662684889574,,,
+principals,principals,1000.0,lof,50,precision_oracle_at_b,1,0.04774204629446085,,,
+principals,principals,1000.0,proposed_budget_aware_conformal,0,auc_roc,1,0.8496754260000512,,,
+principals,principals,1000.0,proposed_budget_aware_conformal,10,dr_at_b,1,0.40246212121212127,,,
+principals,principals,1000.0,proposed_budget_aware_conformal,10,mttd_hours_median,1,23.408101851851853,,,
+principals,principals,1000.0,proposed_budget_aware_conformal,10,n_insiders,1,23.333333333333332,,,
+principals,principals,1000.0,proposed_budget_aware_conformal,10,precision_at_b,1,0.027901261241796524,,,
+principals,principals,1000.0,proposed_budget_aware_conformal,10,precision_oracle_at_b,1,0.22979177357063765,,,
+principals,principals,1000.0,proposed_budget_aware_conformal,50,dr_at_b,1,0.9280303030303031,,,
+principals,principals,1000.0,proposed_budget_aware_conformal,50,mttd_hours_median,1,17.16560185185185,,,
+principals,principals,1000.0,proposed_budget_aware_conformal,50,n_insiders,1,23.333333333333332,,,
+principals,principals,1000.0,proposed_budget_aware_conformal,50,precision_at_b,1,0.020068535019803383,,,
+principals,principals,1000.0,proposed_budget_aware_conformal,50,precision_oracle_at_b,1,0.04774204629446085,,,
+principals,principals,1000.0,rule_baseline,0,auc_roc,1,0.589988030876954,,,
+principals,principals,1000.0,rule_baseline,10,dr_at_b,1,0.24242424242424243,,,
+principals,principals,1000.0,rule_baseline,10,mttd_hours_median,1,16.65189814814815,,,
+principals,principals,1000.0,rule_baseline,10,n_insiders,1,23.333333333333332,,,
+principals,principals,1000.0,rule_baseline,10,precision_at_b,1,0.010121442911028887,,,
+principals,principals,1000.0,rule_baseline,10,precision_oracle_at_b,1,0.22979177357063765,,,
+principals,principals,1000.0,rule_baseline,50,dr_at_b,1,0.4583333333333333,,,
+principals,principals,1000.0,rule_baseline,50,mttd_hours_median,1,14.678055555555554,,,
+principals,principals,1000.0,rule_baseline,50,n_insiders,1,23.333333333333332,,,
+principals,principals,1000.0,rule_baseline,50,precision_at_b,1,0.006392777631441106,,,
+principals,principals,1000.0,rule_baseline,50,precision_oracle_at_b,1,0.04774204629446085,,,
+suppress,suppress_days,0.0,proposed_budget_aware_conformal,0,auc_roc,1,0.8496754260000512,,,
+suppress,suppress_days,0.0,proposed_budget_aware_conformal,10,dr_at_b,1,0.40246212121212127,,,
+suppress,suppress_days,0.0,proposed_budget_aware_conformal,10,mttd_hours_median,1,23.408101851851853,,,
+suppress,suppress_days,0.0,proposed_budget_aware_conformal,10,n_insiders,1,23.333333333333332,,,
+suppress,suppress_days,0.0,proposed_budget_aware_conformal,10,precision_at_b,1,0.027901261241796524,,,
+suppress,suppress_days,0.0,proposed_budget_aware_conformal,10,precision_oracle_at_b,1,0.22979177357063765,,,
+suppress,suppress_days,0.0,proposed_budget_aware_conformal,50,dr_at_b,1,0.9280303030303031,,,
+suppress,suppress_days,0.0,proposed_budget_aware_conformal,50,mttd_hours_median,1,17.16560185185185,,,
+suppress,suppress_days,0.0,proposed_budget_aware_conformal,50,n_insiders,1,23.333333333333332,,,
+suppress,suppress_days,0.0,proposed_budget_aware_conformal,50,precision_at_b,1,0.020068535019803383,,,
+suppress,suppress_days,0.0,proposed_budget_aware_conformal,50,precision_oracle_at_b,1,0.04774204629446085,,,
+suppress,suppress_days,1.0,proposed_budget_aware_conformal,0,auc_roc,1,0.8496754260000512,,,
+suppress,suppress_days,1.0,proposed_budget_aware_conformal,10,dr_at_b,1,0.45928030303030304,,,
+suppress,suppress_days,1.0,proposed_budget_aware_conformal,10,mttd_hours_median,1,26.387962962962963,,,
+suppress,suppress_days,1.0,proposed_budget_aware_conformal,10,n_insiders,1,23.333333333333332,,,
+suppress,suppress_days,1.0,proposed_budget_aware_conformal,10,precision_at_b,1,0.02352880227408899,,,
+suppress,suppress_days,1.0,proposed_budget_aware_conformal,10,precision_oracle_at_b,1,0.22979177357063765,,,
+suppress,suppress_days,1.0,proposed_budget_aware_conformal,50,dr_at_b,1,0.9384469696969697,,,
+suppress,suppress_days,1.0,proposed_budget_aware_conformal,50,mttd_hours_median,1,17.67185185185185,,,
+suppress,suppress_days,1.0,proposed_budget_aware_conformal,50,n_insiders,1,23.333333333333332,,,
+suppress,suppress_days,1.0,proposed_budget_aware_conformal,50,precision_at_b,1,0.01943075820196585,,,
+suppress,suppress_days,1.0,proposed_budget_aware_conformal,50,precision_oracle_at_b,1,0.04774204629446085,,,
+suppress,suppress_days,3.0,proposed_budget_aware_conformal,0,auc_roc,1,0.8496754260000512,,,
+suppress,suppress_days,3.0,proposed_budget_aware_conformal,10,dr_at_b,1,0.3664772727272727,,,
+suppress,suppress_days,3.0,proposed_budget_aware_conformal,10,mttd_hours_median,1,64.0,,,
+suppress,suppress_days,3.0,proposed_budget_aware_conformal,10,n_insiders,1,23.333333333333332,,,
+suppress,suppress_days,3.0,proposed_budget_aware_conformal,10,precision_at_b,1,0.01696038814482451,,,
+suppress,suppress_days,3.0,proposed_budget_aware_conformal,10,precision_oracle_at_b,1,0.22979177357063765,,,
+suppress,suppress_days,3.0,proposed_budget_aware_conformal,50,dr_at_b,1,0.8248106060606061,,,
+suppress,suppress_days,3.0,proposed_budget_aware_conformal,50,mttd_hours_median,1,22.299212962962965,,,
+suppress,suppress_days,3.0,proposed_budget_aware_conformal,50,n_insiders,1,23.333333333333332,,,
+suppress,suppress_days,3.0,proposed_budget_aware_conformal,50,precision_at_b,1,0.014770830046694354,,,
+suppress,suppress_days,3.0,proposed_budget_aware_conformal,50,precision_oracle_at_b,1,0.04774204629446085,,,
+suppress,suppress_days,7.0,proposed_budget_aware_conformal,0,auc_roc,1,0.8496754260000512,,,
+suppress,suppress_days,7.0,proposed_budget_aware_conformal,10,dr_at_b,1,0.5104166666666666,,,
+suppress,suppress_days,7.0,proposed_budget_aware_conformal,10,mttd_hours_median,1,63.97712962962962,,,
+suppress,suppress_days,7.0,proposed_budget_aware_conformal,10,n_insiders,1,23.333333333333332,,,
+suppress,suppress_days,7.0,proposed_budget_aware_conformal,10,precision_at_b,1,0.01587043950296669,,,
+suppress,suppress_days,7.0,proposed_budget_aware_conformal,10,precision_oracle_at_b,1,0.22979177357063765,,,
+suppress,suppress_days,7.0,proposed_budget_aware_conformal,50,dr_at_b,1,0.7064393939393939,,,
+suppress,suppress_days,7.0,proposed_budget_aware_conformal,50,mttd_hours_median,1,32.0,,,
+suppress,suppress_days,7.0,proposed_budget_aware_conformal,50,n_insiders,1,23.333333333333332,,,
+suppress,suppress_days,7.0,proposed_budget_aware_conformal,50,precision_at_b,1,0.010862302054688166,,,
+suppress,suppress_days,7.0,proposed_budget_aware_conformal,50,precision_oracle_at_b,1,0.04774204629446085,,,

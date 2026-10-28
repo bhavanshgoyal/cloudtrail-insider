@@ -1,0 +1,64 @@
+% Hand-written narrative; numbers are macros.
+\textbf{Choosing the budget.} The budget matters more than the detector. Going from 10 to 50 alerts
+per day raises BudgetAwareConformal's detection rate from \DROursBA{} to \DROursBB{} and Isolation
+Forest's from \DRIFBA{} to \DRIFBB{}, while precision falls only from \POursBA{} to \POursBB{}
+(Fig.~\ref{fig:precision}). Because precision is already far below its ceiling, the extra alerts are
+cheap in relative terms; a team that can review 50 alerts a day gains far more from the detector
+than one limited to 10.
+
+\textbf{Precision or coverage.} At 10 alerts per day LOF and the autoencoder cover a similar share of
+insiders but raise roughly twice as many false alerts per true one. Where analyst time is the
+binding constraint, the per-user detector is the better choice; where missing an insider is far
+costlier than reviewing false alerts, a density baseline is a reasonable complement, and the two
+could share one queue.
+
+\textbf{Working the queue by explanation.} Ranking only by score ignores information the detector
+already produces. Since volume-explained alerts are true several times more often than the rest
+(Table~\ref{tab:family}), an analyst can triage those first; identity-only deviations (new PCs) were
+never malicious in our test windows. Pairing the explanation family with its precision estimate
+(as shown in Table~\ref{tab:family}) gives an analyst a simple triage rule without any additional
+model: \emph{volume and resource alerts first, identity alerts last}. Our triage study (H3) confirms
+that reviewers can use the explanation text itself to make correct TP/FP judgements with a
+balanced accuracy of \TriageBAB{}, substantially above the \TriageBAA{} achieved with the bare score.
+
+\textbf{Organisation size and cost.} The budget is fixed per day, so the same 10 alerts cover a
+larger share of a smaller organisation. On random samples of \NUsersSmall{} and \NUsersMid{} users the
+detection rate at 10 alerts per day is \DRSweepOursSmall{} and \DRSweepOursMid{} for our detector
+(Isolation Forest \DRSweepIFSmall{} and \DRSweepIFMid), against \DRSweepOursFull{} on all
+\NUsersFull{} users (Fig.~\ref{fig:scale}; means over runs, hence slightly different from the
+insider-pooled estimate of Table~\ref{tab:main}). Fitting and scoring one test window on all users takes
+\SecsOurs\,s for BudgetAwareConformal, against \SecsIF\,s for Isolation Forest, \SecsLOF\,s for LOF
+and \SecsAE\,s for the autoencoder. The sub-second fit time for BudgetAwareConformal is important
+in cloud settings where a new batch of audit logs arrives every few hours: the model can be
+re-fitted on the updated history and the queue refreshed without adding latency to the analyst's
+workflow.
+
+\textbf{Temporal drift.} The gap between the best validation configuration and the best test
+configuration (Fisher fusion, no suppression) is a signal of temporal distribution shift: the
+organisation's normal behaviour in the January--August 2010 development period differs from the
+behaviour in the September 2010 -- May 2011 test period. This is expected in real deployments
+and argues for periodic re-tuning or a rolling development window. A rolling re-tuning scheme
+in which the most recent months always serve as development data would reduce this gap at the cost
+of operator effort; we leave this for future work.
+
+\textbf{What the negative hypotheses mean.} H1a (detection rate) and H2 (time to detection) were
+not supported. This does not mean our detector performs worse; on the point estimates it detects
+more insiders in less time. The intervals simply include zero, primarily because with only
+\NInsTest{} insiders in the test windows the bootstrap over insiders has low power for a 40\%
+relative threshold. These results are reported openly, as the protocol required.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/precision_vs_budget.png}
+\caption{Precision against the daily alert budget (log scales) with the oracle ceiling, CERT r4.2
+test windows.}
+\label{fig:precision}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/sweep_principals.png}
+\caption{Detection rate and precision at 10 alerts/day on random samples of the organisation (three
+samples per size; 95\% $t$-interval over samples).}
+\label{fig:scale}
+\end{figure}

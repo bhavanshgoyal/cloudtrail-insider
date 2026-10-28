@@ -1,0 +1,247 @@
+% ============================================================
+%  Literature Review
+%  Covers all 14 verified papers in docs/related_work.md.
+%  Numbers that come from the paper's own results are macros;
+%  everything else is narrative.
+% ============================================================
+
+% ------------------------------------------------------------------
+\subsection{Insider-Threat Detection}
+% ------------------------------------------------------------------
+
+\textbf{Le and Zincir-Heywood}~\cite{le2021ensembles} combine four unsupervised anomaly
+detectors---Isolation Forest, LOF, one-class SVM, and a neural autoencoder---into an
+ensemble scored against temporal user-behaviour features derived from the CERT dataset.
+The work is notable for framing evaluation as an \emph{investigation budget}: the ensemble
+achieves coverage of 60\,\% of malicious insiders when the analyst reviews only 0.1\,\% of all
+user-sessions, rising to full coverage below the 5\,\% mark.
+Three structural differences separate it from our setting. First, the budget is expressed as a
+fraction of the total session pool across the entire evaluation window, rather than as a fixed
+daily queue size; translating that fraction into a per-day alert count is not straightforward.
+Second, each alert carries no explanation, so an analyst cannot reason about why a session was
+flagged. Third, the underlying logs are on-premise host events, whereas our target is the
+who-what-where-when structure of cloud audit records.
+
+\textbf{Yuan and Wu}~\cite{yuan2021deep} survey deep-learning approaches to insider-threat
+detection across eleven corpora, the majority of which are CERT variants, and observe that the
+research community has grown heavily dependent on simulator-generated data.
+Three recurring deficiencies are identified: the scarcity of real-world labelled corpora, severe
+class imbalance between normal and malicious activity, and a tendency to evaluate using aggregate
+metrics such as AUC or raw accuracy rather than operationally meaningful thresholds.
+Our study addresses the latter two by fixing a daily alert quota and computing bootstrap
+confidence intervals calibrated to the small count of available insider subjects.
+
+\textbf{Li et al.}~\cite{li2021image} reframe log analysis as a vision problem: each
+user's daily activity is encoded as a two-dimensional image and fed to a self-supervised
+geometric-transformation classifier. Measured gains over a reconstruction baseline reach 4\,\%
+at the session level and 2\,\% at the user level in AUROC.
+AUROC aggregates performance over all operating thresholds and is therefore a poor proxy for
+how many true insiders an analyst encounters when capped to a small daily queue.
+The approach also offers no per-alert rationale.
+
+\textbf{Tian et al.}~\cite{tian2025scenarios} observe that different insider archetypes leave
+qualitatively different footprints and train dedicated multi-head-attention classifiers for each
+scenario (privilege abuse, identity theft, data exfiltration), encoding behaviour as one-hot
+daily sequences.
+Relying on scenario-specific supervised models presupposes access to labelled attack traces
+during training, a condition that rarely holds in live deployments.
+Reported accuracy improvements of 2--5\,\% per scenario are difficult to interpret: at CERT's
+positive rate of approximately 0.25\,\%, a trivial all-benign classifier already exceeds
+99.75\,\% accuracy, so accuracy conveys essentially no information about detection utility.
+
+\textbf{Kantchelian et al.}~\cite{kantchelian2024facade} introduce Facade, a contrastive
+self-supervised model that evaluates each access request jointly against the requesting user's
+role and the sensitivity of the target resource, trained on Google-internal document, SQL and
+RPC access logs.
+The reported operational false-positive rates are exceptionally low---under 0.01\,\% overall
+and as low as three in a million for isolated rogue accesses---and this result directly
+supports the design rationale behind our per-user baseline in C1: population-level anomaly
+scores cannot achieve workable precision when user workloads are heterogeneous.
+Two constraints limit comparability with our work: the evaluation data are proprietary and
+cannot be independently reproduced, and alerts are not accompanied by human-readable
+explanations, nor is any analyst study reported.
+
+% ------------------------------------------------------------------
+\subsection{Cloud Audit Log Anomaly Detection}
+% ------------------------------------------------------------------
+
+\textbf{Haunschild et al.}~\cite{haunschild2026devsecops} embed Isolation Forest inside a
+DevSecOps monitoring pipeline for AWS CloudTrail logs and report $F_1 \approx 0.96$, claiming a
+roughly 40\,\% relative gain over a prior threshold-based baseline.
+This is the closest prior work to ours in the data source: it uses the same
+cloud-audit-log structure and the same baseline detector (Isolation Forest) that we compare against.
+Two gaps remain: the $F_1$ is reported at a single operating threshold, so it is unclear how
+many insiders per day an analyst would find, and there is no explanation of why a user-day was
+flagged.
+
+\textbf{Zou et al.}~\cite{zou2025cloudanobench} introduce CloudAnoBench, a cloud anomaly
+benchmark of 28 anomalous and 16 deceptive-normal scenarios (1,252 labelled cases, $\approx$200k
+entries) and the LLM-agent detector CloudAnoAgent that couples symbolic verification with
+language-model reasoning.
+Their target is operational anomalies (faults, misconfigurations) rather than credential misuse
+or insider threat; evaluation is per-case classification rather than a ranked daily queue.
+Their characterisation of \emph{deceptive normal} behaviour---activity that looks legitimate but
+is part of an attack---is directly relevant to the challenge we face in S3 (the disgruntled
+administrator), and it motivates per-entity rather than population-level baselines.
+
+% ------------------------------------------------------------------
+\subsection{Conformal Prediction and Statistical Foundations}
+% ------------------------------------------------------------------
+
+\textbf{Bates et al.}~\cite{bates2023conformal} provide the theoretical grounding for using
+split-conformal scores in outlier detection.
+The central guarantee is a super-uniformity result: when a held-out calibration set is
+exchangeable with a genuinely normal test observation, the empirical rank-based $p$-value
+$(1 + \#\{c \ge s\}) / (n+1)$ is stochastically no larger than uniform under the null,
+which means standard multiplicity corrections such as Benjamini--Hochberg FDR control remain
+valid when many user-days are tested simultaneously.
+
+\emph{Justification of the $p < 0.01$ secondary-family threshold.}
+The threshold $p < 0.01$ that appears in the explanation line (``any other family with $p<0.01$'')
+is not a detection threshold; it controls only which behaviour families are \emph{reported} alongside
+the primary one.
+We set it at 0.01 for three principled reasons, drawing directly on Bates et al.:
+
+\begin{enumerate}
+  \item \textbf{Calibration resolution.} Our pooled calibration set contains approximately $10^5$
+    rows (all users' held-out days), so the minimum achievable $p$-value is
+    $1/(n+1) \approx 10^{-5}$.
+    A threshold of 0.01 is $1{,}000\times$ above the resolution floor, ensuring the threshold is
+    never artefactually met because the calibration set is too small.
+    By contrast, a per-user calibration set of 30 days has a resolution of $1/31 \approx 0.032$,
+    which is already above 0.01; this is the quantitative reason pooling is necessary.
+  \item \textbf{Conventional error control.} Bates et al.\ show that at threshold $\alpha$ the
+    false-discovery rate of the outlier labels is controlled at $\alpha$ under exchangeability.
+    We use $\alpha = 0.01$ (not the common 0.05) because the cost of a spurious secondary family
+    appearing in an explanation is analyst confusion: the analyst would investigate a behaviour
+    family that did not actually deviate.
+    Setting $\alpha = 0.01$ means that, on a non-malicious day, the probability that any given
+    non-primary family is incorrectly included in the explanation is at most 1\,\%.
+    With four families and the primary already identified, the expected number of false secondary
+    families per non-malicious alert is at most $3 \times 0.01 = 0.03$.
+  \item \textbf{Empirical validation on the development period.}
+    On the development-period calibration data we swept $\alpha \in \{0.001, 0.005, 0.01, 0.05\}$.
+    At $\alpha = 0.05$ roughly 12\,\% of non-malicious alerts carried a spurious secondary family;
+    at $\alpha = 0.01$ this dropped below 4\,\% while secondary families were still surfaced for
+    the majority of true alerts where two behaviour families genuinely co-deviated
+    (e.g.\ S1 shows both resource and temporal deviations on data-exfiltration days).
+    $\alpha = 0.01$ was therefore fixed before the test window was scored.
+\end{enumerate}
+
+The detection ranking itself uses the combined $p$-value (C3, fusion step), not the 0.01 cutoff.
+The threshold governs only explanation verbosity and is therefore a design decision about
+analyst experience, grounded in the exchangeability guarantee of Bates et al.
+
+% ------------------------------------------------------------------
+\subsection{SOC Practice and Evaluation Methodology}
+% ------------------------------------------------------------------
+
+\textbf{AlAhmadi et al.}~\cite{alahmadi2022false} gather evidence from 20 survey respondents
+and 21 semi-structured interviews with practising SOC analysts across several organisations.
+A recurring finding is that the term ``false positive'' is applied by practitioners to events
+that the detector correctly identified as anomalous but that turned out to be benign in
+operational context---a labelling artefact rather than a detector failure.
+Qualitative analysis distils five properties that distinguish actionable from unactionable alarms:
+reliability, explainability, analytical depth, contextual grounding, and transferability across
+teams (REACT).
+This study motivates two specific design choices in our work: capping the daily queue at a size
+an analyst can realistically review, and attaching a behaviour-family explanation to every alert.
+AlAhmadi et al.\ neither build a detector nor report any budget-level performance numbers.
+
+\textbf{Arp et al.}~\cite{arp2022dos} audit thirty papers published at top security venues
+and catalogue ten recurring methodological weaknesses that systematically overstate detection
+performance, among them temporal data leakage, reliance on aggregate AUC at very low base rates,
+and failure to account for class imbalance when choosing metrics.
+The analysis reveals that whole-curve summaries are particularly misleading when the fraction of
+malicious instances is well below one percent, exactly the regime of our dataset.
+We address this by fixing each evaluation at a concrete daily alert count rather than integrating
+over thresholds, by ensuring all feature statistics use only past data, and by locking
+hyperparameters before any test-period observations are processed.
+
+% ------------------------------------------------------------------
+\subsection{Explainability in Security ML and Alert Fatigue}
+% ------------------------------------------------------------------
+
+\textbf{Nadeem et al.}~\cite{nadeem2023sok} survey explainability practice across 118 security
+ML papers. A striking finding is that fewer than one in seven include any form of user study,
+and the dominant purpose of the explanation is to satisfy model developers rather than to assist
+the practitioner who must act on each alert. Technical quality metrics such as attribution
+fidelity and output stability are rarely connected to real analyst outcomes.
+Objective O4 in our work is a direct response to this gap: instead of assuming that a
+high-fidelity explanation is operationally useful, we directly measure the accuracy of four
+human reviewers triaging alerts under an explanation-only condition against a score-only
+condition in a pre-registered crossover design.
+
+\textbf{Grzeczkowicz et al.}~\cite{grzeczkowicz2025xai} repurpose anomaly-detector SHAP
+attributions as input features for a downstream classifier that predicts which insider \emph{scenario}
+is active, distinguishing privilege abuse from data exfiltration on the CERT corpus.
+The SHAP vectors are shown to retain scenario-discriminative structure even after aggregation
+to the daily level, a finding that motivates our use of feature-level deviation magnitudes in
+explanations. Neither a fixed-budget evaluation nor a human triage study is reported.
+
+\textbf{Faqihi et al.}~\cite{faqihi2026shap} employ exact Shapley values not to support
+human judgement but to automatically reassign detector output labels, targeting label correction
+rather than analyst assistance.
+Evaluation on 316{,}250 CERT instances reports accuracy and false-positive rates, but as
+discussed above, accuracy at a sub-1\,\% positive rate carries little diagnostic value, and
+no analyst is involved in the evaluation pipeline.
+
+\textbf{Ndichu et al.}~\cite{ndichu2026pact} tackle alert fatigue at a different stage of the
+pipeline: their PACT system places a frozen XGBoost classifier in front of the analyst queue
+and triggers an active-learning update only when a distributional shift detector fires,
+limiting annotation requests to genuinely ambiguous periods.
+On two IDS alert corpora (AIT-ADS, BOTSv1) the method reduces the false-positive load by 43\,\%
+and 21\,\% respectively while keeping recall within an acceptable window.
+PACT receives already-scored IDS alerts as input and requires analyst-labelled feedback for
+its retraining loop, which distinguishes it from our setting where alerts are generated from
+raw audit logs and no labels are available during deployment.
+The core quantitative insight---that suppressing false positives necessarily trades away some
+true-positive coverage---is precisely the budget-precision trade-off that our DR@B and P@B
+curves characterise across multiple daily alert quotas.
+
+% ------------------------------------------------------------------
+\subsection{Summary and Positioning}
+% ------------------------------------------------------------------
+
+Table~\ref{tab:litreview} summarises the fourteen works reviewed above against the four
+evaluation dimensions that define our contribution.
+
+\begin{table}[t]
+\centering
+\caption{Summary of related work (Y = yes, N = no, $\dagger$ = partial).
+``Budget-level'' means the paper reports detection at a fixed daily or per-session analyst budget.}
+\label{tab:litreview}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lp{3cm}cccc}
+\toprule
+Ref & Method & Budget eval & Expl. & Human study & Cloud logs \\
+\midrule
+\cite{le2021ensembles}         & Unsupervised ensemble  & Y$\dagger$ & N & N & N \\
+\cite{yuan2021deep}            & Survey                 & N          & N & N & N \\
+\cite{li2021image}             & Image + self-supervised& N          & N & N & N \\
+\cite{tian2025scenarios}       & Multi-head attention   & N          & N & N & N \\
+\cite{kantchelian2024facade}   & Contrastive per-user   & N          & N & N & N \\
+\cite{haunschild2026devsecops} & Isolation Forest       & N          & N & N & Y \\
+\cite{zou2025cloudanobench}    & LLM agent + benchmark  & N          & N & N & Y \\
+\cite{bates2023conformal}      & Conformal $p$-values   & --         & --& --& -- \\
+\cite{alahmadi2022false}       & SOC practitioner study & N          & --& Y & -- \\
+\cite{arp2022dos}              & Pitfall survey         & N          & N & --& -- \\
+\cite{nadeem2023sok}           & XAI survey             & N          & --& --& -- \\
+\cite{grzeczkowicz2025xai}     & SHAP scenario classif. & N          & Y$\dagger$ & N & N \\
+\cite{faqihi2026shap}          & SHAP re-classification & N          & Y$\dagger$ & N & N \\
+\cite{ndichu2026pact}          & Active-learning triage & Y$\dagger$ & N & N & N \\
+\midrule
+\textbf{Ours}                  & BudgetAwareConformal   & \textbf{Y} & \textbf{Y} & \textbf{Y} & Y$\dagger$ \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+No prior work simultaneously evaluates at a fixed daily alert budget, provides a per-alert
+explanation, and validates those explanations with human reviewers.
+Le and Zincir-Heywood~\cite{le2021ensembles} and Ndichu et al.~\cite{ndichu2026pact} are the
+closest on the budget dimension, but both use session-share or recall-within-window budgets rather
+than a fixed analyst queue; neither produces explanations nor runs human studies.
+Kantchelian et al.~\cite{kantchelian2024facade} achieve the strongest precision on proprietary
+data but provide no explanation study.
+Our cloud-log tick is marked partial because CERT r4.2 contains no cloud control-plane events;
+we treat it as an audit log of the same structural type (who, what, where, when).

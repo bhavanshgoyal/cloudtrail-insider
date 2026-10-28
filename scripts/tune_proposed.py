@@ -4,8 +4,10 @@ tune_proposed.py
 Model selection on VALIDATION windows only (never the test window).
 
 Protocol (declared before running)
-  * data: workload W1_baseline, tuning seeds 100 and 101 (disjoint from the
-    campaign seeds 0-4), all 3 rolling origins -> 6 validation windows;
+  * data: CERT r4.2, the 3 rolling *tuning* splits inside the development
+    period (every day before the earliest test day of any evaluation origin,
+    see cti.util.splits.tuning_splits); detector seeds 100 and 101 (disjoint
+    from the campaign seeds 0-4) -> 6 validation windows;
   * phase "val": fit on train, evaluate on val;
   * criterion: mean DR@10 over the 6 windows; ties (within 0.005) broken by
     mean P@10;
@@ -39,13 +41,12 @@ from cti.detectors.proposed import DEFAULTS, BudgetAwareConformal
 from cti.detectors.train import IsoForestDetector
 from cti.experiment import load_world, run_window
 from cti.util.config import load_config
-from cti.util.splits import all_splits
+from cti.util.splits import tuning_splits
 
 logging.basicConfig(level=logging.WARNING, format="%(asctime)s %(message)s")
 log = logging.getLogger("tune")
 
 TUNING_SEEDS = [100, 101]
-WORKLOAD = "W1_baseline"
 LOG_PATH = Path("results/tuning_log.csv")
 
 PROPOSED_GRID = {
@@ -71,8 +72,10 @@ def _hash(d: dict) -> str:
 class Tuner:
     def __init__(self, cfg: dict) -> None:
         self.cfg = cfg
-        self.worlds = [load_world(cfg, WORKLOAD, s) for s in TUNING_SEEDS]
-        self.splits = {w.seed: all_splits(w.features["date"], cfg) for w in self.worlds}
+        self.worlds = [load_world(cfg, None, s) for s in TUNING_SEEDS]
+        self.splits = {w.seed: tuning_splits(w.features["date"], cfg) for w in self.worlds}
+        for sp in self.splits[TUNING_SEEDS[0]]:
+            print("tuning", sp.describe(), flush=True)
         self.seen: dict[str, tuple[float, float]] = {}
 
     def evaluate(self, detector_name: str, make, params: dict) -> tuple[float, float]:
@@ -146,9 +149,9 @@ def main() -> None:
     t = Tuner(cfg)
     prop = tune_proposed(t)
     iso = tune_if(t)
-    header = (f"# Frozen by scripts/tune_proposed.py on {dt.date.today()} (validation windows only:\n"
-              f"# {WORKLOAD}, seeds {TUNING_SEEDS}, 3 origins). Do not edit by hand; the campaign\n"
-              f"# must use these values unchanged. Log: {LOG_PATH}\n")
+    header = (f"# Frozen by scripts/tune_proposed.py on {dt.date.today()} (validation windows of the\n"
+              f"# CERT development period only, seeds {TUNING_SEEDS}, 3 tuning splits). Do not edit by\n"
+              f"# hand; the campaign must use these values unchanged. Log: {LOG_PATH}\n")
     Path("configs/proposed_final.yaml").write_text(
         header + yaml.safe_dump({"detectors": {"proposed": prop}}, sort_keys=False))
     Path("configs/baseline_final.yaml").write_text(

@@ -1,0 +1,13 @@
+# Signature rules for the CERT rule baseline, in the style of commercial DLP / UEBA
+# alert rules. Fixed a priori; never tuned on validation or test data.
+# A rule fires on a (user, day) when feature >= min. score = max severity
+# + 0.1 * (distinct rules - 1) + 0.001 * log1p(total hits); 0 rules -> no alert.
+rules:
+  - {id: R1_leak_site_visit,        feature: res_leak_site_visits,      min: 1, severity: 3}
+  - {id: R2_usb_after_hours,        feature: res_usb_after_hours,       min: 1, severity: 2}
+  - {id: R3_first_usb_use,          feature: res_usb_first_use,         min: 1, severity: 2}
+  - {id: R4_executable_to_usb,      feature: res_exe_files,             min: 1, severity: 2}
+  - {id: R5_job_site_visit,         feature: res_job_site_visits,       min: 1, severity: 1}
+  - {id: R6_external_email_attach,  feature: res_email_external_attach, min: 1, severity: 1}
+  - {id: R7_logon_new_pc,           feature: idn_logons_new_pc,         min: 1, severity: 1}
+  - {id: R8_after_hours_logon,      feature: tmp_after_hours_logons,    min: 1, severity: 1}

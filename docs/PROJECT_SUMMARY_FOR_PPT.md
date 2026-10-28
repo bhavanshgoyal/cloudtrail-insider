@@ -1,3 +1,5 @@
+> **OUTDATED (2026-10-27): this slide plan describes the synthetic CloudTrail version.** Its numbers are NOT the CERT r4.2 results. Do not build slides from it; use README.md, docs/OBJECTIVES_EVIDENCE.md and the IEEE paper in docs/paper_ieee/ until it is rewritten.
+
 # P20: Project summary for building the Review 1, 2 and 3 slide decks
 
 > **For the deck-building agent.** Everything you need is in this file. Numbers are filled

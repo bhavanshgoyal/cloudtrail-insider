@@ -7,7 +7,7 @@ import pytest
 from scipy import stats
 
 from cti.eval.aggregate import summarise, t_interval
-from cti.eval.figures import ORDER, STYLE, plot_budget_curves, plot_rank_reversal
+from cti.eval.figures import ORDER, STYLE, plot_budget_curves, plot_rank_reversal, plot_per_scenario
 
 
 def test_t_interval_matches_scipy():
@@ -38,7 +38,7 @@ def _fake_summary():
         for b in (10, 50, 100):
             for metric in ("dr_at_b", "precision_at_b", "precision_oracle_at_b", "auc_roc", "mttd_hours_median"):
                 m = float(rng.uniform(0.1, 0.9))
-                rows.append(dict(workload="W1_baseline", detector=det, budget=0 if metric == "auc_roc" else b,
+                rows.append(dict(workload="CERT_r4.2", detector=det, budget=0 if metric == "auc_roc" else b,
                                  metric=metric, n_seeds=5, mean=m, std=0.05, ci_lo=m - 0.05, ci_hi=m + 0.05))
     return pd.DataFrame(rows).drop_duplicates(subset=["workload", "detector", "budget", "metric"])
 
@@ -50,3 +50,10 @@ def test_budget_and_rank_figures_are_written(tmp_path):
     for name in ("dr_vs_budget", "precision_vs_budget", "auc_vs_budget_rank"):
         assert (tmp_path / f"{name}.png").stat().st_size > 5000
         assert (tmp_path / f"{name}.csv").exists()          # table view alongside every figure
+
+
+def test_per_scenario_figure_is_written(tmp_path):
+    by_sc = pd.DataFrame([dict(workload="CERT_r4.2", detector=d, scenario_id=s, dr_at_10=0.5, n=10)
+                          for d in ORDER for s in ("S1", "S2", "S3")])
+    plot_per_scenario(by_sc, tmp_path)
+    assert (tmp_path / "dr_by_scenario.png").stat().st_size > 5000

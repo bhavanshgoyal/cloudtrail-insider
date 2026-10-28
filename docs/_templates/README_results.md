@@ -1,19 +1,22 @@
-## Results (test windows, 10 alerts/day, mean over 5 seeds; 95% CI in `results/campaign/summary.csv`)
+## Results (CERT r4.2 test windows, 3 origins pooled, 10 alerts/day; CIs in `results/campaign/summary.csv`)
 
-| Workload | Proposed DR@10 | Isolation Forest | LOF | Autoencoder | Rules | Proposed P@10 (oracle) | IF P@10 |
-|---|---|---|---|---|---|---|---|
-| W1 baseline | **{{S|W1_baseline|P|dr_at_b|10|mean|.3f}}** | {{S|W1_baseline|IF|dr_at_b|10|mean|.3f}} | {{S|W1_baseline|LOF|dr_at_b|10|mean|.3f}} | {{S|W1_baseline|AE|dr_at_b|10|mean|.3f}} | {{S|W1_baseline|RULE|dr_at_b|10|mean|.3f}} | **{{S|W1_baseline|P|precision_at_b|10|mean|.3f}}** ({{S|W1_baseline|P|precision_oracle_at_b|10|mean|.2f}}) | {{S|W1_baseline|IF|precision_at_b|10|mean|.3f}} |
-| W2 stealthy | **{{S|W2_stealthy|P|dr_at_b|10|mean|.3f}}** | {{S|W2_stealthy|IF|dr_at_b|10|mean|.3f}} | {{S|W2_stealthy|LOF|dr_at_b|10|mean|.3f}} | {{S|W2_stealthy|AE|dr_at_b|10|mean|.3f}} | {{S|W2_stealthy|RULE|dr_at_b|10|mean|.3f}} | **{{S|W2_stealthy|P|precision_at_b|10|mean|.3f}}** ({{S|W2_stealthy|P|precision_oracle_at_b|10|mean|.2f}}) | {{S|W2_stealthy|IF|precision_at_b|10|mean|.3f}} |
-| W3 scale (3,000) | **{{S|W3_scale|P|dr_at_b|10|mean|.3f}}** | {{S|W3_scale|IF|dr_at_b|10|mean|.3f}} | {{S|W3_scale|LOF|dr_at_b|10|mean|.3f}} | {{S|W3_scale|AE|dr_at_b|10|mean|.3f}} | {{S|W3_scale|RULE|dr_at_b|10|mean|.3f}} | **{{S|W3_scale|P|precision_at_b|10|mean|.3f}}** ({{S|W3_scale|P|precision_oracle_at_b|10|mean|.2f}}) | {{S|W3_scale|IF|precision_at_b|10|mean|.3f}} |
-| W4 noisy | **{{S|W4_noisy|P|dr_at_b|10|mean|.3f}}** | {{S|W4_noisy|IF|dr_at_b|10|mean|.3f}} | {{S|W4_noisy|LOF|dr_at_b|10|mean|.3f}} | {{S|W4_noisy|AE|dr_at_b|10|mean|.3f}} | {{S|W4_noisy|RULE|dr_at_b|10|mean|.3f}} | **{{S|W4_noisy|P|precision_at_b|10|mean|.3f}}** ({{S|W4_noisy|P|precision_oracle_at_b|10|mean|.2f}}) | {{S|W4_noisy|IF|precision_at_b|10|mean|.3f}} |
-
-**Hypothesis verdicts** (whole 95% CI beyond the threshold = supported):
-
-| | W1 | W2 | W3 | W4 |
+| Detector | DR@10 [95% CI over insiders] | P@10 [95% CI over days] | DR@50 | AUC-ROC |
 |---|---|---|---|---|
-| H1a DR@10 ≥ +40% | {{H|W1_baseline|H1a|diff|pct}} {{H|W1_baseline|H1a|verdict|s}} | {{H|W2_stealthy|H1a|diff|pct}} {{H|W2_stealthy|H1a|verdict|s}} | {{H|W3_scale|H1a|diff|pct}} {{H|W3_scale|H1a|verdict|s}} | {{H|W4_noisy|H1a|diff|pct}} {{H|W4_noisy|H1a|verdict|s}} |
-| H1b P@10 ≥ +30% | {{H|W1_baseline|H1b|diff|pct}} {{H|W1_baseline|H1b|verdict|s}} | {{H|W2_stealthy|H1b|diff|pct}} {{H|W2_stealthy|H1b|verdict|s}} | {{H|W3_scale|H1b|diff|pct}} {{H|W3_scale|H1b|verdict|s}} | {{H|W4_noisy|H1b|diff|pct}} {{H|W4_noisy|H1b|verdict|s}} |
-| H2 MTTD ≤ −25% | {{H|W1_baseline|H2|diff|pct}} {{H|W1_baseline|H2|verdict|s}} | {{H|W2_stealthy|H2|diff|pct}} {{H|W2_stealthy|H2|verdict|s}} | {{H|W3_scale|H2|diff|pct}} {{H|W3_scale|H2|verdict|s}} | {{H|W4_noisy|H2|diff|pct}} {{H|W4_noisy|H2|verdict|s}} |
-| H3 triage | {{T|h3.verdict|s}} | | | |
+| **Proposed (BudgetAwareConformal)** | **{{S|CERT_r4.2|P|dr_at_b|10|mean|.3f}}** [{{S|CERT_r4.2|P|dr_at_b|10|ci_lo|.2f}}, {{S|CERT_r4.2|P|dr_at_b|10|ci_hi|.2f}}] | **{{S|CERT_r4.2|P|precision_at_b|10|mean|.3f}}** [{{S|CERT_r4.2|P|precision_at_b|10|ci_lo|.3f}}, {{S|CERT_r4.2|P|precision_at_b|10|ci_hi|.3f}}] | {{S|CERT_r4.2|P|dr_at_b|50|mean|.3f}} | {{S|CERT_r4.2|P|auc_roc|0|mean|.3f}} |
+| Isolation Forest | {{S|CERT_r4.2|IF|dr_at_b|10|mean|.3f}} [{{S|CERT_r4.2|IF|dr_at_b|10|ci_lo|.2f}}, {{S|CERT_r4.2|IF|dr_at_b|10|ci_hi|.2f}}] | {{S|CERT_r4.2|IF|precision_at_b|10|mean|.3f}} [{{S|CERT_r4.2|IF|precision_at_b|10|ci_lo|.3f}}, {{S|CERT_r4.2|IF|precision_at_b|10|ci_hi|.3f}}] | {{S|CERT_r4.2|IF|dr_at_b|50|mean|.3f}} | {{S|CERT_r4.2|IF|auc_roc|0|mean|.3f}} |
+| LOF | {{S|CERT_r4.2|LOF|dr_at_b|10|mean|.3f}} | {{S|CERT_r4.2|LOF|precision_at_b|10|mean|.3f}} | {{S|CERT_r4.2|LOF|dr_at_b|50|mean|.3f}} | {{S|CERT_r4.2|LOF|auc_roc|0|mean|.3f}} |
+| Autoencoder | {{S|CERT_r4.2|AE|dr_at_b|10|mean|.3f}} | {{S|CERT_r4.2|AE|precision_at_b|10|mean|.3f}} | {{S|CERT_r4.2|AE|dr_at_b|50|mean|.3f}} | {{S|CERT_r4.2|AE|auc_roc|0|mean|.3f}} |
+| Rule signatures | {{S|CERT_r4.2|RULE|dr_at_b|10|mean|.3f}} | {{S|CERT_r4.2|RULE|precision_at_b|10|mean|.3f}} | {{S|CERT_r4.2|RULE|dr_at_b|50|mean|.3f}} | {{S|CERT_r4.2|RULE|auc_roc|0|mean|.3f}} |
 
-![Detection and precision per workload](figures/per_workload_dr10.png)
+Oracle precision ceiling at 10 alerts/day: {{S|CERT_r4.2|P|precision_oracle_at_b|10|mean|.3f}} (few user-days are malicious).
+
+**Hypothesis verdicts vs Isolation Forest** (whole 95% CI beyond the threshold = supported):
+
+| Hypothesis | Relative difference [95% CI] | Verdict |
+|---|---|---|
+| H1a DR@10 ≥ +40% | {{H|CERT_r4.2|H1a|diff|pct}} [{{H|CERT_r4.2|H1a|ci_lo|pct}}, {{H|CERT_r4.2|H1a|ci_hi|pct}}] | {{H|CERT_r4.2|H1a|verdict|s}} |
+| H1b P@10 ≥ +30% | {{H|CERT_r4.2|H1b|diff|pct}} [{{H|CERT_r4.2|H1b|ci_lo|pct}}, {{H|CERT_r4.2|H1b|ci_hi|pct}}] | {{H|CERT_r4.2|H1b|verdict|s}} |
+| H2 MTTD ≤ −25% | {{H|CERT_r4.2|H2|diff|pct}} [{{H|CERT_r4.2|H2|ci_lo|pct}}, {{H|CERT_r4.2|H2|ci_hi|pct}}] | {{H|CERT_r4.2|H2|verdict|s}} |
+| H3 triage | | {{T|h3.verdict|s}} |
+
+![Detection rate per insider scenario](figures/dr_by_scenario.png)

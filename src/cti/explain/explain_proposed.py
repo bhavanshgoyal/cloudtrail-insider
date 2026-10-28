@@ -7,9 +7,9 @@ cross-check of their faithfulness.
 An explanation names the behavioural deviation responsible for the alert:
 
     Resource access deviation (p = 0.0004)
-      - calls on sensitive buckets this identity never accessed before: 50 (usually 0)
-      - calls on sensitive buckets (finance/hr/pii/security): 52 (usually 1)
-    Also unusual: identity
+      - USB device connections outside 08:00-18:00: 3 (usually 0)
+      - visits to leak / file-upload sites: 2 (usually 0)
+    Also unusual: timing
 
 It is built from the detector's own per-feature attribution (one-sided robust
 z-scores against the principal's history, grouped into the family with the
@@ -37,38 +37,33 @@ FAMILY_TEXT = {
 
 # feature -> (description, format)   format: int | pct | hours | float | bytes
 FEATURE_TEXT = {
-    "vol_events_per_day": ("API calls", "int"),
-    "vol_log_bytes": ("data transferred", "bytes"),
-    "vol_get_object": ("S3 object reads (GetObject)", "int"),
-    "div_unique_event_names": ("distinct API actions", "int"),
-    "div_unique_sources": ("distinct AWS services", "int"),
-    "div_new_event_types": ("API actions this identity has never used before", "int"),
-    "idn_new_ip_events": ("calls from source IPs never seen for this identity", "int"),
-    "idn_new_ips": ("source IPs never seen for this identity", "int"),
-    "idn_unique_ips": ("distinct source IPs", "int"),
-    "idn_new_user_agents": ("client user agents never seen for this identity", "int"),
-    "idn_new_regions": ("AWS regions never used by this identity", "int"),
-    "idn_unique_regions": ("distinct AWS regions", "int"),
-    "idn_login_failures": ("failed console logins", "int"),
-    "idn_login_new_ip": ("console logins from a never-seen IP", "int"),
-    "idn_logins_no_mfa": ("console logins without MFA", "int"),
-    "err_error_rate": ("share of calls that failed", "pct"),
-    "err_error_count": ("failed API calls", "int"),
-    "res_unique_resources": ("distinct resources touched", "int"),
-    "res_new_resources": ("resources this identity never accessed before", "int"),
-    "res_sensitive_events": ("calls on sensitive buckets (finance / hr / pii / security)", "int"),
-    "res_sensitive_frac": ("share of calls on sensitive buckets", "pct"),
-    "res_new_sensitive_events": ("calls on sensitive buckets this identity never accessed before", "int"),
-    "res_external_writes": ("writes to an external bucket", "int"),
-    "res_priv_esc_events": ("privilege-sensitive actions (CreateAccessKey, AssumeRole, PutBucketPolicy, ...)", "int"),
-    "res_iam_writes": ("IAM write actions", "int"),
-    "res_public_exposure": ("resources made public", "int"),
-    "rar_fraction_rare_events": ("share of calls using rarely-seen API actions", "pct"),
-    "tmp_after_hours_ratio": ("share of activity outside 08:00-18:00 UTC", "pct"),
-    "tmp_hour_deviation": ("hours away from this identity's usual working time", "hours"),
-    "tmp_weekend_events": ("API calls at the weekend", "int"),
+    "idn_unique_pcs": ("distinct PCs used", "int"),
+    "idn_new_pcs": ("PCs this user has never used before", "int"),
+    "idn_logons_new_pc": ("logons on a PC this user has never used before", "int"),
+    "res_usb_connects": ("USB device connections", "int"),
+    "res_usb_after_hours": ("USB device connections outside 08:00-18:00", "int"),
+    "res_usb_first_use": ("first USB device use ever by this user", "int"),
+    "res_exe_files": ("executable files copied to removable media", "int"),
+    "res_job_site_visits": ("visits to job-search sites", "int"),
+    "res_leak_site_visits": ("visits to leak / file-upload sites", "int"),
+    "res_email_external": ("emails sent outside the company", "int"),
+    "res_email_external_attach": ("emails with attachments sent outside the company", "int"),
+    "res_email_ext_recipients": ("external email recipients", "int"),
+    "rar_rare_domain_visits": ("visits to websites almost nobody in the company has visited", "int"),
+    "rar_rare_domain_frac": ("share of web visits to rarely-visited websites", "pct"),
+    "tmp_after_hours_ratio": ("share of activity outside 08:00-18:00", "pct"),
+    "tmp_after_hours_logons": ("logons outside 08:00-18:00", "int"),
+    "tmp_hour_deviation": ("hours away from this user's usual working time", "hours"),
+    "tmp_weekend_events": ("activity at the weekend", "int"),
     "tmp_active_hours": ("distinct hours with activity", "int"),
-    "tmp_burst_std_minutes": ("irregularity of call timing (std of gaps, minutes)", "float"),
+    "vol_events": ("logged actions", "int"),
+    "vol_logons": ("logons", "int"),
+    "vol_http": ("web page visits", "int"),
+    "vol_emails": ("emails sent", "int"),
+    "vol_email_log_bytes": ("email data sent", "bytes"),
+    "vol_file_copies": ("files copied to removable media", "int"),
+    "div_unique_domains": ("distinct websites visited", "int"),
+    "div_new_domains": ("websites this user has never visited before", "int"),
 }
 
 

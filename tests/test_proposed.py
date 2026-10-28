@@ -89,13 +89,14 @@ def test_explanations_name_the_deviating_feature():
     assert "scenario" not in e["text"].lower() and "label" not in e["text"].lower()
 
 
-def test_every_pipeline_feature_has_a_description():
-    from cti.features.pipeline import build_features, feature_columns
-    from cti.ingest.normalise import normalise_columns
-    from cti.ingest.synthetic import SCENARIO_IDS, generate_dataset
-    raw, _ = generate_dataset(30, 30, SCENARIO_IDS, 0.2, seed=1)
-    cols = feature_columns(build_features(normalise_columns(raw), load_config()))
-    assert set(cols) <= set(FEATURE_TEXT)
+def test_every_pipeline_feature_has_a_description(tmp_path):
+    from cert_toy import toy_events, write_parquet
+
+    from cti.features.cert import build_cert_features
+    from cti.features.pipeline import feature_columns
+    frames, _ = toy_events(n_users=5, n_days=30, attack_from=20)
+    cols = feature_columns(build_cert_features(write_parquet(frames, tmp_path), load_config()))
+    assert set(cols) == set(FEATURE_TEXT)
 
 
 def test_render_handles_no_positive_features():

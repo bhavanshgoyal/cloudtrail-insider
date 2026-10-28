@@ -103,6 +103,23 @@ def all_splits(dates, cfg: dict) -> list[Split]:
     return [make_splits(dates, cfg, k) for k in range(int(cfg["splits"]["n_origins"]))]
 
 
+def tuning_splits(dates, cfg: dict) -> list[Split]:
+    """Rolling splits inside the development period, for model selection only.
+
+    On one fixed dataset the evaluation origins overlap (origin 0's test days
+    are origin 1's and 2's validation days), so their validation windows cannot
+    be used to choose settings. The development period is every day before the
+    earliest test day of any evaluation origin; these splits re-apply the same
+    layout inside it. Their ``val`` windows never contain an evaluation test day.
+    """
+    all_days = pd.to_datetime(pd.Series(np.asarray(dates)).drop_duplicates())
+    first_test = min(s.test_days[0] for s in all_splits(all_days, cfg))
+    dev = all_days[all_days < first_test]
+    splits = all_splits(dev, cfg)
+    assert all(s.val_days[-1] < first_test for s in splits)
+    return splits
+
+
 def assert_test_positives(split: Split, ground_truth: list[dict], cfg: dict) -> int:
     """Number of insiders with >=1 malicious day in the test window; raises if too few."""
     test = set(pd.to_datetime(split.test_days).strftime("%Y-%m-%d"))

@@ -1,0 +1,7 @@
+budget,a,b,metric,kind,value,ci_lo,ci_hi,ci_method
+10,proposed_budget_aware_conformal,isolation_forest,dr_at_b,relative,0.75,-0.42857142857142855,6.0,bca
+10,proposed_budget_aware_conformal,isolation_forest,precision_at_b,relative,3.8,1.2222222222222223,13.0,bca
+50,proposed_budget_aware_conformal,isolation_forest,dr_at_b,relative,0.5,0.15384615384615385,1.5,bca
+50,proposed_budget_aware_conformal,isolation_forest,precision_at_b,relative,4.388888888888888,2.875,7.179803667352726,bca
+100,proposed_budget_aware_conformal,isolation_forest,dr_at_b,relative,-0.0625,-0.3125,0.0,bca
+100,proposed_budget_aware_conformal,isolation_forest,precision_at_b,relative,2.0952380952380953,1.421929036293446,3.1111111111111107,bca

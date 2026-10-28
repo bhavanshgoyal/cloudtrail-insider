@@ -3,8 +3,7 @@ cti.experiment
 --------------
 One shared harness for the pipeline, tuning, campaign and ablations.
 
-``load_world``  generate (or load cached) events, features, labels, ground truth
-                for one (workload, seed).
+``load_world``  load (or build and cache) the CERT features, labels and ground truth.
 ``run_window``  fit detectors on the fit window, score the evaluation window and
                 evaluate at fixed per-day budgets.
 
@@ -29,9 +28,8 @@ import numpy as np
 import pandas as pd
 
 from cti.eval.evaluate import EvalContext, build_context, evaluate_window
-from cti.features.pipeline import build_features, make_labels
-from cti.ingest.normalise import normalise_columns
-from cti.ingest.synthetic import generate_workload
+from cti.features.cert import build_cert_features, make_cert_labels
+from cti.ingest.cert import load_ground_truth, load_roles
 from cti.util.splits import Split
 
 log = logging.getLogger(__name__)
@@ -50,30 +48,66 @@ class World:
     meta: dict = field(default_factory=dict)
 
 
+def cert_workload(cfg: dict) -> str:
+    return f"CERT_r{cfg['cert']['release']}"
+
+
 def load_world(cfg: dict, workload: str | None = None, seed: int | None = None,
                fast: bool = False, cache: bool = True) -> World:
-    """Generate one (workload, seed) dataset; features are cached on disk."""
-    workload = workload or cfg["synthetic"]["default_workload"]
+    """The CERT dataset: cached features, labels and ground truth.
+
+    ``seed`` only drives detector randomness and tie-breaks; the data is fixed.
+    ``events`` holds one row per user (principalId, roleName) from LDAP.
+    ``fast`` keeps every insider plus a fixed random sample of other users
+    (a quick sanity check only, never for reported numbers).
+    """
+    c = cfg["cert"]
+    name = cert_workload(cfg)
+    if workload not in (None, name):
+        raise ValueError(f"unknown workload {workload!r}; the only dataset is {name}")
     seed = cfg["random_seed"] if seed is None else seed
     t0 = time.time()
-    raw, gt = generate_workload(cfg, workload, seed, fast=fast)
-    events = normalise_columns(raw)
 
-    key = CACHE_DIR / f"{workload}_s{seed}{'_fast' if fast else ''}"
-    fpath, lpath = key / "features.parquet", key / "labels.parquet"
-    if cache and fpath.exists() and lpath.exists():
+    key = CACHE_DIR / name
+    fpath, lpath, gpath = key / "features.parquet", key / "labels.parquet", key / "ground_truth.json"
+    if cache and fpath.exists() and lpath.exists() and gpath.exists():
         feats, labels = pd.read_parquet(fpath), pd.read_parquet(lpath)
+        gt = json.loads(gpath.read_text())
     else:
-        feats = build_features(events, cfg)
-        labels = make_labels(events, feats)
+        feats = build_cert_features(Path(c["parquet_dir"]), cfg)
+        gt = load_ground_truth(Path(c["answers_dir"]), c["release"])
+        labels = make_cert_labels(feats, gt)
         if cache:
             key.mkdir(parents=True, exist_ok=True)
             feats.to_parquet(fpath, index=False)
             labels.to_parquet(lpath, index=False)
-            (key / "ground_truth.json").write_text(json.dumps(gt, indent=1))
-    log.info("world %s seed %d: %d events, %d feature rows, %d insiders (%.1fs)",
-             workload, seed, len(events), len(feats), len(gt), time.time() - t0)
-    return World(workload, seed, events, feats, labels, gt)
+            gpath.write_text(json.dumps(gt, indent=1))
+    events = load_roles(Path(c["raw_dir"]))
+
+    if fast:
+        insiders = {g["principal_id"] for g in gt}
+        others = np.setdiff1d(feats["principal"].unique(), sorted(insiders))
+        keep = insiders | set(np.random.default_rng(0).choice(others, size=min(200, len(others)),
+                                                                replace=False))
+        feats = feats[feats["principal"].isin(keep)].reset_index(drop=True)
+        labels = labels[labels["principal"].isin(keep)].reset_index(drop=True)
+        name += "_fast"
+    log.info("world %s seed %d: %d user-days, %d users, %d insiders, %d positive user-days (%.1fs)",
+             name, seed, len(feats), feats["principal"].nunique(), len(gt),
+             int(labels["label"].sum()), time.time() - t0)
+    return World(name, seed, events, feats, labels, gt)
+
+
+def subsample_users(world: World, n: int, seed: int) -> World:
+    """A random ``n``-user organisation from ``world`` (insiders kept only if drawn)."""
+    users = np.sort(world.features["principal"].unique())
+    if n >= len(users):
+        return world
+    keep = set(np.random.default_rng(seed).choice(users, size=n, replace=False))
+    sel = lambda df: df[df["principal"].isin(keep)].reset_index(drop=True)  # noqa: E731
+    gt = [g for g in world.ground_truth if g["principal_id"] in keep]
+    return World(f"{world.workload}_n{n}", world.seed, world.events, sel(world.features),
+                 sel(world.labels), gt, {**world.meta, "subsample_seed": seed})
 
 
 @dataclass

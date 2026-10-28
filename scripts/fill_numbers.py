@@ -119,12 +119,10 @@ def named(name: str):
     if name == "n_campaign_runs":
         c = _csv("results/campaign/campaign_metrics.csv")
         return c[["workload", "seed", "origin"]].drop_duplicates().shape[0]
-    if name == "n_test_insiders_total":
-        c = _csv("results/campaign/campaign_metrics.csv")
-        c = c[(c.metric == "n_insiders") & (c.budget == 10) & (c.detector == DET["P"])]
-        return int(c["value"].sum())
+    if name == "n_test_insiders_total":                      # distinct insiders over all test windows
+        return int(_csv("results/campaign/per_insider_all.csv")["principal"].nunique())
     if name == "n_features":
-        f = pd.read_parquet("data/cache/W1_baseline_s0/features.parquet")
+        f = pd.read_parquet("data/cache/CERT_r4.2/features.parquet")
         return f.shape[1] - 2
     raise KeyError(name)
 

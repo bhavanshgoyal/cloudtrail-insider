@@ -1,0 +1,16 @@
+workload,detector,scenario_id,dr_at_10,n
+CERT_r4.2,autoencoder,S1,0.4743589743589744,13
+CERT_r4.2,autoencoder,S2,0.3215686274509804,17
+CERT_r4.2,autoencoder,S3,1.0,3
+CERT_r4.2,isolation_forest,S1,0.45128205128205134,13
+CERT_r4.2,isolation_forest,S2,0.029411764705882353,17
+CERT_r4.2,isolation_forest,S3,1.0,3
+CERT_r4.2,lof,S1,0.38461538461538464,13
+CERT_r4.2,lof,S2,0.4117647058823529,17
+CERT_r4.2,lof,S3,1.0,3
+CERT_r4.2,proposed_budget_aware_conformal,S1,0.4358974358974359,13
+CERT_r4.2,proposed_budget_aware_conformal,S2,0.33333333333333337,17
+CERT_r4.2,proposed_budget_aware_conformal,S3,1.0,3
+CERT_r4.2,rule_baseline,S1,0.46153846153846156,13
+CERT_r4.2,rule_baseline,S2,0.14705882352941177,17
+CERT_r4.2,rule_baseline,S3,0.3333333333333333,3

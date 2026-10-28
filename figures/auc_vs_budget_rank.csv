@@ -1,0 +1,6 @@
+detector,auc_roc,dr_at_b,precision_at_b,workload
+autoencoder,3.0,2.0,3.0,CERT_r4.2
+isolation_forest,4.0,5.0,5.0,CERT_r4.2
+lof,2.0,1.0,2.0,CERT_r4.2
+proposed_budget_aware_conformal,1.0,3.0,1.0,CERT_r4.2
+rule_baseline,5.0,4.0,4.0,CERT_r4.2

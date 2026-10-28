@@ -1,0 +1,276 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+
+% Every result below is a macro written by scripts/build_ieee_paper.py from results/*.csv.
+\input{generated/numbers.tex}
+\newcommand{\B}{\ensuremath{B}}
+
+\begin{document}
+
+\title{Insider-Threat Detection on Cloud Audit Logs at\\Operationally Realistic Alert Budgets}
+
+\author{\IEEEauthorblockN{[Author 1], [Author 2], [Author 3], [Author 4]}
+\IEEEauthorblockA{\textit{[Department], [University]}\\
+[City], [Country] \\
+\{[email1], [email2]\}@[domain]}}
+
+\maketitle
+
+\begin{abstract}
+Insider-threat detectors are usually compared by the area under the ROC curve, yet a security
+operations centre works at one operating point: the handful of alerts an analyst can review each
+day. We evaluate detectors of credential misuse in audit logs at \emph{fixed daily alert budgets}
+and propose \emph{BudgetAwareConformal}, which compares every user with their own history through
+robust per-feature deviations, calibrates four behaviour families (identity, resource, timing,
+volume) with pooled split-conformal $p$-values, and explains each alert by naming the family and
+features that deviated. We evaluate on the CMU CERT Insider Threat r4.2 benchmark (\NUsers{} users,
+\NEvents{}\,M audit events over \NDays{} days, \NInsiders{} insiders in three scenarios) under a
+leak-free protocol: settings are tuned only inside a development period that ends before the first
+test day, and uncertainty is estimated by resampling insiders and days rather than random seeds.
+At 10 alerts per day the method reaches a precision of \POursBA{} against \PIFBA{} for Isolation
+Forest (\HypOneBDiff{}, \HypOneBVerdict{} under our pre-registered rule) and detects \DROursBA{} of
+the insiders active in the test windows against \DRIFBA{} (\HypOneADiff{}, \HypOneAVerdict{}).
+Density and reconstruction baselines detect a similar share of insiders at roughly half the
+precision. Fit and scoring take under a second per window. In a pre-registered crossover triage
+study with four reviewers, explanation-only triage reached a balanced accuracy of \TriageBAB{}
+against \TriageBAA{} for score-only triage (\TriageDiff{} points, 95\% CI \TriageLo{} to
+\TriageHi{}; H3 \TriageVerdict). We report the negative results as they are and release the
+evaluation harness, an analyst console and the triage-study protocol.
+\end{abstract}
+
+\begin{IEEEkeywords}
+insider threat, anomaly detection, alert budget, conformal prediction, explainability, CERT dataset
+\end{IEEEkeywords}
+
+% ---------------------------------------------------------------------------------------------
+\section{Introduction}
+Cloud and on-premise platforms produce audit logs that capture the identity, action, resource, and
+timestamp of every privileged operation. When a legitimate account is abused---whether by an
+employee turning malicious or an attacker reusing stolen credentials---these records are frequently
+the only forensic evidence available. Despite this, detection research overwhelmingly optimises for
+threshold-free metrics such as AUC-ROC, whereas a security operations centre (SOC) operates at
+exactly one threshold: the number of alerts an analyst can review before the next batch arrives.
+Practitioners report that most items in their queue are false positives and that alerts lacking
+context or rationale are routinely discarded without investigation~\cite{alahmadi2022false}.
+A detector that ranks well across all thresholds can therefore be operationally useless at ten
+alerts per day, and an alert that conveys nothing beyond an anomaly score adds no value to a
+time-pressured reviewer.
+
+We pursue four objectives: \textbf{O1} detect deviations in identity behaviour, resource access
+and temporal pattern; \textbf{O2} evaluate at fixed alert budgets that reflect analyst capacity;
+\textbf{O3} generate, for every alert, an explanation naming the deviation responsible; and
+\textbf{O4} assess whether those explanations let a reviewer triage the alert.
+
+\textbf{Contributions.} (i)~A leak-free evaluation protocol for a single fixed benchmark at fixed
+\emph{per-day} alert budgets, with tuning confined to a development period and confidence intervals
+from resampling insiders and days. (ii)~BudgetAwareConformal, a per-user detector with pooled
+conformal calibration that fits and scores in under a second and explains every alert from its own
+attribution. (iii)~An evaluation on CERT r4.2 against four baselines, an ablation and parameter
+sweeps, including results that do not support two of our three detection hypotheses. (iv)~An
+analyst console that applies the frozen model to uploaded logs, and a pre-registered crossover
+protocol for testing explanation usability.
+
+% ---------------------------------------------------------------------------------------------
+\section{Literature Review}
+\input{sections/literature_review}
+
+% ---------------------------------------------------------------------------------------------
+\section{Problem and Hypotheses}
+Detectors score every (user, day). Each day the analyst receives the top-\B{} scored user-days as a
+prioritised queue.
+
+\textbf{What the detector decides---and what it does not.}
+The detector flags behaviour that deviates from a person's own past; it does \emph{not} classify
+anyone as a threat. Many top-$B$ alerts are benign anomalies: a deadline-driven spike in file
+copies, weekend overtime in a role that routinely does so, or a second PC borrowed for a
+presentation. Low absolute precision is therefore expected and by design. At a malicious-day
+prevalence of $\sim\!\PosRate\%$, even an oracle cannot exceed a precision ceiling of roughly
+\OracleP{} at $B=10$, because most days contain fewer than ten malicious user-days. The
+\emph{human analyst} is the sole TP/FP decision-maker: they read each alert card and decide
+whether the pattern warrants escalation or closure. There is no automatic rule.
+
+\textbf{Alert budget, not a significance level.}
+There is no $p$-value threshold that determines whether a user-day becomes an alert. Each day,
+the top-$B$ scored user-days enter the queue regardless of the magnitude of their scores. On a
+quiet day the $B$-th alert may have a fused $p=0.01$; on an active day an alert with $p=0.001$
+might not make the cut. The budget determines the alert, not a significance level.
+
+All hypotheses compare against Isolation Forest on the identical feature matrix at $\B=10$ on the
+test windows. \textbf{H1a}: detection rate at least 40\% higher (relative). \textbf{H1b}:
+precision at least 30\% higher. \textbf{H2}: median time to detection at least 25\% lower.
+\textbf{H3}: reviewers shown only the explanation triage alerts with balanced accuracy at least 20
+percentage points above reviewers shown only the score. A hypothesis is \emph{supported} only if
+the whole 95\% interval lies beyond its threshold. The thresholds were fixed in an earlier
+synthetic-data version of this work; the resampling unit was changed for a single fixed dataset
+before any test result was computed.
+
+% ---------------------------------------------------------------------------------------------
+\section{Method}
+\subsection{Data}
+CERT r4.2~\cite{lindauer2020cert} is a simulated organisation generated for CMU SEI by ExactData's
+Dynamic Data Generator~\cite{glasser2013bridging}. It is synthetic, but independent of the
+authors, and it is the most widely used insider-threat benchmark. It contains \NUsers{} users from
+January 2010 to May 2011 and \NEvents{}\,M events from five sources: logons, removable-media
+(USB) connections, files copied to removable media, e-mail and web browsing. The \NInsiders{}
+insiders follow three scenarios: \textbf{S1} (\NInsSOne{}) after-hours logons and USB use followed by
+an upload to a leak site; \textbf{S2} (\NInsSTwo{}) job-site browsing followed by data theft on USB
+before leaving; \textbf{S3} (\NInsSThree{}) a disgruntled administrator who installs a keylogger and
+logs in as the supervisor. A user-day is malicious if the answer files list a malicious event for
+that account on that day (\NMalDays{} of \NUserDays{} user-days, \PosRate\%). In S3 some events
+occur on the stolen supervisor account; those account-days are labelled malicious, but an insider
+counts as \emph{detected} only through an alert on their own account. CERT contains no cloud
+control-plane logs; we treat it as an audit log of the same who/what/where/when shape.
+
+\subsection{Features (O1)}
+Each user-day is described by \NFeatures{} features in four families. All are \emph{causal}: any
+``new'', ``usual'' or ``rare'' statistic for day $d$ uses only days before $d$, and a test checks
+that appending future events never changes earlier rows.
+\emph{Identity}: distinct PCs, PCs never used before, logons on such PCs.
+\emph{Resource}: USB connections (all, after hours, first ever), executables copied to removable
+media, job-site and leak-site visits, external e-mail (with attachments), visits to websites with
+fewer than five prior company-wide visits.
+\emph{Temporal}: after-hours share and logons, distance from the user's usual hour (circular mean of
+earlier days), weekend activity, active hours.
+\emph{Volume}: events per source, e-mail bytes, distinct and never-visited websites.
+Keyword lists were fixed from general knowledge and the public scenario descriptions, never from
+the answer files.
+
+\subsection{BudgetAwareConformal}
+\textbf{C1, per-user surprisal.} For user $u$ and feature $f$, on $\log(1+x)$,
+$z_{u,f}=\max\bigl(0,(x-\tilde m_{u,f})/s_{u,f}\bigr)$, where the median $\tilde m$ and MAD come
+from $u$'s history, shrunk towards the population for short histories, with the scale floored by a
+population scale. Only increases count.
+\textbf{C2, pooled conformal calibration.} Per family the $\ell_2$ norm of the $z$-scores is the
+family score. The last share of the fit window is held out: baselines are estimated on the earlier
+part, and the held-out family scores of \emph{all} users form a pooled calibration set (about
+$10^5$ rows). A family $p$-value is $p=(1+\#\{c\ge s\})/(n+1)$. Pooling is possible because scores
+are already normalised per user, and it gives $p$-values a resolution that a 30-day per-user
+calibration set cannot. With $\approx10^5$ calibration rows the smallest representable $p$-value
+is $p_{\min}\approx10^{-5}$, flagging behaviour seen on fewer than one in a hundred thousand
+normal days.
+
+\textbf{Rationale for conformal $p$-values.}
+Split-conformal $p$-values were preferred over parametric alternatives for three reasons.
+\emph{(i)~No distributional assumption}: no Gaussian or Poisson model is imposed on the count
+features, whose distributions are heavily right-skewed; parametric tail estimates would be
+poorly calibrated.
+\emph{(ii)~Person-relative deviation}: the $z$-scores in C1 compare each user to their own
+history, so the $p$-value answers ``how unusual is this day relative to \emph{this person's}
+normal?''\, avoiding systematic over-alerting on heavy users or under-alerting on light ones.
+\emph{(iii)~Resolution via pooling}: a 30-day per-user calibration set resolves $p$ only to
+$1/31\approx0.03$; pooling raises the resolution to $\approx10^{-5}$ without parametric
+extrapolation, which is critical for the Bonferroni correction in C3.
+
+\textbf{C3, fusion.} Family $p$-values are combined; validation selected \TunedFusion{}. The
+fused score $-\log_{10}(p_{\text{fused}})$ is used only for \emph{ranking}: user-days are sorted
+by score and the top $B$ enter the analyst queue each day, with no significance cutoff applied.
+\textbf{C4, suppression.} Optionally skip a user alerted in the previous $k$ days; validation
+selected $k=\TunedSuppress$.
+
+\textbf{Explanations (O3).} Each alert names the family with the smallest $p$-value, its top three
+features by deviation with today's value and the user's usual value, and any other family with
+$p<0.01$, e.g. ``Resource access deviation ($p=0.0004$): USB connections outside 08:00--18:00: 3
+(usually 0)''.
+
+\subsection{Baselines}
+Isolation Forest~\cite{liu2008isolation} (tuned under the same protocol), Local Outlier
+Factor~\cite{breunig2000lof} and an MLP autoencoder, all on the identical feature matrix, and eight
+data-loss-prevention style signature rules with fixed thresholds (leak-site visit, USB after hours,
+first USB use, executable to USB, job-site visit, external e-mail with attachment, logon on a new
+PC, after-hours logon).
+
+% ---------------------------------------------------------------------------------------------
+\section{Experimental Setup}
+\textbf{Splits.} The first 14 days are history only. Three rolling origins each have an expanding
+training window, a 15\% validation window and a 25\% test window (122 days); origin test windows
+overlap.
+\textbf{Tuning.} On one fixed dataset the validation window of a later origin overlaps the test
+window of an earlier one, so we tune only inside a \emph{development period} that ends before the
+earliest test day: three rolling splits re-created inside it, coordinate descent on mean DR@10 with
+ties broken by P@10. Isolation Forest receives a grid search under the same protocol. Settings are
+then frozen; final detectors are fitted on training plus validation data and scored on the test
+window, with detector seeds 0--4.
+\textbf{Metrics at budget \B.} DR@\B: share of insiders active in a test window with at least one
+alert on one of their own malicious days. P@\B: true alerts over alerts. MTTD: hours from attack
+onset to the end of the alerting day (alerts are a daily batch). AUC-ROC is reported for reference.
+\textbf{Statistics.} Seeds only change detector randomness, so they are not independent
+replicates. Each insider's outcome is averaged over the runs whose test window contains it, and
+the paired bootstrap (10{,}000 resamples) resamples \emph{insiders} for DR and MTTD and
+\emph{test days} for precision (ratio of sums).
+
+% ---------------------------------------------------------------------------------------------
+\section{Results}
+\subsection{Detection at fixed budgets (O2)}
+Table~\ref{tab:main} gives every detector at 10, 50 and 100 alerts per day, and Table~\ref{tab:hyp}
+the hypothesis tests.
+
+\begin{table*}[t]
+\centering
+\caption{CERT r4.2 test windows (3 origins pooled, \NInsTest{} insiders). Detection rate with 95\%
+bootstrap CI over insiders; precision at 10 and 50 alerts/day (oracle ceiling at 10: \OracleP);
+median time to detection at 10/day (hours); AUC-ROC.}
+\label{tab:main}
+\begin{tabular}{lccccccc}
+\toprule
+Detector & DR@10 & DR@50 & DR@100 & P@10 & P@50 & MTTD@10 & AUC \\
+\midrule
+\input{generated/tab_main.tex}
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table}[t]
+\centering
+\caption{Pre-registered hypotheses vs.\ Isolation Forest at 10 alerts/day (supported only if the
+whole 95\% interval clears the threshold).}
+\label{tab:hyp}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llccccl}
+\toprule
+& Metric & Thr. & Ours & IF & Rel.\ diff.\ [95\% CI] & Verdict \\
+\midrule
+\input{generated/tab_hyp.tex}
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\input{sections/results.tex}
+
+% ---------------------------------------------------------------------------------------------
+\section{Discussion}
+\input{sections/discussion.tex}
+
+% ---------------------------------------------------------------------------------------------
+\section{Analyst Console}
+A Streamlit console applies the frozen model to uploaded CERT-format logs: it parses the CSVs with
+the same code as the benchmark, builds the causal features over the uploaded period (the first two
+weeks serve as history), scores every user-day with all five detectors, and shows the daily queue
+at a chosen budget with the explanation, family $p$-values and any signature rules that also fired.
+Optional labels yield precision and insiders caught; alerts and scores are exported as CSV.
+
+% ---------------------------------------------------------------------------------------------
+\section{Limitations and Threats to Validity}
+CERT r4.2 is generated by a simulator, contains no cloud logs, and is one organisation; results
+are not replicated across independent datasets. Only \NInsTest{} insiders fall in the test windows,
+so intervals on the detection rate are wide. Validation detection was markedly higher than test
+detection, which points to drift between the development period and the later months. The keyword
+lists use the kinds of sites named in the public scenario descriptions. The triage study (H3) is
+small (4 reviewers, 40 alerts) and its reviewers are the system's authors, who may know the public CERT scenario
+descriptions. Its 50\% share of true alerts is far above the share in the live queue, so its
+accuracy is not operational accuracy; balanced accuracy is reported for that reason.
+
+\section{Conclusion}
+\input{sections/conclusion.tex}
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

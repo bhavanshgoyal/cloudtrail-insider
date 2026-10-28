@@ -1,0 +1,6 @@
+detector,n_seeds,mean,std,ci_lo,ci_hi
+autoencoder,5,63.19628703703704,25.907636512923848,,
+isolation_forest,5,16.431685185185184,0.1984913240598269,,
+lof,5,141.0153703703704,0.0,,
+proposed_budget_aware_conformal,5,23.408101851851853,0.0,,
+rule_baseline,5,16.65189814814815,0.0,,

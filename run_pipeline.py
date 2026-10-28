@@ -3,13 +3,15 @@ run_pipeline.py
 ---------------
 One-command reproduction of a single run::
 
-    python run_pipeline.py                      # W1_baseline, seed 42, last rolling origin
-    python run_pipeline.py --fast               # small dataset, quick check
-    python run_pipeline.py --workload W2_stealthy --seed 7 --origin 0
+    python run_pipeline.py                      # CERT r4.2, seed 42, last rolling origin
+    python run_pipeline.py --fast               # all insiders + 200 other users, quick check
+    python run_pipeline.py --seed 7 --origin 0
+
+Needs the one-time conversion first: ``python -m cti.ingest.cert``.
 
 Steps
 ~~~~~
-1. generate synthetic CloudTrail events + ground truth (cached features)
+1. load CERT r4.2 user-day features + ground truth (built once, then cached)
 2. temporal split (relative days; refuses to run if a window is empty)
 3. fit every detector on train+val, score the TEST window
    (settings frozen by scripts/tune_proposed.py on validation windows only)
@@ -18,7 +20,7 @@ Steps
 6. SHAP cross-check of those explanations
 
 This is ONE run. The statistics reported in the paper come from the campaign
-(Phase 6: workloads x seeds x origins), not from this script.
+(campaign: seeds x origins), not from this script.
 """
 from __future__ import annotations
 

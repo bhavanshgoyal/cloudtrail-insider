@@ -8,16 +8,14 @@ build/
 .eggs/
 *.egg
 
-# Data (too large for git — regenerable via run_pipeline.py)
-data/processed/*.parquet
-data/features/*.parquet
-data/raw/
+# Data. CERT r4.2 is licensed (ExactData): raw AND derived files (incl. samples) must never be committed.
+data/
 
 # Models (too large — regenerable via run_pipeline.py)
 models/*.pkl
 
 # Results (large parquet — regenerable; keep CSV)
-results/*.parquet
+results/**/*.parquet
 
 # IDE
 .vscode/
@@ -29,6 +27,8 @@ results/*.parquet
 .DS_Store
 Thumbs.db
 desktop.ini
+~$*
+*.tmp
 
 # Env
 .env
@@ -42,3 +42,11 @@ env/
 
 # Feature cache (regenerable)
 data/cache/
+
+# CERT-derived files that name CERT user IDs (licence: no redistribution). Kept locally only.
+models/
+results/**/*insider*.csv
+results/per_insider.csv
+results/explanations.json
+results/shap_crosscheck.json
+docs/triage_study/_facilitator_only/answer_key.csv

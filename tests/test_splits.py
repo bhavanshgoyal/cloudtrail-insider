@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 
 from cti.util.config import load_config
-from cti.util.splits import all_splits, assert_test_positives, make_splits
+from cti.util.splits import all_splits, assert_test_positives, make_splits, tuning_splits
 
 
 @pytest.fixture()
@@ -66,3 +66,12 @@ def test_assert_test_positives_raises_when_too_few(cfg):
     gt = [{"malicious_days": [str(pd.Timestamp(sp.test_days[0]).date())]}]
     with pytest.raises(ValueError):
         assert_test_positives(sp, gt, cfg)
+
+
+def test_tuning_windows_never_touch_any_test_day(cfg):
+    dates = _dates(500)                                     # CERT r4.2 spans ~500 days
+    test_days = set().union(*(set(s.test_days) for s in all_splits(dates, cfg)))
+    tune = tuning_splits(dates, cfg)
+    assert len(tune) == cfg["splits"]["n_origins"]
+    for sp in tune:
+        assert not (set(sp.val_days) | set(sp.train_days)) & test_days
