@@ -66,6 +66,9 @@ def main() -> None:
 
     log.info("STEP 1  data")
     world = load_world(cfg, args.workload, seed, fast=args.fast)
+    if world.meta.get("toy"):
+        cfg["splits"]["min_test_insiders"] = 1
+        cfg["budgets"] = [1, 2]
 
     log.info("STEP 2  temporal split")
     split = make_splits(world.features["date"], cfg, args.origin)

@@ -73,16 +73,48 @@ def load_world(cfg: dict, workload: str | None = None, seed: int | None = None,
     if cache and fpath.exists() and lpath.exists() and gpath.exists():
         feats, labels = pd.read_parquet(fpath), pd.read_parquet(lpath)
         gt = json.loads(gpath.read_text())
+        events = load_roles(Path(c["raw_dir"])) if (Path(c["raw_dir"]) / "LDAP").exists() else pd.DataFrame(
+            {"principalId": feats["principal"].unique(), "roleName": "User"}
+        )
     else:
-        feats = build_cert_features(Path(c["parquet_dir"]), cfg)
-        gt = load_ground_truth(Path(c["answers_dir"]), c["release"])
-        labels = make_cert_labels(feats, gt)
+        parquet_path = Path(c["parquet_dir"])
+        if not (parquet_path / "logon.parquet").exists():
+            raw_path = Path(c["raw_dir"])
+            if (raw_path / "logon.csv").exists():
+                from cti.ingest.cert import convert_raw
+                convert_raw(raw_path, parquet_path, cfg)
+                feats = build_cert_features(parquet_path, cfg)
+                gt = load_ground_truth(Path(c["answers_dir"]), c["release"])
+                labels = make_cert_labels(feats, gt)
+            elif fast:
+                log.warning("CERT r4.2 dataset not found at %s. Using synthetic toy data for fast check.", parquet_path)
+                from cti.ingest.toy import toy_events
+                frames, gt = toy_events(n_users=25, n_days=140, seed=seed)
+                feats = build_cert_features(frames, cfg)
+                labels = make_cert_labels(feats, gt)
+                events = pd.DataFrame({"principalId": feats["principal"].unique(), "roleName": "User"})
+                log.info("world %s seed %d (toy): %d user-days, %d users, %d insiders, %d positive user-days (%.1fs)",
+                         name + "_toy", seed, len(feats), feats["principal"].nunique(), len(gt),
+                         int(labels["label"].sum()), time.time() - t0)
+                return World(f"{name}_toy", seed, events, feats, labels, gt, {"toy": True})
+            else:
+                raise FileNotFoundError(
+                    f"CERT r4.2 parquet files not found under {parquet_path}. "
+                    "Run 'python -m cti.ingest.cert' after unpacking r4.2.tar.bz2 to data/raw/cert/r4.2/ "
+                    "or run with --fast to use a synthetic toy dataset."
+                )
+        else:
+            feats = build_cert_features(parquet_path, cfg)
+            gt = load_ground_truth(Path(c["answers_dir"]), c["release"])
+            labels = make_cert_labels(feats, gt)
         if cache:
             key.mkdir(parents=True, exist_ok=True)
             feats.to_parquet(fpath, index=False)
             labels.to_parquet(lpath, index=False)
             gpath.write_text(json.dumps(gt, indent=1))
-    events = load_roles(Path(c["raw_dir"]))
+        events = load_roles(Path(c["raw_dir"])) if (Path(c["raw_dir"]) / "LDAP").exists() else pd.DataFrame(
+            {"principalId": feats["principal"].unique(), "roleName": "User"}
+        )
 
     if fast:
         insiders = {g["principal_id"] for g in gt}
